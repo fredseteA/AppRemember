@@ -1,0 +1,185 @@
+{
+  "design_system": {
+    "name": "Remember QrCode - Ethereal Remembrance",
+    "description": "A digital memorial platform that feels like a sanctuary. Light, airy, and respectful.",
+    "typography": {
+      "font_family": {
+        "heading": "Cormorant Garamond, serif",
+        "body": "Manrope, sans-serif",
+        "accent": "Pinyon Script, cursive"
+      },
+      "scale": {
+        "h1": "text-5xl md:text-7xl font-light tracking-tight leading-tight",
+        "h2": "text-4xl md:text-5xl font-light tracking-tight",
+        "h3": "text-2xl md:text-3xl font-normal",
+        "body_lg": "text-lg md:text-xl leading-relaxed font-light",
+        "body_base": "text-base leading-relaxed text-muted-foreground",
+        "caption": "text-sm tracking-widest uppercase text-muted-foreground/80"
+      },
+      "imports": [
+        "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Manrope:wght@300;400;500;600&family=Pinyon+Script&display=swap"
+      ]
+    },
+    "colors": {
+      "palette": {
+        "primary": {
+          "name": "Celestial Blue",
+          "hsl": "190 30% 92%",
+          "hex": "#E0F2F1",
+          "usage": "Backgrounds, soft highlights"
+        },
+        "secondary": {
+          "name": "Warm Paper",
+          "hsl": "40 30% 94%",
+          "hex": "#F9F7F2",
+          "usage": "Card backgrounds, secondary sections"
+        },
+        "accent": {
+          "name": "Muted Gold",
+          "hsl": "45 40% 60%",
+          "hex": "#C5A059",
+          "usage": "Buttons, borders, icons, emphasis"
+        },
+        "text": {
+          "primary": "210 20% 25%",
+          "secondary": "210 10% 45%",
+          "light": "210 20% 98%"
+        },
+        "status": {
+          "success": "142 76% 36%",
+          "error": "0 84% 60%"
+        }
+      },
+      "css_vars": {
+        "light": {
+          "--background": "40 30% 96%",
+          "--foreground": "210 20% 25%",
+          "--card": "0 0% 100%",
+          "--card-foreground": "210 20% 25%",
+          "--popover": "0 0% 100%",
+          "--popover-foreground": "210 20% 25%",
+          "--primary": "45 40% 60%",
+          "--primary-foreground": "0 0% 100%",
+          "--secondary": "190 30% 92%",
+          "--secondary-foreground": "210 20% 25%",
+          "--muted": "40 20% 90%",
+          "--muted-foreground": "210 10% 50%",
+          "--accent": "45 40% 60%",
+          "--accent-foreground": "0 0% 100%",
+          "--destructive": "0 84.2% 60.2%",
+          "--destructive-foreground": "0 0% 98%",
+          "--border": "45 20% 85%",
+          "--input": "45 20% 85%",
+          "--ring": "45 40% 60%",
+          "--radius": "0.75rem"
+        },
+        "dark": {
+          "--background": "210 20% 10%",
+          "--foreground": "40 30% 94%",
+          "--card": "210 20% 12%",
+          "--card-foreground": "40 30% 94%",
+          "--popover": "210 20% 12%",
+          "--popover-foreground": "40 30% 94%",
+          "--primary": "45 40% 60%",
+          "--primary-foreground": "0 0% 100%",
+          "--secondary": "210 20% 15%",
+          "--secondary-foreground": "40 30% 94%",
+          "--muted": "210 20% 15%",
+          "--muted-foreground": "210 10% 60%",
+          "--accent": "45 40% 60%",
+          "--accent-foreground": "0 0% 100%",
+          "--destructive": "0 62.8% 30.6%",
+          "--destructive-foreground": "0 0% 98%",
+          "--border": "210 20% 20%",
+          "--input": "210 20% 20%",
+          "--ring": "45 40% 60%"
+        }
+      }
+    },
+    "visual_enhancers": {
+      "shadows": {
+        "soft": "0 4px 20px -2px rgba(0, 0, 0, 0.05)",
+        "hover": "0 10px 40px -10px rgba(197, 160, 89, 0.15)",
+        "inner": "inset 0 2px 4px 0 rgba(0, 0, 0, 0.02)"
+      },
+      "borders": {
+        "delicate": "1px solid hsl(var(--border))",
+        "gold": "1px solid hsl(var(--accent))"
+      },
+      "textures": {
+        "grain": "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E\")",
+        "steel": "linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 50%, #d0d0d0 100%)"
+      }
+    },
+    "layout": {
+      "container": "max-w-7xl mx-auto px-6 md:px-12",
+      "section_spacing": "py-24 md:py-32",
+      "grid_gap": "gap-8 md:gap-12"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-8 py-6 text-lg font-medium transition-all duration-300 shadow-soft hover:shadow-hover hover:-translate-y-1",
+      "secondary": "bg-transparent border border-primary text-primary hover:bg-primary/5 rounded-full px-8 py-6 text-lg font-medium transition-all duration-300",
+      "ghost": "text-muted-foreground hover:text-primary hover:bg-transparent transition-colors duration-300"
+    },
+    "cards": {
+      "memorial": "bg-card border border-border/50 rounded-xl overflow-hidden shadow-soft hover:shadow-hover transition-all duration-500 group",
+      "feature": "bg-secondary/30 backdrop-blur-sm border border-white/20 rounded-2xl p-8 hover:bg-secondary/50 transition-all duration-300"
+    },
+    "inputs": {
+      "default": "bg-background border-border focus:border-accent focus:ring-1 focus:ring-accent rounded-lg h-12 px-4 transition-all duration-300"
+    }
+  },
+  "image_urls": {
+    "hero": {
+      "url": "https://images.unsplash.com/photo-1732130318657-c8740c0f5215?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzl8MHwxfHNlYXJjaHwxfHxwZWFjZWZ1bCUyMG5hdHVyZSUyMGxhbmRzY2FwZSUyMGZvZ3xlbnwwfHx8fDE3NzAwNTM2MTF8MA&ixlib=rb-4.1.0&q=85",
+      "alt": "Foggy peaceful forest landscape",
+      "usage": "Hero background with overlay"
+    },
+    "user_example": {
+      "url": "https://images.unsplash.com/photo-1763573676689-bf2d7b474208?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzZ8MHwxfHNlYXJjaHwyfHxlbGRlcmx5JTIwY291cGxlJTIwc21pbGluZyUyMHBvcnRyYWl0fGVufDB8fHx8MTc3MDA1MzYxNXww&ixlib=rb-4.1.0&q=85",
+      "alt": "Elderly couple laughing together",
+      "usage": "Testimonial or Example Memorial"
+    },
+    "decoration": {
+      "url": "https://images.unsplash.com/photo-1640614315052-ebabc4385e00?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzR8MHwxfHNlYXJjaHwxfHx3aGl0ZSUyMGxpbHklMjBmbG93ZXIlMjBtaW5pbWFsfGVufDB8fHx8MTc3MDA1MzYxN3ww&ixlib=rb-4.1.0&q=85",
+      "alt": "White lily floating on water",
+      "usage": "Section divider or subtle background accent"
+    },
+    "product_texture": {
+      "url": "https://images.unsplash.com/photo-1667660664335-f026a2614577?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NjV8MHwxfHNlYXJjaHwxfHxicnVzaGVkJTIwc3RhaW5sZXNzJTIwc3RlZWwlMjBtZXRhbCUyMHRleHR1cmV8ZW58MHx8fHwxNzcwMDUzNjMyfDA&ixlib=rb-4.1.0&q=85",
+      "alt": "Brushed stainless steel texture",
+      "usage": "Background for the QR Code Plaque preview"
+    },
+    "candle": {
+      "url": "https://images.unsplash.com/photo-1652181768928-12931bc4917d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzl8MHwxfHNlYXJjaHwxfHxjYW5kbGUlMjBsaWdodCUyMGRhcmslMjBiYWNrZ3JvdW5kJTIwbWluaW1hbHxlbnwwfHx8fDE3NzAwNTM2Mzd8MA&ixlib=rb-4.1.0&q=85",
+      "alt": "Burning candle in dark",
+      "usage": "Light a candle feature"
+    },
+    "plaque_context": {
+      "url": "https://images.unsplash.com/photo-1763890418145-7b060f0ec3df?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzOTB8MHwxfHNlYXJjaHwxfHxtZW1vcmlhbCUyMHBsYXF1ZSUyMG9uJTIwc3RvbmV8ZW58MHx8fHwxNzcwMDUzNjQxfDA&ixlib=rb-4.1.0&q=85",
+      "alt": "Engraved text on stone",
+      "usage": "Contextual image for 'How it works'"
+    }
+  },
+  "instructions_to_main_agent": [
+    "1. SETUP: Update `tailwind.config.js` to include the custom fonts (Cormorant Garamond, Manrope) and the specific color palette defined in `css_vars`.",
+    "2. GLOBAL CSS: In `index.css`, replace the default Shadcn variables with the 'Ethereal Remembrance' values provided in `css_vars`. Ensure the `.dark` class overrides are also applied.",
+    "3. FONTS: Add the Google Fonts import to `index.css` or the main HTML file immediately.",
+    "4. COMPONENTS: When building the 'Memorial Card', use the `cards.memorial` classes. It should feel like a physical object.",
+    "5. HERO SECTION: Use the 'Hero Background' image with a soft white gradient overlay (`bg-gradient-to-b from-transparent to-background`) so the text pops.",
+    "6. PLAQUE PREVIEW: Create a component that uses the 'Brushed stainless steel' image as a background, with a rounded border and a QR code centered on it. Add a 'shine' effect using CSS gradients.",
+    "7. CANDLE FEATURE: For the 'Light a Candle' section, use a dark background (even in light mode) to make the candle flame image glow.",
+    "8. MOBILE FIRST: Ensure all padding is responsive (`p-6` mobile, `p-12` desktop). Do not use fixed widths.",
+    "9. ACCESSIBILITY: Ensure the Gold accent color has enough contrast against white. If not, darken it slightly for text, keep it bright for borders."
+  ],
+  "universal_guidelines": [
+    "Do not use generic 'SaaS Blue'. Stick to the defined 'Celestial Blue' and 'Muted Gold'.",
+    "Avoid 'Inter' font. Use 'Manrope' for UI and 'Cormorant Garamond' for all headings.",
+    "Use 2x more whitespace than usual. This is a memorial site, it needs breathing room.",
+    "All interactive elements must have `data-testid` attributes.",
+    "Do not use solid black (#000000). Use the defined deep charcoal (#1a202c) or similar.",
+    "Animations should be slow and dignified (duration-700 or duration-1000), not snappy."
+  ]
+}

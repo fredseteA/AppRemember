@@ -1,0 +1,16 @@
+# Ignorar arquivos desnecessários no build Docker
+.env
+.env.*
+!.env.example
+__pycache__
+*.pyc
+*.pyo
+.git
+.gitignore
+README.md
+*.md
+.pytest_cache
+.mypy_cache
+tests/
+*.log
+.DS_Store

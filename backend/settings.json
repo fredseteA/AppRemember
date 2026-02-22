@@ -1,0 +1,6 @@
+//Load environment variables from .env file in the workspace folder
+
+{
+    "python.envFile": "${workspaceFolder}/.env",
+    "python.terminal.useEnvFile": true
+}
