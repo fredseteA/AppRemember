@@ -1,32 +1,31 @@
-# fly.toml - Configuração para Fly.io
-# Remember QRCode Backend
+# fly.toml app configuration file generated for remember-qrcode-api on 2026-02-25T19:47:34-03:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
 
-app = "remember-qrcode-api"
-primary_region = "gru"  # São Paulo, Brasil
+app = 'remember-qrcode-api'
+primary_region = 'gru'
 
 [build]
-  dockerfile = "Dockerfile"
-
-[env]
-  # Variáveis públicas (não sensíveis)
-  # As variáveis sensíveis devem ser configuradas via: fly secrets set
+  dockerfile = 'Dockerfile'
 
 [http_service]
   internal_port = 8080
   force_https = true
-  auto_stop_machines = true
+  auto_stop_machines = 'stop'
   auto_start_machines = true
   min_machines_running = 0
-  processes = ["app"]
+  processes = ['app']
 
-[[http_service.checks]]
-  interval = "30s"
-  timeout = "5s"
-  grace_period = "10s"
-  method = "GET"
-  path = "/api/"
+  [[http_service.checks]]
+    interval = '30s'
+    timeout = '5s'
+    grace_period = '10s'
+    method = 'GET'
+    path = '/api/'
 
 [[vm]]
-  memory = "512mb"
-  cpu_kind = "shared"
+  memory = '512mb'
+  cpu_kind = 'shared'
   cpus = 1
+  memory_mb = 512

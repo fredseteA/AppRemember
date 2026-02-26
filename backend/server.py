@@ -30,7 +30,16 @@ from firebase_admin import credentials, firestore, auth
 FIREBASE_CREDENTIALS = os.getenv("FIREBASE_CREDENTIALS_PATH")
 
 if not firebase_admin._apps:
-    cred = credentials.Certificate(FIREBASE_CREDENTIALS)
+    _firebase_json = os.getenv("FIREBASE_CREDENTIALS_JSON")
+    _firebase_path = os.getenv("FIREBASE_CREDENTIALS_PATH")
+
+    if _firebase_json:
+        cred = credentials.Certificate(json.loads(_firebase_json))
+    elif _firebase_path:
+        cred = credentials.Certificate(_firebase_path)
+    else:
+        raise RuntimeError("Firebase credentials não configuradas.")
+
     firebase_admin.initialize_app(cred)
 
 # Cliente Firestore síncrono
