@@ -396,7 +396,7 @@ function HowItWorksSection() {
       const img = new Image();
       img.src = s.image;
     });
-  }, []);
+  }, [steps]);
 
   const goToStep = useCallback((idx) => {
     if (idx === activeStep || transitioning) return;
