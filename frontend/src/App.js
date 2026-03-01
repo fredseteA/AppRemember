@@ -5,6 +5,7 @@ import { Analytics } from '@vercel/analytics/react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
+import ErrorBoundary from "./components/ErrorBoundary";
 import Home from './pages/Home';
 import HowItWorks from './pages/HowItWorks';
 import Explore from './pages/Explore';
@@ -91,86 +92,88 @@ const AppLayout = ({ children }) => {
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <AppLayout>
-          <ScrollToTop />
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/how-it-works" element={<HowItWorks />} />
-            <Route path="/explore" element={<Explore />} />
-            <Route path="/create-memorial" element={<CreateMemorial />} />
-            <Route path="/memorial/:id" element={<MemorialView />} />
-            <Route
-                path="/preview/:id"
-                element={
-                  <ProtectedRoute>
-                    <PreviewMemorial />
-                  </ProtectedRoute>
-                }
-              />
+      <ErrorBoundary>
+        <BrowserRouter>
+          <AppLayout>
+            <ScrollToTop />
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/how-it-works" element={<HowItWorks />} />
+              <Route path="/explore" element={<Explore />} />
+              <Route path="/create-memorial" element={<CreateMemorial />} />
+              <Route path="/memorial/:id" element={<MemorialView />} />
               <Route
-                path="/select-plan/:id"
-                element={
-                  <ProtectedRoute>
-                    <SelectPlan />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/payment/:id"
-                element={
-                  <ProtectedRoute>
-                    <Payment />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="/payment/success" element={<PaymentSuccess />} />
-              <Route path="/payment/failure" element={<PaymentFailure />} />
-              <Route path="/payment/pending" element={<PaymentPending />} />
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/profile"
-                element={
-                  <ProtectedRoute>
-                    <Profile />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/my-memorials"
-                element={
-                  <ProtectedRoute>
-                    <MyMemorials />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/my-purchases"
-                element={
-                  <ProtectedRoute>
-                    <MyPurchases />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin"
-                element={
-                  <AdminRoute>
-                    <Admin />
-                  </AdminRoute>
-                }
-              />
-            </Routes>
+                  path="/preview/:id"
+                  element={
+                    <ProtectedRoute>
+                      <PreviewMemorial />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/select-plan/:id"
+                  element={
+                    <ProtectedRoute>
+                      <SelectPlan />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/payment/:id"
+                  element={
+                    <ProtectedRoute>
+                      <Payment />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route path="/payment/success" element={<PaymentSuccess />} />
+                <Route path="/payment/failure" element={<PaymentFailure />} />
+                <Route path="/payment/pending" element={<PaymentPending />} />
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/profile"
+                  element={
+                    <ProtectedRoute>
+                      <Profile />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/my-memorials"
+                  element={
+                    <ProtectedRoute>
+                      <MyMemorials />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/my-purchases"
+                  element={
+                    <ProtectedRoute>
+                      <MyPurchases />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin"
+                  element={
+                    <AdminRoute>
+                      <Admin />
+                    </AdminRoute>
+                  }
+                />
+              </Routes>
           </AppLayout>
-      </BrowserRouter>
-      <Analytics />
+          <Analytics />
+        </BrowserRouter>
+      </ErrorBoundary>
     </AuthProvider>
   );
 }

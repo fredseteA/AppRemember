@@ -440,8 +440,8 @@ function HowItWorksSection() {
     setTimeout(() => startTimer(), 450);
   };
 
-  const current = steps[activeStep];
-  const previous = prevStep !== null ? steps[prevStep] : null;
+  const current = STEPS[activeStep];
+  const previous = prevStep !== null ? STEPS[prevStep] : null;
 
   return (
     <section
@@ -667,7 +667,7 @@ function HowItWorksSection() {
           className="howit-tabs flex items-center justify-center gap-6 md:gap-12 mb-10"
           style={{ borderBottom: "1px solid rgba(26,39,68,0.12)" }}
         >
-          {steps.map((s, i) => (
+          {STEPS.map((s, i) => (
             <button
               key={i}
               className={`howit-tab-btn${activeStep === i ? " howit-tab-active" : ""}`}
