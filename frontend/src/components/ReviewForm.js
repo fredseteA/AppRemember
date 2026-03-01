@@ -1,3 +1,9 @@
+import { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { Star, Send, CheckCircle } from 'lucide-react';
+import { toast } from 'sonner';
+import axios from 'axios';
+
 const ReviewForm = ({ onSuccess }) => {
   const { user, token } = useAuth();
   const [rating, setRating] = useState(0);

@@ -1,3 +1,6 @@
+import { useState } from 'react';
+import { Share2, Image, Music, BookOpen } from 'lucide-react';
+
 const MemorialLayout = ({ memorial, isPreview = false, onShare }) => {
   const [activeTab, setActiveTab] = useState('historia');
 
