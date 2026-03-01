@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Share2, Image, Music, BookOpen } from 'lucide-react';
+import { Share2, Image, Music, BookOpen, X, ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
 
 const MemorialLayout = ({ memorial, isPreview = false, onShare }) => {
   const [activeTab, setActiveTab] = useState('historia');
+  const [lightbox, setLightbox] = useState(null); // { images: [], index: 0 }
 
   if (!memorial) return null;
 
@@ -40,14 +41,39 @@ const MemorialLayout = ({ memorial, isPreview = false, onShare }) => {
     }
   };
 
+  // Lightbox helpers
+  const openLightbox = (images, index) => setLightbox({ images, index });
+  const closeLightbox = () => setLightbox(null);
+  const lightboxPrev = () => setLightbox(l => ({ ...l, index: (l.index - 1 + l.images.length) % l.images.length }));
+  const lightboxNext = () => setLightbox(l => ({ ...l, index: (l.index + 1) % l.images.length }));
+
+  // Fecha ao clicar no backdrop
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget) closeLightbox();
+  };
+
+  // Navegação por teclado
+  const handleKeyDown = (e) => {
+    if (!lightbox) return;
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowLeft') lightboxPrev();
+    if (e.key === 'ArrowRight') lightboxNext();
+  };
+
+  // Todas as imagens da galeria (para lightbox)
+  const galleryImages = content.gallery_urls || [];
+
   return (
     <div
+      onKeyDown={handleKeyDown}
+      tabIndex={-1}
       style={{
         minHeight: '100vh',
         background: 'linear-gradient(180deg, #c8e8f5 0%, #ddf0f7 30%, #eef8fb 65%, #eef8fb 100%)',
         fontFamily: '"Georgia", serif',
         position: 'relative',
         overflow: 'hidden',
+        outline: 'none',
       }}
     >
       <style>{`
@@ -73,6 +99,14 @@ const MemorialLayout = ({ memorial, isPreview = false, onShare }) => {
         }
         @keyframes photoReveal {
           from { opacity: 0; transform: scale(0.88); }
+          to   { opacity: 1; transform: scale(1); }
+        }
+        @keyframes lbFadeIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        @keyframes lbImgIn {
+          from { opacity: 0; transform: scale(0.92); }
           to   { opacity: 1; transform: scale(1); }
         }
 
@@ -109,17 +143,61 @@ const MemorialLayout = ({ memorial, isPreview = false, onShare }) => {
           background: #5aa8e0;
         }
 
+        /* Gallery item */
         .ml-gallery-item {
           aspect-ratio: 1;
           border-radius: 16px;
           overflow: hidden;
           box-shadow: 0 4px 16px rgba(26,39,68,0.1);
+          cursor: pointer;
+          position: relative;
         }
         .ml-gallery-item img {
           width: 100%; height: 100%; object-fit: cover; display: block;
           transition: transform 0.55s cubic-bezier(.22,1,.36,1);
         }
         .ml-gallery-item:hover img { transform: scale(1.07); }
+        .ml-gallery-item .ml-zoom-overlay {
+          position: absolute; inset: 0;
+          background: rgba(26,39,68,0);
+          display: flex; align-items: center; justify-content: center;
+          transition: background 0.25s ease;
+          border-radius: 16px;
+        }
+        .ml-gallery-item:hover .ml-zoom-overlay {
+          background: rgba(26,39,68,0.22);
+        }
+        .ml-gallery-item .ml-zoom-overlay svg {
+          opacity: 0;
+          transform: scale(0.7);
+          transition: opacity 0.25s ease, transform 0.25s ease;
+          color: white;
+          filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));
+        }
+        .ml-gallery-item:hover .ml-zoom-overlay svg {
+          opacity: 1;
+          transform: scale(1);
+        }
+
+        /* Profile photo clickable */
+        .ml-profile-wrap {
+          cursor: pointer;
+          position: relative;
+        }
+        .ml-profile-wrap .ml-profile-overlay {
+          position: absolute; inset: 0; border-radius: 50%;
+          background: rgba(26,39,68,0);
+          display: flex; align-items: center; justify-content: center;
+          transition: background 0.25s ease;
+        }
+        .ml-profile-wrap:hover .ml-profile-overlay {
+          background: rgba(26,39,68,0.28);
+        }
+        .ml-profile-wrap .ml-profile-overlay svg {
+          opacity: 0; transition: opacity 0.25s ease; color: white;
+          filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+        }
+        .ml-profile-wrap:hover .ml-profile-overlay svg { opacity: 1; }
 
         .ml-share-btn {
           position: absolute; top: 14px; right: 14px;
@@ -135,7 +213,87 @@ const MemorialLayout = ({ memorial, isPreview = false, onShare }) => {
           -webkit-tap-highlight-color: transparent;
         }
         .ml-share-btn:hover { background: white; transform: scale(1.08); }
+
+        /* Lightbox */
+        .ml-lightbox {
+          position: fixed; inset: 0; z-index: 9999;
+          background: rgba(10,16,28,0.92);
+          backdrop-filter: blur(8px);
+          display: flex; align-items: center; justify-content: center;
+          animation: lbFadeIn 0.25s ease both;
+          padding: 20px;
+        }
+        .ml-lightbox-img {
+          max-width: min(90vw, 800px);
+          max-height: 85vh;
+          object-fit: contain;
+          border-radius: 16px;
+          box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+          animation: lbImgIn 0.3s cubic-bezier(.22,1,.36,1) both;
+          display: block;
+        }
+        .ml-lb-btn {
+          position: absolute;
+          width: 44px; height: 44px; border-radius: 50%;
+          background: rgba(255,255,255,0.1);
+          border: 1px solid rgba(255,255,255,0.2);
+          color: white; cursor: pointer;
+          display: flex; align-items: center; justify-content: center;
+          transition: background 0.2s ease, transform 0.2s ease;
+          -webkit-tap-highlight-color: transparent;
+          backdrop-filter: blur(8px);
+        }
+        .ml-lb-btn:hover { background: rgba(255,255,255,0.2); transform: scale(1.08); }
+        .ml-lb-close { top: 16px; right: 16px; }
+        .ml-lb-prev  { left: 16px;  top: 50%; transform: translateY(-50%); }
+        .ml-lb-next  { right: 16px; top: 50%; transform: translateY(-50%); }
+        .ml-lb-prev:hover  { transform: translateY(-50%) scale(1.08); }
+        .ml-lb-next:hover  { transform: translateY(-50%) scale(1.08); }
+        .ml-lb-counter {
+          position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+          font-family: "Georgia", serif; font-size: 0.75rem;
+          color: rgba(255,255,255,0.5); letter-spacing: 0.12em;
+        }
       `}</style>
+
+      {/* ── Lightbox ── */}
+      {lightbox && (
+        <div className="ml-lightbox" onClick={handleBackdropClick}>
+          {/* Fechar */}
+          <button className="ml-lb-btn ml-lb-close" onClick={closeLightbox}>
+            <X size={18} />
+          </button>
+
+          {/* Anterior (só se múltiplas imagens) */}
+          {lightbox.images.length > 1 && (
+            <button className="ml-lb-btn ml-lb-prev" onClick={lightboxPrev}>
+              <ChevronLeft size={22} />
+            </button>
+          )}
+
+          {/* Imagem */}
+          <img
+            key={lightbox.index}
+            src={lightbox.images[lightbox.index]}
+            alt=""
+            className="ml-lightbox-img"
+          />
+
+          {/* Próximo (só se múltiplas imagens) */}
+          {lightbox.images.length > 1 && (
+            <button className="ml-lb-btn ml-lb-next" onClick={lightboxNext}>
+              <ChevronRight size={22} />
+            </button>
+          )}
+
+          {/* Contador */}
+          {lightbox.images.length > 1 && (
+            <span className="ml-lb-counter">
+              {lightbox.index + 1} / {lightbox.images.length}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* ── Nuvens decorativas ── */}
       <div className="absolute top-[-20px] left-[-60px] w-52 md:w-80 opacity-60 pointer-events-none select-none"
@@ -175,38 +333,49 @@ const MemorialLayout = ({ memorial, isPreview = false, onShare }) => {
           {/* Capa + foto de perfil */}
           <div style={{ position: 'relative' }}>
 
-            {/* Foto de capa */}
-            <div style={{ height: 'clamp(160px, 30vw, 220px)', overflow: 'hidden', position: 'relative' }}>
-              {content.gallery_urls && content.gallery_urls.length > 0 ? (
-                <img src={content.gallery_urls[0]} alt="Capa"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            {/* Foto de capa — clicável se existir */}
+            <div
+              style={{ height: 'clamp(160px, 30vw, 220px)', overflow: 'hidden', position: 'relative', cursor: galleryImages.length > 0 ? 'pointer' : 'default' }}
+              onClick={() => galleryImages.length > 0 && openLightbox(galleryImages, 0)}
+            >
+              {galleryImages.length > 0 ? (
+                <img src={galleryImages[0]} alt="Capa"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform 0.5s ease' }} />
               ) : (
                 <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #b8e0f5 0%, #7bbde8 50%, #5aa8e0 100%)' }} />
               )}
-              {/* Gradient overlay na capa */}
               <div style={{
                 position: 'absolute', inset: 0,
                 background: 'linear-gradient(to bottom, rgba(26,39,68,0.05) 0%, rgba(26,39,68,0.35) 100%)',
               }} />
             </div>
 
-            {/* Foto de perfil */}
+            {/* Foto de perfil — clicável */}
             <div style={{
               position: 'absolute', left: '50%', transform: 'translateX(-50%)',
               bottom: -52,
             }}>
-              <div style={{
-                width: 104, height: 104, borderRadius: '50%',
-                border: '4px solid rgba(255,255,255,0.95)',
-                boxShadow: '0 8px 32px rgba(26,39,68,0.18)',
-                overflow: 'hidden',
-                background: 'linear-gradient(135deg, #c8e8f5, #a8d8f0)',
-                animation: 'photoReveal 0.7s cubic-bezier(.22,1,.36,1) 0.3s both',
-              }}>
+              <div
+                className={person_data.photo_url ? 'ml-profile-wrap' : ''}
+                onClick={() => person_data.photo_url && openLightbox([person_data.photo_url], 0)}
+                style={{
+                  width: 104, height: 104, borderRadius: '50%',
+                  border: '4px solid rgba(255,255,255,0.95)',
+                  boxShadow: '0 8px 32px rgba(26,39,68,0.18)',
+                  overflow: 'hidden',
+                  background: 'linear-gradient(135deg, #c8e8f5, #a8d8f0)',
+                  animation: 'photoReveal 0.7s cubic-bezier(.22,1,.36,1) 0.3s both',
+                }}
+              >
                 {person_data.photo_url ? (
-                  <img src={person_data.photo_url} alt={person_data.full_name}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                    data-testid="memorial-photo" />
+                  <>
+                    <img src={person_data.photo_url} alt={person_data.full_name}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                      data-testid="memorial-photo" />
+                    <div className="ml-profile-overlay">
+                      <ZoomIn size={20} />
+                    </div>
+                  </>
                 ) : (
                   <div style={{
                     width: '100%', height: '100%',
@@ -235,58 +404,36 @@ const MemorialLayout = ({ memorial, isPreview = false, onShare }) => {
             textAlign: 'center',
             animation: 'revealML 0.7s cubic-bezier(.22,1,.36,1) 0.2s both',
           }}>
-
-            {/* Eyebrow */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 10 }}>
               <div style={{ height: 1, width: 20, background: 'rgba(42,61,94,0.25)' }} />
-              <span style={{
-                textTransform: 'uppercase', letterSpacing: '0.2em',
-                fontSize: '0.58rem', fontWeight: 700, color: '#5aa8e0',
-              }}>
+              <span style={{ textTransform: 'uppercase', letterSpacing: '0.2em', fontSize: '0.58rem', fontWeight: 700, color: '#5aa8e0' }}>
                 Em memória de
               </span>
               <div style={{ height: 1, width: 20, background: 'rgba(42,61,94,0.25)' }} />
             </div>
-
-            {/* Nome */}
-            <h1
-              data-testid="memorial-name"
-              style={{
-                fontFamily: '"Georgia", serif',
-                fontSize: 'clamp(1.5rem, 5vw, 2.2rem)',
-                fontWeight: 700, color: '#1a2744',
-                lineHeight: 1.15, marginBottom: 10,
-              }}
-            >
+            <h1 data-testid="memorial-name" style={{
+              fontFamily: '"Georgia", serif', fontSize: 'clamp(1.5rem, 5vw, 2.2rem)',
+              fontWeight: 700, color: '#1a2744', lineHeight: 1.15, marginBottom: 10,
+            }}>
               {person_data.full_name}
             </h1>
-
-            {/* Datas */}
             <p style={{
-              fontFamily: '"Georgia", serif',
-              fontSize: '0.85rem', color: 'rgba(58,80,112,0.65)',
-              letterSpacing: '0.05em', marginBottom: 16,
+              fontFamily: '"Georgia", serif', fontSize: '0.85rem',
+              color: 'rgba(58,80,112,0.65)', letterSpacing: '0.05em', marginBottom: 16,
             }}>
               {person_data.birth_date ? formatDate(person_data.birth_date) : '...'}
               <span style={{ margin: '0 10px', color: 'rgba(90,168,224,0.6)' }}>✦</span>
               {person_data.death_date ? formatDate(person_data.death_date) : '...'}
             </p>
-
-            {/* Frase principal */}
             {content.main_phrase && (
               <div style={{
-                margin: '0 auto',
-                maxWidth: 380,
-                padding: '14px 20px',
-                borderRadius: 14,
-                background: 'rgba(90,168,224,0.07)',
+                margin: '0 auto', maxWidth: 380, padding: '14px 20px',
+                borderRadius: 14, background: 'rgba(90,168,224,0.07)',
                 border: '1px solid rgba(90,168,224,0.18)',
               }}>
                 <p style={{
-                  fontFamily: '"Georgia", serif',
-                  fontSize: 'clamp(0.85rem, 2.5vw, 0.95rem)',
-                  color: '#2a3d5e', fontStyle: 'italic', lineHeight: 1.7,
-                  margin: 0,
+                  fontFamily: '"Georgia", serif', fontSize: 'clamp(0.85rem, 2.5vw, 0.95rem)',
+                  color: '#2a3d5e', fontStyle: 'italic', lineHeight: 1.7, margin: 0,
                 }}>
                   "{content.main_phrase}"
                 </p>
@@ -298,26 +445,15 @@ const MemorialLayout = ({ memorial, isPreview = false, onShare }) => {
           <div style={{ height: 1, background: 'rgba(26,39,68,0.07)', margin: '0 clamp(20px, 5vw, 36px)' }} />
 
           {/* ── Tabs ── */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: 4,
-            padding: '14px clamp(16px, 4vw, 28px)',
-          }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 4, padding: '14px clamp(16px, 4vw, 28px)' }}>
             {[
               { key: 'historia', label: 'História', icon: BookOpen },
               { key: 'memorias', label: 'Memórias', icon: Image },
               { key: 'audio',    label: 'Áudio',    icon: Music },
             ].map(({ key, label, icon: Icon }) => (
-              <button
-                key={key}
-                className={`ml-tab-btn ${activeTab === key ? 'active' : ''}`}
-                onClick={() => setActiveTab(key)}
-              >
+              <button key={key} className={`ml-tab-btn ${activeTab === key ? 'active' : ''}`} onClick={() => setActiveTab(key)}>
                 <Icon size={18} />
-                <span style={{ fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.06em' }}>
-                  {label}
-                </span>
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.06em' }}>{label}</span>
               </button>
             ))}
           </div>
@@ -333,19 +469,14 @@ const MemorialLayout = ({ memorial, isPreview = false, onShare }) => {
               <div data-testid="memorial-biography">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
                   <div style={{ height: 1, flex: 1, background: 'rgba(26,39,68,0.08)' }} />
-                  <span style={{
-                    textTransform: 'uppercase', letterSpacing: '0.18em',
-                    fontSize: '0.6rem', fontWeight: 700, color: '#5aa8e0',
-                  }}>
+                  <span style={{ textTransform: 'uppercase', letterSpacing: '0.18em', fontSize: '0.6rem', fontWeight: 700, color: '#5aa8e0' }}>
                     História de Vida
                   </span>
                   <div style={{ height: 1, flex: 1, background: 'rgba(26,39,68,0.08)' }} />
                 </div>
                 <p style={{
-                  fontFamily: '"Georgia", serif',
-                  fontSize: 'clamp(0.88rem, 2.5vw, 0.97rem)',
-                  color: '#2a3d5e', lineHeight: 1.9,
-                  whiteSpace: 'pre-wrap',
+                  fontFamily: '"Georgia", serif', fontSize: 'clamp(0.88rem, 2.5vw, 0.97rem)',
+                  color: '#2a3d5e', lineHeight: 1.9, whiteSpace: 'pre-wrap',
                 }}>
                   {content.biography || (
                     <span style={{ color: 'rgba(58,80,112,0.4)', fontStyle: 'italic' }}>
@@ -359,24 +490,21 @@ const MemorialLayout = ({ memorial, isPreview = false, onShare }) => {
             {/* Memórias */}
             {activeTab === 'memorias' && (
               <div data-testid="memorial-gallery">
-                {content.gallery_urls && content.gallery_urls.length > 0 ? (
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
-                    gap: 10,
-                  }}>
-                    {content.gallery_urls.map((url, index) => (
-                      <div key={index} className="ml-gallery-item">
+                {galleryImages.length > 0 ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 10 }}>
+                    {galleryImages.map((url, index) => (
+                      <div key={index} className="ml-gallery-item" onClick={() => openLightbox(galleryImages, index)}>
                         <img src={url} alt={`Memória ${index + 1}`} />
+                        <div className="ml-zoom-overlay">
+                          <ZoomIn size={22} />
+                        </div>
                       </div>
                     ))}
                   </div>
                 ) : (
                   <div style={{
-                    textAlign: 'center', padding: '40px 24px',
-                    borderRadius: 18,
-                    background: 'rgba(90,168,224,0.05)',
-                    border: '1px dashed rgba(90,168,224,0.25)',
+                    textAlign: 'center', padding: '40px 24px', borderRadius: 18,
+                    background: 'rgba(90,168,224,0.05)', border: '1px dashed rgba(90,168,224,0.25)',
                   }}>
                     <Image size={36} style={{ color: 'rgba(90,168,224,0.35)', margin: '0 auto 10px' }} />
                     <p style={{ fontFamily: '"Georgia", serif', fontSize: '0.88rem', color: 'rgba(58,80,112,0.5)' }}>
@@ -394,28 +522,19 @@ const MemorialLayout = ({ memorial, isPreview = false, onShare }) => {
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
                       <div style={{ height: 1, flex: 1, background: 'rgba(26,39,68,0.08)' }} />
-                      <span style={{
-                        textTransform: 'uppercase', letterSpacing: '0.18em',
-                        fontSize: '0.6rem', fontWeight: 700, color: '#5aa8e0',
-                      }}>
+                      <span style={{ textTransform: 'uppercase', letterSpacing: '0.18em', fontSize: '0.6rem', fontWeight: 700, color: '#5aa8e0' }}>
                         Mensagem de Homenagem
                       </span>
                       <div style={{ height: 1, flex: 1, background: 'rgba(26,39,68,0.08)' }} />
                     </div>
-                    <div style={{
-                      borderRadius: 16, padding: '20px',
-                      background: 'rgba(90,168,224,0.06)',
-                      border: '1px solid rgba(90,168,224,0.18)',
-                    }}>
+                    <div style={{ borderRadius: 16, padding: '20px', background: 'rgba(90,168,224,0.06)', border: '1px solid rgba(90,168,224,0.18)' }}>
                       <audio src={content.audio_url} controls style={{ width: '100%', borderRadius: 8 }} />
                     </div>
                   </div>
                 ) : (
                   <div style={{
-                    textAlign: 'center', padding: '40px 24px',
-                    borderRadius: 18,
-                    background: 'rgba(90,168,224,0.05)',
-                    border: '1px dashed rgba(90,168,224,0.25)',
+                    textAlign: 'center', padding: '40px 24px', borderRadius: 18,
+                    background: 'rgba(90,168,224,0.05)', border: '1px dashed rgba(90,168,224,0.25)',
                   }}>
                     <Music size={36} style={{ color: 'rgba(90,168,224,0.35)', margin: '0 auto 10px' }} />
                     <p style={{ fontFamily: '"Georgia", serif', fontSize: '0.88rem', color: 'rgba(58,80,112,0.5)' }}>
@@ -430,17 +549,10 @@ const MemorialLayout = ({ memorial, isPreview = false, onShare }) => {
         </div>
 
         {/* ── Rodapé ── */}
-        <div style={{
-          textAlign: 'center', marginTop: 28,
-          animation: 'revealML 0.7s cubic-bezier(.22,1,.36,1) 0.4s both',
-        }}>
+        <div style={{ textAlign: 'center', marginTop: 28, animation: 'revealML 0.7s cubic-bezier(.22,1,.36,1) 0.4s both' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 6 }}>
             <div style={{ height: 1, width: 24, background: 'rgba(42,61,94,0.2)' }} />
-            <p style={{
-              fontFamily: '"Georgia", serif',
-              fontSize: '0.78rem', color: 'rgba(58,80,112,0.55)',
-              fontStyle: 'italic',
-            }}>
+            <p style={{ fontFamily: '"Georgia", serif', fontSize: '0.78rem', color: 'rgba(58,80,112,0.55)', fontStyle: 'italic' }}>
               Criado com amor por {responsible?.name}
             </p>
             <div style={{ height: 1, width: 24, background: 'rgba(42,61,94,0.2)' }} />

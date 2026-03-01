@@ -1,13 +1,16 @@
 import { useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent } from '../components/ui/card';
-import { Button } from '../components/ui/button';
 import { XCircle } from 'lucide-react';
+import axios from 'axios';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
 
 const PaymentFailure = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const paymentId = searchParams.get('payment_id');
+  const collectionId = searchParams.get('collection_id');
 
   const sharedStyles = `
     @keyframes floatPR1 {
@@ -51,7 +54,22 @@ const PaymentFailure = () => {
   useEffect(() => {
     console.log('=== PAGAMENTO FALHOU ===');
     console.log('Payment ID:', paymentId);
-  }, [paymentId]);
+    console.log('Collection ID:', collectionId);
+
+    // Registra o status de falha no backend
+    if (paymentId) {
+      axios.post(`${API}/payments/confirm`, {
+        payment_id: paymentId,
+        mp_payment_id: collectionId || null,
+      })
+        .then((res) => {
+          console.log('✅ Status de falha registrado no backend:', res.data);
+        })
+        .catch((err) => {
+          console.error('❌ Erro ao registrar falha:', err);
+        });
+    }
+  }, [paymentId, collectionId]);
 
   return (
     <div

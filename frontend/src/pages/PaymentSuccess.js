@@ -1,14 +1,16 @@
 import { useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent } from '../components/ui/card';
-import { Button } from '../components/ui/button';
 import { CheckCircle2 } from 'lucide-react';
+import axios from 'axios';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
 
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const paymentId = searchParams.get('payment_id');
-  const collectionId = searchParams.get('collection_id');
+  const paymentId = searchParams.get('payment_id');           // external_reference (ID interno)
+  const collectionId = searchParams.get('collection_id');     // ID do Mercado Pago
   const collectionStatus = searchParams.get('collection_status');
 
   const sharedStyles = `
@@ -49,11 +51,26 @@ const PaymentSuccess = () => {
       .pr-btn-primary, .pr-btn-outline { width: 100%; }
     }
   `;
+
   useEffect(() => {
     console.log('=== PAGAMENTO APROVADO ===');
-    console.log('Payment ID:', paymentId);
-    console.log('Collection ID:', collectionId);
+    console.log('Payment ID (external_reference):', paymentId);
+    console.log('Collection ID (MP):', collectionId);
     console.log('Status:', collectionStatus);
+
+    // Chama o backend para confirmar e publicar o memorial
+    if (paymentId) {
+      axios.post(`${API}/payments/confirm`, {
+        payment_id: paymentId,
+        mp_payment_id: collectionId || null,
+      })
+        .then((res) => {
+          console.log('✅ Confirmação enviada ao backend:', res.data);
+        })
+        .catch((err) => {
+          console.error('❌ Erro ao confirmar pagamento:', err);
+        });
+    }
   }, [paymentId, collectionId, collectionStatus]);
 
   return (
