@@ -1219,7 +1219,7 @@ const Home = () => {
             h-[320px] md:h-[400px] lg:h-[440px] rounded-3xl overflow-hidden shadow-2xl relative"
           >
             <video
-              src="public/hero-video.mp4"
+              src="/hero-video.mp4"
               autoPlay loop muted playsInline
               className="absolute inset-0 w-full h-full object-cover"
             />
