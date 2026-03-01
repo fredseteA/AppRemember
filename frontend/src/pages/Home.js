@@ -38,7 +38,7 @@ const defaultReviews = [
 ];
 
 // ── ReviewCard ──────────────────────────────────────────────────────────────
-function ReviewCard({ review, DefaultAvatar, featured = false }) {
+function ReviewCard({ review, featured = false }) {
   return (
     <div style={{
       borderRadius: "22px",
@@ -335,10 +335,7 @@ function TestimonialsSection({ reviews, loadingReviews, user, showReviewForm, se
 }
 // ── Fim TestimonialsSection ─────────────────────────────────────────────────
 
-
-// ── HowItWorksSection ───────────────────────────────────────────────────────
-function HowItWorksSection() {
-  const steps = [
+const STEPS = [
     {
       num: "01",
       label: "Crie o memorial",
@@ -372,7 +369,10 @@ function HowItWorksSection() {
       testId: "step-3",
       image: "/step3.png"
     },
-  ];
+];
+
+// ── HowItWorksSection ───────────────────────────────────────────────────────
+function HowItWorksSection() {
 
   const [activeStep, setActiveStep] = useState(0);
   const [prevStep, setPrevStep] = useState(null);
@@ -392,11 +392,11 @@ function HowItWorksSection() {
 
   // Pré-carrega todas as imagens para evitar jank na troca
   useEffect(() => {
-    steps.forEach(s => {
+    STEPS.forEach(s => {
       const img = new Image();
       img.src = s.image;
     });
-  }, [steps]);
+  }, []);
 
   const goToStep = useCallback((idx) => {
     if (idx === activeStep || transitioning) return;
@@ -411,20 +411,23 @@ function HowItWorksSection() {
   }, [activeStep, transitioning]);
 
   const startTimer = useCallback(() => {
-    clearInterval(timerRef.current);
-    timerRef.current = setInterval(() => {
+  clearInterval(timerRef.current);
+
+  timerRef.current = setInterval(() => {
       setActiveStep(prev => {
-        const next = (prev + 1) % steps.length;
+        const next = (prev + 1) % STEPS.length;
         setPrevStep(prev);
         setTransitioning(true);
+
         setTimeout(() => {
           setPrevStep(null);
           setTransitioning(false);
         }, 420);
+
         return next;
       });
     }, 4000);
-  }, [steps.length]);
+  }, []);
 
   useEffect(() => {
     startTimer();
