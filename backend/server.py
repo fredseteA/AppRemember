@@ -208,6 +208,10 @@ class CreatePaymentRequest(BaseModel):
     payer_email: EmailStr
     payment_method_id: str = "pix"
 
+class ConfirmPaymentRequest(BaseModel):
+    payment_id: str
+    mp_payment_id: Optional[str] = None
+
 
 # ✅ FIX 4: Modelo Pydantic para update de status de pedido (substitui dict puro)
 class UpdateOrderStatusRequest(BaseModel):
@@ -688,7 +692,7 @@ async def create_checkout(payment_req: CreatePaymentRequest, token_data: dict = 
             "auto_return": "approved",
             "external_reference": payment.id,
             "statement_descriptor": "Remember QrCode",
-            #"notification_url": f"{backend_url}/api/webhooks/mercadopago"
+            "notification_url": f"{backend_url}/api/webhooks/mercadopago"
         }
 
         logger.info("PAYLOAD ENVIADO PARA MERCADO PAGO:")
@@ -772,6 +776,67 @@ async def get_my_payments(token_data: dict = Depends(verify_firebase_token)):
 
     return payments
 
+@api_router.post("/payments/confirm")
+async def confirm_payment(
+    body: ConfirmPaymentRequest,
+    background_tasks: BackgroundTasks
+):
+    payment_ref = db.collection("payments").document(body.payment_id)
+    payment_doc = payment_ref.get()
+
+    if not payment_doc.exists:
+        raise HTTPException(status_code=404, detail="Pagamento não encontrado")
+
+    payment_data = payment_doc.to_dict()
+
+    # Tenta verificar status real no MP se tiver o ID deles
+    mp_status = "approved"
+    if body.mp_payment_id:
+        try:
+            result = mp_sdk.payment().get(body.mp_payment_id)
+            if result["status"] == 200:
+                mp_status = result["response"].get("status", "approved")
+                logger.info(f"Status MP verificado: {mp_status}")
+        except Exception as e:
+            logger.warning(f"Não foi possível verificar MP: {e}. Usando status da URL.")
+
+    # Atualiza o pagamento
+    payment_ref.update({
+        "status": mp_status,
+        "mercadopago_payment_id": body.mp_payment_id or payment_data.get("mercadopago_payment_id"),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    })
+
+    if mp_status == "approved":
+        memorial_id = payment_data["memorial_id"]
+        plan_type = payment_data["plan_type"]
+
+        frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:3000')
+        memorial_url = f"{frontend_url}/memorial/{memorial_id}"
+        qr_code_data = generate_qr_code(memorial_url)
+
+        db.collection("memorials").document(memorial_id).update({
+            "status": "published",
+            "plan_type": plan_type,
+            "qr_code_url": qr_code_data,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        })
+
+        logger.info(f"✅ Memorial {memorial_id} publicado via confirm | Plano: {plan_type}")
+
+        updated_payment = payment_ref.get().to_dict()
+        memorial_data = db.collection("memorials").document(memorial_id).get().to_dict()
+        if updated_payment and memorial_data:
+            background_tasks.add_task(
+                send_payment_notification_email,
+                updated_payment,
+                memorial_data
+            )
+
+    return {
+        "status": mp_status,
+        "memorial_published": mp_status == "approved"
+    }
 
 @api_router.post("/webhooks/mercadopago")
 async def handle_mercadopago_webhook(request: Request, background_tasks: BackgroundTasks):
