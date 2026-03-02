@@ -122,7 +122,7 @@ const MyMemorials = () => {
                     {memorial.person_data.relationship}
                   </p>
                   <div className="flex space-x-2">
-                    <Link to={`/memorial/${memorial.id}`} className="flex-1">
+                    <Link to={`/memorial/${memorial.slug || memorial.id}`} className="flex-1">
                       <Button variant="outline" size="sm" className="w-full" data-testid="button-view">
                         <Eye className="h-4 w-4 mr-2" />
                         Ver

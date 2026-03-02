@@ -385,7 +385,7 @@ const MyMemorials = () => {
                       borderTop: '1px solid rgba(26,39,68,0.07)',
                     }}
                   >
-                    <Link to={`/memorial/${memorial.id}`} style={{ flex: 1 }}>
+                    <Link to={`/memorial/${memorial.slug || memorial.id}`} style={{ flex: 1 }}>
                       <button className="mm-btn-outline" style={{ width: '100%' }} data-testid="button-view">
                         <Eye size={14} />
                         Ver

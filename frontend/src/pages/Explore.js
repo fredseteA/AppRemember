@@ -206,7 +206,7 @@ const Explore = () => {
               data-testid="memorials-grid"
             >
               {memorials.map((memorial, index) => (
-                <Link key={memorial.id} to={`/memorial/${memorial.id}`} data-testid={`memorial-card-${memorial.id}`}>
+                <Link key={memorial.id} to={`/memorial/${memorial.slug || memorial.id}`} data-testid={`memorial-card-${memorial.id}`}>
                   <div
                     className="exp-card group relative rounded-3xl overflow-hidden h-full flex flex-col"
                     style={{
