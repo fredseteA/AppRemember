@@ -181,18 +181,24 @@ const MemorialView = () => {
   const canGoBack = window.history.length > 1;
 
   useEffect(() => {
-    const fetchMemorial = async () => {
+  const fetchMemorial = async () => {
+    try {
+      // Tenta buscar por slug primeiro, fallback para UUID
+      let response;
       try {
-        const response = await axios.get(`${API}/memorials/${id}`);
-        setMemorial(response.data);
-      } catch (error) {
-        console.error('Error fetching memorial:', error);
-      } finally {
-        setLoading(false);
+        response = await axios.get(`${API}/memorials/by-slug/${id}`);
+      } catch {
+        response = await axios.get(`${API}/memorials/${id}`);
       }
-    };
-    fetchMemorial();
-  }, [id]);
+      setMemorial(response.data);
+    } catch (error) {
+      console.error('Error fetching memorial:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchMemorial();
+}, [id]);
 
   if (loading) return <MemorialSkeleton />;
   if (!memorial) return <MemorialNotFound />;

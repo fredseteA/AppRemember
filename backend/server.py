@@ -7,6 +7,8 @@ from typing import Optional, List, Any
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 from pathlib import Path
+import re
+import unicodedata
 import os
 import logging
 import uuid
@@ -14,8 +16,6 @@ import qrcode
 import io
 import base64
 import mercadopago
-import hmac
-import hashlib
 import json
 import asyncio
 import resend
@@ -143,6 +143,7 @@ class Memorial(BaseModel):
     status: str = "draft"
     plan_type: Optional[str] = None
     qr_code_url: Optional[str] = None
+    slug: Optional[str] = None 
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -304,6 +305,38 @@ def generate_qr_code(memorial_url: str) -> str:
     img_str = base64.b64encode(buffered.getvalue()).decode()
     return f"data:image/png;base64,{img_str}"
 
+def slugify(text: str) -> str:
+    """Converte nome para slug URL-friendly. Ex: 'Maria da Silva' → 'maria-da-silva'"""
+    # Normaliza unicode (remove acentos)
+    text = unicodedata.normalize('NFKD', text)
+    text = text.encode('ascii', 'ignore').decode('ascii')
+    # Minúsculas
+    text = text.lower()
+    # Remove tudo que não é letra, número ou espaço
+    text = re.sub(r'[^\w\s-]', '', text)
+    # Substitui espaços e underscores por hífen
+    text = re.sub(r'[-\s]+', '-', text).strip('-')
+    return text
+
+
+def generate_unique_slug(full_name: str) -> str:
+    """Gera slug único checando colisão no Firestore"""
+    base_slug = slugify(full_name)
+    slug = base_slug
+    counter = 2
+
+    while True:
+        # Verifica se já existe memorial com esse slug
+        existing = db.collection("memorials").where(
+            filter=firestore.FieldFilter("slug", "==", slug)
+        ).limit(1).stream()
+
+        if not list(existing):
+            return slug  # Slug disponível
+
+        # Colisão: tenta maria-da-silva-2, maria-da-silva-3...
+        slug = f"{base_slug}-{counter}"
+        counter += 1
 
 def serialize_datetime(data: Any) -> Any:
     """
@@ -526,6 +559,9 @@ async def create_memorial(memorial_request: CreateMemorialRequest, token_data: d
         responsible=memorial_request.responsible
     )
 
+    slug = generate_unique_slug(memorial_request.person_data.full_name)
+    memorial.slug = slug
+
     memorial_dict = memorial.model_dump()
     memorial_dict = serialize_datetime(memorial_dict)
 
@@ -582,6 +618,19 @@ async def explore_memorials():
 
     return memorials
 
+@api_router.get("/memorials/by-slug/{slug}", response_model=Memorial)
+async def get_memorial_by_slug(slug: str):
+    docs = db.collection("memorials").where(
+        filter=firestore.FieldFilter("slug", "==", slug)
+    ).limit(1).stream()
+
+    results = list(docs)
+    if not results:
+        raise HTTPException(status_code=404, detail="Memorial not found")
+
+    memorial_data = results[0].to_dict()
+    memorial_data = deserialize_datetime(memorial_data, ["created_at", "updated_at"])
+    return memorial_data
 
 @api_router.get("/memorials/{memorial_id}", response_model=Memorial)
 async def get_memorial(memorial_id: str):
@@ -812,7 +861,9 @@ async def confirm_payment(
         plan_type = payment_data["plan_type"]
 
         frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:3000')
-        memorial_url = f"{frontend_url}/memorial/{memorial_id}"
+        memorial_doc = db.collection("memorials").document(memorial_id).get().to_dict()
+        memorial_slug = memorial_doc.get("slug") or memorial_id  # fallback para UUID se não tiver slug
+        memorial_url = f"{frontend_url}/memorial/{memorial_slug}"
         qr_code_data = generate_qr_code(memorial_url)
 
         db.collection("memorials").document(memorial_id).update({
@@ -876,7 +927,9 @@ async def handle_mercadopago_webhook(request: Request, background_tasks: Backgro
 
                                     # ✅ FIX 6: usar FRONTEND_URL para a URL do memorial
                                     frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:3000')
-                                    memorial_url = f"{frontend_url}/memorial/{memorial_id}"
+                                    memorial_doc = db.collection("memorials").document(memorial_id).get().to_dict()
+                                    memorial_slug = memorial_doc.get("slug") or memorial_id  # fallback para UUID se não tiver slug
+                                    memorial_url = f"{frontend_url}/memorial/{memorial_slug}"
                                     qr_code_data = generate_qr_code(memorial_url)
 
                                     db.collection("memorials").document(memorial_id).update({
