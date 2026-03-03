@@ -124,12 +124,11 @@ const SelectPlan = () => {
     setLoading(true);
 
     try {
-      const finalPrice = getFinalPrice(plan.price);
-
       const payload = {
         memorial_id: id,
         plan_type: plan.id,
-        transaction_amount: finalPrice,
+        // Sempre envia o preço ORIGINAL — o backend aplica o desconto
+        transaction_amount: plan.price,
         description: `${plan.name} - Memorial de ${memorial?.person_data?.full_name || 'homenageado'}`,
         payer_email: user.email,
         payment_method_id: 'account_money',
