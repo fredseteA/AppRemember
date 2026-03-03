@@ -21,7 +21,19 @@ import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import MyMemorials from './pages/MyMemorials';
 import MyPurchases from './pages/MyPurchases';
-import Admin from './pages/Admin';
+
+// Admin Pages
+import AdminLayout from './components/admin/AdminLayout';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminOrders from './pages/admin/AdminOrders';
+import AdminProduction from './pages/admin/AdminProduction';
+import AdminPartners from './pages/admin/AdminPartners';
+import AdminFinance from './pages/admin/AdminFinance';
+import AdminMemorials from './pages/admin/AdminMemorials';
+import AdminReviews from './pages/admin/AdminReviews';
+import AdminNotifications from './pages/admin/AdminNotifications';
+import AdminLogs from './pages/admin/AdminLogs';
+
 import './lib/i18n';
 import './App.css';
 
@@ -73,6 +85,17 @@ const DEFAULT_FOOTER_COLOR = '#ffffff'; // fallback para demais páginas
 const AppLayout = ({ children }) => {
   const location = useLocation();
   const isMemorialPage = location.pathname.startsWith('/memorial/');
+  const isAdminPage = location.pathname.startsWith('/admin');
+
+  // Admin pages have their own layout
+  if (isAdminPage) {
+    return (
+      <div className="App min-h-screen">
+        {children}
+        <Toaster position="top-right" />
+      </div>
+    );
+  }
 
   const footerStartColor =
     FOOTER_START_COLOR[location.pathname] ?? DEFAULT_FOOTER_COLOR;
@@ -161,11 +184,77 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
+                
+                {/* Admin Routes */}
                 <Route
                   path="/admin"
                   element={
                     <AdminRoute>
-                      <Admin />
+                      <AdminLayout><AdminDashboard /></AdminLayout>
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="/admin/orders"
+                  element={
+                    <AdminRoute>
+                      <AdminLayout><AdminOrders /></AdminLayout>
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="/admin/production"
+                  element={
+                    <AdminRoute>
+                      <AdminLayout><AdminProduction /></AdminLayout>
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="/admin/partners"
+                  element={
+                    <AdminRoute>
+                      <AdminLayout><AdminPartners /></AdminLayout>
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="/admin/finance"
+                  element={
+                    <AdminRoute>
+                      <AdminLayout><AdminFinance /></AdminLayout>
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="/admin/memorials"
+                  element={
+                    <AdminRoute>
+                      <AdminLayout><AdminMemorials /></AdminLayout>
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="/admin/reviews"
+                  element={
+                    <AdminRoute>
+                      <AdminLayout><AdminReviews /></AdminLayout>
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="/admin/notifications"
+                  element={
+                    <AdminRoute>
+                      <AdminLayout><AdminNotifications /></AdminLayout>
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="/admin/logs"
+                  element={
+                    <AdminRoute>
+                      <AdminLayout><AdminLogs /></AdminLayout>
                     </AdminRoute>
                   }
                 />
