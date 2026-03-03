@@ -983,6 +983,114 @@ async def confirm_payment(body: ConfirmPaymentRequest, background_tasks: Backgro
 
     return {"status": mp_status, "memorial_published": mp_status == "approved"}
 
+@api_router.post("/payments/{payment_id}/request-cancel")
+async def request_cancel_payment(
+    payment_id: str,
+    background_tasks: BackgroundTasks,
+    token_data: dict = Depends(verify_firebase_token)
+):
+    """Cliente solicita cancelamento do pedido (janela de 7 dias)"""
+    payment_ref = db.collection("payments").document(payment_id)
+    doc = payment_ref.get()
+
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="Pedido não encontrado")
+
+    payment_data = doc.to_dict()
+
+    if payment_data.get("user_id") != token_data["uid"]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+
+    if payment_data.get("status") in ["cancelled", "entregue", "shipped"]:
+        raise HTTPException(status_code=400, detail="Este pedido não pode ser cancelado")
+
+    if payment_data.get("cancel_requested"):
+        raise HTTPException(status_code=400, detail="Cancelamento já solicitado")
+
+    # Verificar janela de 7 dias
+    created_at = payment_data.get("created_at")
+    if isinstance(created_at, str):
+        created_at = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+    if created_at.tzinfo is None:
+        created_at = created_at.replace(tzinfo=timezone.utc)
+
+    now = datetime.now(timezone.utc)
+    diff_days = (now - created_at).total_seconds() / 86400
+    if diff_days > 7:
+        raise HTTPException(status_code=400, detail="Prazo de cancelamento encerrado (7 dias)")
+
+    # Marcar solicitação
+    payment_ref.update({
+        "cancel_requested": True,
+        "cancel_requested_at": now.isoformat(),
+        "updated_at": now.isoformat()
+    })
+
+    # Notificação para o admin
+    memorial_id = payment_data.get("memorial_id")
+    memorial_data = {}
+    if memorial_id:
+        mem_doc = db.collection("memorials").document(memorial_id).get()
+        if mem_doc.exists:
+            memorial_data = mem_doc.to_dict()
+
+    person_name = memorial_data.get("person_data", {}).get("full_name", "N/A")
+
+    background_tasks.add_task(
+        create_admin_notification,
+        "cancellation_request",
+        "Solicitacao de Cancelamento",
+        f"Cliente {payment_data.get('user_email')} solicitou cancelamento do pedido #{payment_id[:8]} — {person_name}",
+        "order",
+        payment_id
+    )
+
+    # Guardar detalhes na notificação
+    notif = AdminNotification(
+        type="cancellation_request",
+        title="Solicitacao de Cancelamento",
+        message=f"Cliente {payment_data.get('user_email')} solicitou cancelamento do pedido #{payment_id[:8]} — {person_name}",
+        entity_type="order",
+        entity_id=payment_id
+    )
+    notif_dict = notif.model_dump()
+    notif_dict["details"] = {
+        "user_email": payment_data.get("user_email"),
+        "plan_type": payment_data.get("plan_type"),
+        "amount": payment_data.get("amount"),
+        "person_name": person_name
+    }
+    notif_dict = serialize_datetime(notif_dict)
+    db.collection("admin_notifications").document(notif.id).set(notif_dict)
+
+    # Email ao cliente confirmando recebimento
+    responsible = memorial_data.get("responsible", {})
+    customer_name = responsible.get("name", "Cliente")
+    order_id_short = payment_id[:8]
+    html = f"""
+    <!DOCTYPE html><html><head><meta charset="UTF-8"></head>
+    <body style="font-family:Arial,sans-serif;line-height:1.6;color:#333;max-width:600px;margin:0 auto;padding:20px;">
+        <h2 style="color:#f59e0b;">Solicitacao de cancelamento recebida</h2>
+        <p>Ola, <strong>{customer_name}</strong>!</p>
+        <p>Recebemos sua solicitacao de cancelamento do pedido <strong>#{order_id_short}</strong>.</p>
+        <hr/>
+        <p>Nossa equipe ira analisar e processar o cancelamento em breve.</p>
+        <p>Apos a confirmacao, o reembolso sera realizado em ate <strong>7 dias uteis</strong>.</p>
+        <hr style="border:none;border-top:1px solid #eee;margin:30px 0;">
+        <p style="font-size:12px;color:#888;text-align:center;">
+            © {datetime.now().year} Remember QRCode
+        </p>
+    </body></html>
+    """
+    params = {
+        "from": SENDER_EMAIL,
+        "to": [payment_data.get("user_email")],
+        "subject": "Solicitacao de cancelamento recebida — Remember QRCode",
+        "html": html
+    }
+    background_tasks.add_task(asyncio.to_thread, resend.Emails.send, params)
+
+    return {"message": "Solicitacao de cancelamento enviada com sucesso"}
 
 @api_router.post("/webhooks/mercadopago")
 async def handle_mercadopago_webhook(request: Request, background_tasks: BackgroundTasks):
@@ -1303,6 +1411,15 @@ async def cancel_order(order_id: str, background_tasks: BackgroundTasks, user: d
         "cancelled_by": user.get("email"),
         "updated_at": datetime.now(timezone.utc).isoformat()
     })
+
+    # Deletar memorial associado
+    memorial_id = order_data.get("memorial_id")
+    if memorial_id:
+        try:
+            db.collection("memorials").document(memorial_id).delete()
+            logger.info(f"Memorial {memorial_id} deletado apos cancelamento do pedido {order_id}")
+        except Exception as e:
+            logger.error(f"Erro ao deletar memorial {memorial_id}: {str(e)}")
 
     background_tasks.add_task(create_admin_log, user.get("uid"), user.get("email"), "cancel_order", "order", order_id, {"old_status": old_status})
 
