@@ -169,6 +169,8 @@ class CreateReviewRequest(BaseModel):
     comment: Optional[str] = None
 
 
+# ✅ CORREÇÃO PROBLEMA 1 (apoio): CreatePaymentRequest definido UMA única vez,
+# já com o campo supporter_code. A duplicação original causava shadowing silencioso.
 class CreatePaymentRequest(BaseModel):
     memorial_id: str
     plan_type: str
@@ -176,6 +178,7 @@ class CreatePaymentRequest(BaseModel):
     description: str
     payer_email: EmailStr
     payment_method_id: str = "pix"
+    supporter_code: Optional[str] = None
 
 
 class ConfirmPaymentRequest(BaseModel):
@@ -187,16 +190,14 @@ class UpdateOrderStatusRequest(BaseModel):
     status: str
 
 class CreatePartnerRequest(BaseModel):
-    """Substitui o CreatePartnerRequest existente"""
     name: str
     email: EmailStr
     phone: Optional[str] = None
-    supporter_code: str          # obrigatório, definido manualmente
+    supporter_code: str
     commission_rate: float = 0.10
 
 
 class SupporterCommission(BaseModel):
-    """Registro de comissão por pedido"""
     model_config = ConfigDict(extra="ignore")
 
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -205,20 +206,10 @@ class SupporterCommission(BaseModel):
     partner_name: str
     supporter_code: str
     commission_amount: float
-    commission_status: str = "pending"   # pending | available | paid | canceled
+    commission_status: str = "pending"
     paid_at: Optional[datetime] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-
-# Atualizar CreatePaymentRequest para incluir supporter_code
-class CreatePaymentRequest(BaseModel):
-    memorial_id: str
-    plan_type: str
-    transaction_amount: float
-    description: str
-    payer_email: EmailStr
-    payment_method_id: str = "pix"
-    supporter_code: Optional[str] = None   # ← NOVO campo
 
 # ========== NEW ADMIN MODELS ==========
 
@@ -238,7 +229,6 @@ class Partner(BaseModel):
     status: str = "active"
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
 
 
 class UpdatePartnerRequest(BaseModel):
@@ -271,6 +261,8 @@ class AdminNotification(BaseModel):
     message: str
     entity_type: Optional[str] = None
     entity_id: Optional[str] = None
+    # ✅ CORREÇÃO PROBLEMA 2: campo priority adicionado ao model
+    priority: int = 3  # 1=crítico, 2=alto, 3=normal, 4=baixo
     read: bool = False
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -292,7 +284,7 @@ class CommissionPayment(BaseModel):
 
 class UpdateTrackingRequest(BaseModel):
     tracking_code: str
-    delivery_type: str = "correios"  # correios ou local
+    delivery_type: str = "correios"
 
 
 class RespondReviewRequest(BaseModel):
@@ -433,13 +425,11 @@ def deserialize_datetime(data: dict, datetime_fields: List[str]) -> dict:
                 pass
     return result
 
-DISCOUNT_PERCENTAGE = 5.0   # desconto fixo ao usar código
+
+DISCOUNT_PERCENTAGE = 5.0
+
 
 def supporter_service_validate(code: str) -> Optional[dict]:
-    """
-    Valida um código de apoiador.
-    Retorna o documento do parceiro ou None se inválido/inativo.
-    """
     if not code:
         return None
     code = code.strip().upper()
@@ -454,13 +444,6 @@ def supporter_service_validate(code: str) -> Optional[dict]:
 
 
 def commission_service_calculate(original_amount: float, commission_rate: float) -> dict:
-    """
-    Aplica o desconto e calcula a comissão.
-    Todas as fórmulas exatas do spec:
-        discount_amount   = original_amount * 0.05
-        final_amount      = original_amount - discount_amount
-        commission_amount = final_amount * commission_rate
-    """
     discount_amount   = round(original_amount * (DISCOUNT_PERCENTAGE / 100), 2)
     final_amount      = round(original_amount - discount_amount, 2)
     commission_amount = round(final_amount * commission_rate, 2)
@@ -474,8 +457,44 @@ def commission_service_calculate(original_amount: float, commission_rate: float)
     }
 
 
+# ✅ CORREÇÃO PROBLEMA 2: helper central para criar notificações com prioridade
+# Mapa de prioridades por tipo de notificação
+NOTIFICATION_PRIORITY = {
+    "cancellation_request": 1,   # crítico — aparece primeiro
+    "payment_approved":     2,   # alto
+    "new_order":            2,   # alto
+    "order_status_change":  3,   # normal
+    "new_review":           3,   # normal
+    "system":               4,   # baixo
+}
+
+async def create_admin_notification_with_priority(
+    type: str,
+    title: str,
+    message: str,
+    entity_type: str = None,
+    entity_id: str = None,
+    details: dict = None
+):
+    """Cria notificação com prioridade automática baseada no tipo."""
+    priority = NOTIFICATION_PRIORITY.get(type, 3)
+    notification = AdminNotification(
+        type=type,
+        title=title,
+        message=message,
+        entity_type=entity_type,
+        entity_id=entity_id,
+        priority=priority,
+    )
+    notif_dict = notification.model_dump()
+    if details:
+        notif_dict["details"] = details
+    notif_dict = serialize_datetime(notif_dict)
+    db.collection("admin_notifications").document(notification.id).set(notif_dict)
+    return notification
+
+
 async def send_supporter_sale_email(partner_data: dict, payment_data: dict, calc: dict):
-    """Email automático ao apoiador quando uma venda é gerada com seu código."""
     try:
         order_id = payment_data.get("id", "")[:8]
         html = f"""
@@ -546,18 +565,9 @@ async def create_admin_log(admin_uid: str, admin_email: str, action: str, entity
     return log
 
 
+# Mantido para compatibilidade com chamadas existentes (request_cancel_payment usava direto)
 async def create_admin_notification(type: str, title: str, message: str, entity_type: str = None, entity_id: str = None):
-    notification = AdminNotification(
-        type=type,
-        title=title,
-        message=message,
-        entity_type=entity_type,
-        entity_id=entity_id
-    )
-    notif_dict = notification.model_dump()
-    notif_dict = serialize_datetime(notif_dict)
-    db.collection("admin_notifications").document(notification.id).set(notif_dict)
-    return notification
+    return await create_admin_notification_with_priority(type, title, message, entity_type, entity_id)
 
 
 def generate_partner_code(name: str) -> str:
@@ -585,7 +595,6 @@ async def send_admin_notification_email(subject: str, html_content: str):
 # ========== EMAIL NOTIFICATIONS ==========
 
 async def send_payment_notification_email(payment_data: dict, memorial_data: dict):
-    """Envia e-mail de notificação para o ADMINISTRADOR quando um pagamento é aprovado."""
     try:
         plan_type = payment_data.get('plan_type', '')
         is_plaque_order = plan_type in ['plaque', 'complete', 'qrcode_plaque']
@@ -706,7 +715,6 @@ async def send_order_status_email(
     tracking_code: str = None,
     delivery_type: str = "correios"
 ):
-    """Envia email ao CLIENTE quando status do pedido muda."""
     try:
         responsible = memorial_data.get('responsible', {}) if memorial_data else {}
         person_data = memorial_data.get('person_data', {}) if memorial_data else {}
@@ -827,8 +835,6 @@ async def send_order_status_email(
         return False
 
 
-# ========== HELPER: buscar memorial do pedido ==========
-
 def get_memorial_for_order(order_data: dict) -> dict:
     memorial_id = order_data.get("memorial_id")
     if memorial_id:
@@ -838,7 +844,6 @@ def get_memorial_for_order(order_data: dict) -> dict:
     return {}
 
 def _set_commission_available_on_deliver(order_id: str):
-    """Chamada quando pedido é marcado como 'entregue'. pending → available."""
     order_ref = db.collection("payments").document(order_id)
     doc = order_ref.get()
     if not doc.exists:
@@ -864,7 +869,6 @@ def _set_commission_available_on_deliver(order_id: str):
 
 
 def _cancel_commission(order_id: str):
-    """Cancela comissão quando pedido é cancelado. Se já 'paid', registra ajuste manual."""
     order_ref = db.collection("payments").document(order_id)
     doc = order_ref.get()
     if not doc.exists:
@@ -1049,7 +1053,6 @@ async def create_checkout(
     if not mp_access_token:
         raise HTTPException(status_code=500, detail="Mercado Pago não configurado")
 
-    # ── Lógica de código do apoiador (toda validação aqui no backend) ──
     supporter_data    = None
     calc              = None
     original_amount   = payment_req.transaction_amount
@@ -1079,17 +1082,15 @@ async def create_checkout(
 
         logger.info(f"Código apoiador '{raw_code}' válido. Desconto: R${discount_amount} | Comissão: R${commission_amount}")
 
-    # Cria o registro de pagamento com todos os campos novos
     payment = Payment(
         memorial_id=payment_req.memorial_id,
         user_id=token_data["uid"],
         user_email=payment_req.payer_email,
         plan_type=payment_req.plan_type,
-        amount=final_amount,                 # valor cobrado = final
+        amount=final_amount,
         status="pending"
     )
 
-    # Campos extras (Firestore é schemaless, podemos salvar direto)
     payment_dict = payment.model_dump()
     payment_dict.update({
         "original_amount":    original_amount,
@@ -1138,7 +1139,28 @@ async def create_checkout(
             payment_dict["mercadopago_payment_id"] = preference_id
             db.collection("payments").document(payment.id).set(payment_dict)
 
-            # Salvar registro de comissão separado
+            # ✅ CORREÇÃO PROBLEMA 2: notificação de novo pedido criada aqui
+            person_name = memorial.get("person_data", {}).get("full_name", "N/A")
+            plan_names = {
+                'digital': 'Digital', 'plaque': 'Placa QR',
+                'qrcode_plaque': 'Placa QR', 'complete': 'Completo'
+            }
+            plan_label = plan_names.get(payment_req.plan_type, payment_req.plan_type)
+            background_tasks.add_task(
+                create_admin_notification_with_priority,
+                "new_order",
+                "Novo Pedido Criado",
+                f"Pedido #{payment.id[:8]} — {person_name} ({plan_label}) — R$ {final_amount:.2f}",
+                "order",
+                payment.id,
+                {
+                    "plan_type": payment_req.plan_type,
+                    "amount": final_amount,
+                    "person_name": person_name,
+                    "user_email": payment_req.payer_email,
+                }
+            )
+
             if supporter_data and commission_amount > 0:
                 comm = SupporterCommission(
                     order_id=payment.id,
@@ -1151,8 +1173,6 @@ async def create_checkout(
                 comm_dict = comm.model_dump()
                 comm_dict = serialize_datetime(comm_dict)
                 db.collection("supporter_commissions").document(comm.id).set(comm_dict)
-
-                # Email ao apoiador em background
                 background_tasks.add_task(send_supporter_sale_email, supporter_data, payment_dict, calc)
 
             return {
@@ -1161,7 +1181,6 @@ async def create_checkout(
                 "preference_id": preference_id,
                 "checkout_url": init_point,
                 "message": "Checkout criado com sucesso",
-                # Informações do desconto para o frontend confirmar
                 "discount_applied": discount_amount > 0,
                 "discount_amount": discount_amount,
                 "final_amount": final_amount,
@@ -1182,7 +1201,6 @@ async def create_checkout(
         import traceback
         logger.error(f"❌ {type(e).__name__}: {str(e)}\n{traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Erro interno: {str(e)}")
-
 
 
 @api_router.get("/payments/my", response_model=List[Payment])
@@ -1239,10 +1257,35 @@ async def confirm_payment(body: ConfirmPaymentRequest, background_tasks: Backgro
         })
         updated_payment = payment_ref.get().to_dict()
         memorial_data = db.collection("memorials").document(memorial_id).get().to_dict()
+
         if updated_payment and memorial_data:
             background_tasks.add_task(send_payment_notification_email, updated_payment, memorial_data)
 
+            # ✅ CORREÇÃO PROBLEMA 2: notificação de pagamento aprovado
+            person_name = memorial_data.get("person_data", {}).get("full_name", "N/A")
+            amount = updated_payment.get("amount", 0)
+            plan_names = {
+                'digital': 'Digital', 'plaque': 'Placa QR',
+                'qrcode_plaque': 'Placa QR', 'complete': 'Completo'
+            }
+            plan_label = plan_names.get(plan_type, plan_type)
+            background_tasks.add_task(
+                create_admin_notification_with_priority,
+                "payment_approved",
+                "Pagamento Aprovado",
+                f"Pedido #{body.payment_id[:8]} aprovado — {person_name} ({plan_label}) — R$ {amount:.2f}",
+                "order",
+                body.payment_id,
+                {
+                    "plan_type": plan_type,
+                    "amount": amount,
+                    "person_name": person_name,
+                    "user_email": updated_payment.get("user_email"),
+                }
+            )
+
     return {"status": mp_status, "memorial_published": mp_status == "approved"}
+
 
 @api_router.post("/payments/{payment_id}/request-cancel")
 async def request_cancel_payment(
@@ -1250,7 +1293,6 @@ async def request_cancel_payment(
     background_tasks: BackgroundTasks,
     token_data: dict = Depends(verify_firebase_token)
 ):
-    """Cliente solicita cancelamento do pedido (janela de 7 dias)"""
     payment_ref = db.collection("payments").document(payment_id)
     doc = payment_ref.get()
 
@@ -1268,7 +1310,6 @@ async def request_cancel_payment(
     if payment_data.get("cancel_requested"):
         raise HTTPException(status_code=400, detail="Cancelamento já solicitado")
 
-    # Verificar janela de 7 dias
     created_at = payment_data.get("created_at")
     if isinstance(created_at, str):
         created_at = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
@@ -1280,14 +1321,12 @@ async def request_cancel_payment(
     if diff_days > 7:
         raise HTTPException(status_code=400, detail="Prazo de cancelamento encerrado (7 dias)")
 
-    # Marcar solicitação
     payment_ref.update({
         "cancel_requested": True,
         "cancel_requested_at": now.isoformat(),
         "updated_at": now.isoformat()
     })
 
-    # Notificação para o admin
     memorial_id = payment_data.get("memorial_id")
     memorial_data = {}
     if memorial_id:
@@ -1296,35 +1335,27 @@ async def request_cancel_payment(
             memorial_data = mem_doc.to_dict()
 
     person_name = memorial_data.get("person_data", {}).get("full_name", "N/A")
+    amount = payment_data.get("amount", 0)
 
-    background_tasks.add_task(
-        create_admin_notification,
-        "cancellation_request",
-        "Solicitacao de Cancelamento",
-        f"Cliente {payment_data.get('user_email')} solicitou cancelamento do pedido #{payment_id[:8]} — {person_name}",
-        "order",
-        payment_id
-    )
-
-    # Guardar detalhes na notificação
+    # ✅ CORREÇÃO PROBLEMA 2: notificação de cancelamento com prioridade máxima (1)
     notif = AdminNotification(
         type="cancellation_request",
-        title="Solicitacao de Cancelamento",
+        title="Solicitação de Cancelamento",
         message=f"Cliente {payment_data.get('user_email')} solicitou cancelamento do pedido #{payment_id[:8]} — {person_name}",
         entity_type="order",
-        entity_id=payment_id
+        entity_id=payment_id,
+        priority=1,  # crítico
     )
     notif_dict = notif.model_dump()
     notif_dict["details"] = {
         "user_email": payment_data.get("user_email"),
         "plan_type": payment_data.get("plan_type"),
-        "amount": payment_data.get("amount"),
+        "amount": amount,
         "person_name": person_name
     }
     notif_dict = serialize_datetime(notif_dict)
     db.collection("admin_notifications").document(notif.id).set(notif_dict)
 
-    # Email ao cliente confirmando recebimento
     responsible = memorial_data.get("responsible", {})
     customer_name = responsible.get("name", "Cliente")
     order_id_short = payment_id[:8]
@@ -1352,6 +1383,7 @@ async def request_cancel_payment(
     background_tasks.add_task(asyncio.to_thread, resend.Emails.send, params)
 
     return {"message": "Solicitacao de cancelamento enviada com sucesso"}
+
 
 @api_router.post("/webhooks/mercadopago")
 async def handle_mercadopago_webhook(request: Request, background_tasks: BackgroundTasks):
@@ -1393,6 +1425,29 @@ async def handle_mercadopago_webhook(request: Request, background_tasks: Backgro
                                     memorial_data = db.collection("memorials").document(memorial_id).get().to_dict()
                                     if updated_payment and memorial_data:
                                         background_tasks.add_task(send_payment_notification_email, updated_payment, memorial_data)
+
+                                        # ✅ CORREÇÃO PROBLEMA 2: notificação via webhook também
+                                        person_name = memorial_data.get("person_data", {}).get("full_name", "N/A")
+                                        amount = updated_payment.get("amount", 0)
+                                        plan_names = {
+                                            'digital': 'Digital', 'plaque': 'Placa QR',
+                                            'qrcode_plaque': 'Placa QR', 'complete': 'Completo'
+                                        }
+                                        plan_label = plan_names.get(plan_type, plan_type)
+                                        background_tasks.add_task(
+                                            create_admin_notification_with_priority,
+                                            "payment_approved",
+                                            "Pagamento Aprovado",
+                                            f"Pedido #{external_ref[:8]} aprovado — {person_name} ({plan_label}) — R$ {amount:.2f}",
+                                            "order",
+                                            external_ref,
+                                            {
+                                                "plan_type": plan_type,
+                                                "amount": amount,
+                                                "person_name": person_name,
+                                                "user_email": updated_payment.get("user_email"),
+                                            }
+                                        )
                 except Exception as e:
                     logger.error(f"Error processing payment webhook: {str(e)}")
 
@@ -1410,6 +1465,12 @@ async def get_admin_stats(user: dict = Depends(verify_admin)):
     payments_docs = list(db.collection("payments").stream())
     total_plaques = sum(1 for doc in payments_docs if doc.to_dict().get("plan_type") in ["plaque", "complete", "qrcode_plaque"])
     return {"total_memorials": len(memorials_docs), "total_orders": len(payments_docs), "total_plaques": total_plaques}
+
+
+# ✅ CORREÇÃO PROBLEMA 3: status válidos para contagem de receita
+# Pedidos que avançaram no fluxo (in_production, produced, shipped, entregue)
+# também são receita — foram pagos e aprovados. Só "cancelled" e "pending" ficam fora.
+PAID_STATUSES = {"approved", "paid", "in_production", "produced", "shipped", "entregue"}
 
 
 @api_router.get("/admin/dashboard")
@@ -1440,8 +1501,10 @@ async def get_admin_dashboard(user: dict = Depends(verify_admin)):
     revenue_by_type = {"digital": 0.0, "plaque": 0.0, "complete": 0.0}
 
     for payment in payments:
-        if payment.get("status", "") not in ["approved", "paid"]:
+        # ✅ CORREÇÃO PROBLEMA 3: usa PAID_STATUSES em vez de ["approved", "paid"]
+        if payment.get("status", "") not in PAID_STATUSES:
             continue
+
         amount = payment.get("amount", 0)
         plan_type = payment.get("plan_type", "digital")
         created_at = payment.get("created_at")
@@ -1512,24 +1575,39 @@ async def test_email_notification(user: dict = Depends(verify_admin)):
         raise HTTPException(status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Erro ao enviar e-mail: {str(e)}")
 
 
+# ✅ CORREÇÃO PROBLEMA 1: get_admin_orders reescrito sem query "!= True"
+# Busca TODOS os documentos e filtra archived em Python — resolve o bug do Firestore
+# onde documentos sem o campo "archived" eram excluídos pela query de desigualdade.
 @api_router.get("/admin/orders")
 async def get_all_orders(user: dict = Depends(verify_admin), status: Optional[str] = None, archived: bool = False):
+    # Busca todos os pagamentos sem filtro de campo inexistente
     payments_ref = db.collection("payments")
-    if not archived:
-        try:
-            payments_ref = payments_ref.where(filter=firestore.FieldFilter("archived", "!=", True))
-        except:
-            pass
-    docs = payments_ref.order_by("created_at", direction=firestore.Query.DESCENDING).stream()
+    docs = list(payments_ref.stream())
+
     orders = []
     for doc in docs:
         order_data = doc.to_dict()
+
+        # Filtro de archived feito em Python — seguro para documentos sem o campo
+        is_archived = order_data.get("archived", False)  # default False se campo não existe
+        if not archived and is_archived:
+            continue
+        if archived and not is_archived:
+            continue
+
+        # Filtro de status opcional
         if status and order_data.get("status") != status:
             continue
-        if not archived and order_data.get("archived", False):
-            continue
+
         order_data = deserialize_datetime(order_data, ["created_at", "updated_at"])
         orders.append(order_data)
+
+    # Ordenação por created_at decrescente feita em Python
+    orders.sort(
+        key=lambda x: x.get("created_at") if isinstance(x.get("created_at"), datetime)
+        else datetime.min.replace(tzinfo=timezone.utc),
+        reverse=True
+    )
     return orders
 
 
@@ -1590,7 +1668,6 @@ async def update_order_status(
         "updated_at": datetime.now(timezone.utc).isoformat()
     })
 
-    # ✅ Quando entregue: libera comissão do apoiador (pending → available)
     if new_status == "entregue":
         _set_commission_available_on_deliver(order_id)
 
@@ -1633,10 +1710,8 @@ async def cancel_order(
         "updated_at": datetime.now(timezone.utc).isoformat()
     })
 
-    # ✅ Cancela comissão do apoiador (pending/available → canceled)
     _cancel_commission(order_id)
 
-    # Deletar memorial associado
     memorial_id = order_data.get("memorial_id")
     if memorial_id:
         try:
@@ -1652,7 +1727,6 @@ async def cancel_order(
         {"old_status": old_status}
     )
 
-    # Email ao cliente
     memorial_data = get_memorial_for_order(order_data)
     background_tasks.add_task(send_order_status_email, order_data, memorial_data, "cancelled")
 
@@ -1702,7 +1776,6 @@ async def update_tracking(
 
     background_tasks.add_task(create_admin_log, user.get("uid"), user.get("email"), "add_tracking", "order", order_id, {"tracking_code": tracking_data.tracking_code, "delivery_type": tracking_data.delivery_type})
 
-    # Email ao cliente
     memorial_data = get_memorial_for_order(order_data)
     background_tasks.add_task(
         send_order_status_email,
@@ -1717,10 +1790,6 @@ async def update_tracking(
 
 
 # ========== PRODUCTION QUEUE ==========
-# ALTERAÇÃO: removido filtro exclusivo de plan_type físico.
-# Agora retorna físicos (plaque, complete, qrcode_plaque) E digitais (digital).
-# Campo is_physical adicionado para o frontend separar as abas.
-# Zero impacto em qualquer outra rota.
 
 @api_router.get("/admin/production-queue")
 async def get_production_queue(user: dict = Depends(verify_admin)):
@@ -1737,21 +1806,17 @@ async def get_production_queue(user: dict = Depends(verify_admin)):
         plan_type = order_data.get("plan_type", "")
         order_status = order_data.get("status", "")
 
-        # Aceita físicos e digitais; ignora qualquer outro plan_type desconhecido
         if plan_type not in PHYSICAL_TYPES and plan_type not in DIGITAL_TYPES:
             continue
 
-        # Apenas os status relevantes para produção/gestão
         if order_status not in VALID_STATUSES:
             continue
 
-        # Pedidos arquivados não aparecem
         if order_data.get("archived", False):
             continue
 
         order_data = deserialize_datetime(order_data, ["created_at", "updated_at"])
 
-        # Enriquece com dados do memorial (nome da pessoa e slug)
         memorial_id = order_data.get("memorial_id")
         if memorial_id:
             memorial_doc = db.collection("memorials").document(memorial_id).get()
@@ -1760,12 +1825,10 @@ async def get_production_queue(user: dict = Depends(verify_admin)):
                 order_data["person_name"]   = memorial_data.get("person_data", {}).get("full_name", "N/A")
                 order_data["memorial_slug"] = memorial_data.get("slug")
 
-        # Flag usada pelo frontend para separar as abas — não altera nenhum dado do banco
         order_data["is_physical"] = plan_type in PHYSICAL_TYPES
 
         queue.append(order_data)
 
-    # Mais antigos primeiro (mesma ordenação de antes)
     queue.sort(key=lambda x: x.get("created_at", ""), reverse=False)
     return queue
 
@@ -1790,7 +1853,6 @@ async def start_production(order_id: str, background_tasks: BackgroundTasks, use
 
     background_tasks.add_task(create_admin_log, user.get("uid"), user.get("email"), "start_production", "order", order_id, {})
 
-    # Email ao cliente
     memorial_data = get_memorial_for_order(order_data)
     background_tasks.add_task(send_order_status_email, order_data, memorial_data, "in_production")
 
@@ -1817,7 +1879,6 @@ async def complete_production(order_id: str, background_tasks: BackgroundTasks, 
 
     background_tasks.add_task(create_admin_log, user.get("uid"), user.get("email"), "complete_production", "order", order_id, {})
 
-    # Email ao cliente
     memorial_data = get_memorial_for_order(order_data)
     background_tasks.add_task(send_order_status_email, order_data, memorial_data, "produced")
 
@@ -1837,7 +1898,6 @@ async def delete_order(order_id: str, user: dict = Depends(verify_admin)):
 
 @api_router.get("/supporters/validate/{code}")
 async def validate_supporter_code(code: str):
-    """Rota pública — frontend valida o código antes de mostrar o desconto."""
     supporter = supporter_service_validate(code)
     if not supporter:
         raise HTTPException(status_code=404, detail="Código inválido ou inativo.")
@@ -1850,7 +1910,6 @@ async def validate_supporter_code(code: str):
 
 @api_router.get("/admin/partners")
 async def get_all_partners(user: dict = Depends(verify_admin)):
-    """Retorna parceiros com totais de comissão calculados em tempo real."""
     partners_ref = db.collection("partners").order_by("created_at", direction=firestore.Query.DESCENDING)
     docs = list(partners_ref.stream())
     result = []
@@ -1902,7 +1961,6 @@ async def create_partner(
     background_tasks: BackgroundTasks,
     user: dict = Depends(verify_admin)
 ):
-    """Cria parceiro com código manual único."""
     import re as _re
     code = partner_req.supporter_code.strip().upper()
 
@@ -1929,7 +1987,7 @@ async def create_partner(
         "email": partner_req.email,
         "phone": partner_req.phone,
         "supporter_code": code,
-        "code": code,                   # campo legado mantido para compatibilidade
+        "code": code,
         "commission_rate": partner_req.commission_rate,
         "status": "active",
         "commission_pending":   0.0,
@@ -1987,7 +2045,6 @@ async def get_partner_sales(
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
 ):
-    """Relatório de vendas de um parceiro com filtro de período."""
     doc = db.collection("partners").document(partner_id).get()
     if not doc.exists:
         raise HTTPException(status_code=404, detail="Parceiro não encontrado")
@@ -2030,7 +2087,6 @@ async def get_partner_sales(
 
 @api_router.get("/admin/commissions/available")
 async def get_available_commissions(user: dict = Depends(verify_admin)):
-    """Lista comissões com status 'available' prontas para pagamento."""
     docs = list(
         db.collection("supporter_commissions")
         .where(filter=firestore.FieldFilter("commission_status", "==", "available"))
@@ -2050,7 +2106,6 @@ async def pay_commission(
     background_tasks: BackgroundTasks,
     user: dict = Depends(verify_admin)
 ):
-    """Marca uma comissão individual como paga."""
     comm_ref = db.collection("supporter_commissions").document(commission_id)
     doc = comm_ref.get()
     if not doc.exists:
@@ -2116,7 +2171,9 @@ async def get_finance_summary(
 
     for doc in payments_docs:
         payment = doc.to_dict()
-        if payment.get("status") not in ["approved", "paid"]:
+        # ✅ CORREÇÃO PROBLEMA 3: finance/summary usa o mesmo PAID_STATUSES do dashboard
+        # garante consistência entre os dois endpoints
+        if payment.get("status") not in PAID_STATUSES:
             continue
         created_at = payment.get("created_at")
         if isinstance(created_at, str):
@@ -2137,7 +2194,6 @@ async def get_finance_summary(
         month_key = f"{created_at.year}-{created_at.month:02d}"
         revenue_by_month[month_key] += amount
 
-        # ── Campos novos incluídos na listagem de transações ──
         filtered_payments.append({
             "id":                payment.get("id"),
             "amount":            amount,
@@ -2153,7 +2209,6 @@ async def get_finance_summary(
             "status":            payment.get("status"),
         })
 
-    # ── Totais de comissão pela nova coleção supporter_commissions ──
     pending_commissions   = 0.0
     available_commissions = 0.0
     total_commissions_paid = 0.0
@@ -2180,7 +2235,6 @@ async def get_finance_summary(
         "revenue_by_type":        dict(revenue_by_type),
         "orders_by_type":         dict(orders_by_type),
         "revenue_by_month":       dict(revenue_by_month),
-        # ── comissões com os 3 status ──
         "pending_commissions":    round(pending_commissions, 2),
         "available_commissions":  round(available_commissions, 2),
         "total_commissions_paid": round(total_commissions_paid, 2),
@@ -2190,7 +2244,6 @@ async def get_finance_summary(
         ),
         "payments": filtered_payments[:100],
     }
-
 
 
 @api_router.get("/admin/finance/export")
@@ -2212,7 +2265,7 @@ async def export_finance_data(
         },
         "by_type":      [{"type": k, "revenue": v, "orders": summary["orders_by_type"].get(k, 0)} for k, v in summary["revenue_by_type"].items()],
         "by_month":     [{"month": k, "revenue": v} for k, v in sorted(summary["revenue_by_month"].items())],
-        "transactions": summary["payments"],   # já contém todos os campos novos
+        "transactions": summary["payments"],
     }
 
 
@@ -2258,12 +2311,26 @@ async def feature_memorial(memorial_id: str, background_tasks: BackgroundTasks, 
 
 @api_router.get("/admin/notifications")
 async def get_admin_notifications(user: dict = Depends(verify_admin)):
-    docs = db.collection("admin_notifications").order_by("created_at", direction=firestore.Query.DESCENDING).limit(50).stream()
+    # ✅ CORREÇÃO PROBLEMA 2: busca sem orderBy no Firestore para evitar índice composto.
+    # Ordenação por prioridade + data feita em Python.
+    docs = db.collection("admin_notifications").limit(100).stream()
     notifications = []
     for doc in docs:
         notif_data = doc.to_dict()
         notif_data = deserialize_datetime(notif_data, ["created_at"])
+        # Garante que documentos antigos sem o campo priority recebam prioridade normal
+        if "priority" not in notif_data:
+            notif_data["priority"] = NOTIFICATION_PRIORITY.get(notif_data.get("type", ""), 3)
         notifications.append(notif_data)
+
+    # Ordena: primeiro por prioridade ASC (1=crítico vem antes), depois por data DESC
+    notifications.sort(
+        key=lambda n: (
+            n.get("priority", 3),
+            -(n["created_at"].timestamp() if isinstance(n.get("created_at"), datetime)
+              else 0)
+        )
+    )
     return notifications
 
 
