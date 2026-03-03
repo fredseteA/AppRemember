@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
+import AddressForm, { isAddressComplete } from '../components/AddressForm';
 import { toast } from 'sonner';
 import { User, Phone, Mail, MapPin, Calendar, CreditCard, Save, ArrowLeft, Camera, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -18,15 +19,13 @@ const Profile = () => {
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const fileInputRef = useRef(null);
+  const [deliveryAddress, setDeliveryAddress] = useState(null);
+  const [savingDelivery, setSavingDelivery] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
     cpf: '',
     birth_date: '',
-    address: '',
-    city: '',
-    state: '',
-    zip_code: '',
     photo_url: ''
   });
 
@@ -49,12 +48,15 @@ const Profile = () => {
         phone: response.data.phone || '',
         cpf: response.data.cpf || '',
         birth_date: response.data.birth_date || '',
-        address: response.data.address || '',
-        city: response.data.city || '',
-        state: response.data.state || '',
-        zip_code: response.data.zip_code || '',
         photo_url: response.data.photo_url || ''
       });
+      // Buscar endereço de entrega separado
+      const addrRes = await axios.get(`${API}/auth/me/address`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (addrRes.data.has_address) {
+        setDeliveryAddress(addrRes.data.address);
+      }
     } catch (error) {
       console.error('Error fetching user data:', error);
       toast.error('Erro ao carregar dados do perfil');
@@ -186,6 +188,22 @@ const Profile = () => {
       toast.error('Erro ao atualizar perfil');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSaveDeliveryAddress = async (addressData) => {
+    setSavingDelivery(true);
+    try {
+      await axios.put(`${API}/auth/me/address`, addressData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setDeliveryAddress(addressData);
+      toast.success('Endereço de entrega salvo!');
+    } catch (error) {
+      toast.error('Erro ao salvar endereço de entrega');
+      throw error;
+    } finally {
+      setSavingDelivery(false);
     }
   };
 
@@ -613,54 +631,52 @@ const Profile = () => {
             </div>
           </div>
 
-          {/* ── Card: Endereço ── */}
+          {/* ── Card: Endereço de Entrega ── */}
           <div className="pr-card" style={{ animation: 'slideCard 0.6s cubic-bezier(.22,1,.36,1) 0.3s both' }}>
             <div className="pr-card-header">
               <div style={{
                 width: 34, height: 34, borderRadius: '50%',
-                background: 'rgba(90,168,224,0.12)',
-                border: '1px solid rgba(90,168,224,0.25)',
+                background: 'rgba(245,158,11,0.12)',
+                border: '1px solid rgba(245,158,11,0.25)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
               }}>
-                <MapPin size={16} style={{ color: '#5aa8e0' }} />
+                <span style={{ fontSize: 16 }}>📦</span>
               </div>
-              <h2 style={{ fontFamily: '"Georgia", serif', fontSize: 'clamp(0.95rem, 2vw, 1.1rem)', fontWeight: 700, color: '#1a2744' }}>
-                Endereço
-              </h2>
+              <div>
+                <h2 style={{ fontFamily: '"Georgia", serif', fontSize: 'clamp(0.95rem, 2vw, 1.1rem)', fontWeight: 700, color: '#1a2744' }}>
+                  Endereço de Entrega
+                </h2>
+                <p style={{ fontFamily: '"Georgia", serif', fontSize: '0.72rem', color: 'rgba(58,80,112,0.55)', marginTop: 2 }}>
+                  Usado para entrega de placas físicas
+                </p>
+              </div>
+              {isAddressComplete(deliveryAddress) ? (
+                <span style={{
+                  marginLeft: 'auto', padding: '4px 12px', borderRadius: 999,
+                  background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)',
+                  fontSize: '0.7rem', fontWeight: 700, color: '#15803d',
+                }}>
+                  ✅ Completo
+                </span>
+              ) : (
+                <span style={{
+                  marginLeft: 'auto', padding: '4px 12px', borderRadius: 999,
+                  background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)',
+                  fontSize: '0.7rem', fontWeight: 700, color: '#92400e',
+                }}>
+                  ⚠️ Não preenchido
+                </span>
+              )}
             </div>
 
             <div className="pr-card-body">
-              <div>
-                <label className="pr-label" htmlFor="address">Endereço Completo</label>
-                <input id="address" name="address" className="pr-input"
-                  value={formData.address} onChange={handleChange}
-                  placeholder="Rua, número, complemento" data-testid="input-address" />
-              </div>
-
-              <div className="pr-grid-3">
-                <div>
-                  <label className="pr-label" htmlFor="city">Cidade</label>
-                  <input id="city" name="city" className="pr-input"
-                    value={formData.city} onChange={handleChange}
-                    placeholder="Sua cidade" data-testid="input-city" />
-                </div>
-                <div>
-                  <label className="pr-label" htmlFor="state">Estado</label>
-                  <select id="state" name="state" className="pr-select"
-                    value={formData.state} onChange={handleChange} data-testid="input-state">
-                    <option value="">Selecione</option>
-                    {brazilianStates.map(state => (
-                      <option key={state} value={state}>{state}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="pr-label" htmlFor="zip_code">CEP</label>
-                  <input id="zip_code" name="zip_code" className="pr-input"
-                    value={formData.zip_code} onChange={handleZipCodeChange}
-                    placeholder="00000-000" maxLength={9} data-testid="input-zip-code" />
-                </div>
-              </div>
+              <AddressForm
+                initialData={deliveryAddress}
+                onSave={handleSaveDeliveryAddress}
+                loading={savingDelivery}
+                submitLabel="Salvar endereço de entrega"
+                title=""
+              />
             </div>
           </div>
 

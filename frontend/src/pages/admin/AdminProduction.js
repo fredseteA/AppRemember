@@ -82,6 +82,7 @@ const ProductionCard = ({ order, onAction }) => {
   const [trackingCode, setTrackingCode]           = useState(order.tracking_code || '');
   const [showTrackingInput, setShowTrackingInput] = useState(false);
   const [showCancelModal, setShowCancelModal]     = useState(false);
+  const [showAddress, setShowAddress] = useState(false);
 
   const statusConfig = PRODUCTION_STATUS[order.status] || PRODUCTION_STATUS.approved;
   const isCancelled  = order.status === 'cancelled';
@@ -148,6 +149,60 @@ const ProductionCard = ({ order, onAction }) => {
             </div>
           )}
         </div>
+        
+        {/* Endereço de Entrega */}
+        {order.delivery_address_snapshot && (
+          <div className="mb-4">
+            <button
+              onClick={() => setShowAddress(!showAddress)}
+              className="flex items-center gap-2 text-xs text-[#94a3b8] hover:text-white transition-colors w-full"
+            >
+              <MapPin size={13} />
+              <span>Endereço de entrega</span>
+              <span className="ml-auto">{showAddress ? '▲' : '▼'}</span>
+            </button>
+
+            {showAddress && (
+              <div className="mt-2 bg-[#0b121b] border border-[#2d3a52] rounded-lg p-3 space-y-1">
+                <p className="text-sm font-medium text-white">
+                  {order.delivery_address_snapshot.recipient_name}
+                </p>
+                <p className="text-xs text-[#94a3b8]">
+                  {order.delivery_address_snapshot.phone}
+                </p>
+                <p className="text-xs text-[#94a3b8]">
+                  {order.delivery_address_snapshot.street}, {order.delivery_address_snapshot.number}
+                  {order.delivery_address_snapshot.complement && ` — ${order.delivery_address_snapshot.complement}`}
+                </p>
+                <p className="text-xs text-[#94a3b8]">
+                  {order.delivery_address_snapshot.neighborhood} · {order.delivery_address_snapshot.city}/{order.delivery_address_snapshot.state}
+                </p>
+                <p className="text-xs text-[#94a3b8]">
+                  CEP: {order.delivery_address_snapshot.zip_code}
+                </p>
+                {/* Botão copiar */}
+                <button
+                  onClick={() => {
+                    const txt = [
+                      order.delivery_address_snapshot.recipient_name,
+                      order.delivery_address_snapshot.phone,
+                      `${order.delivery_address_snapshot.street}, ${order.delivery_address_snapshot.number}`,
+                      order.delivery_address_snapshot.complement,
+                      order.delivery_address_snapshot.neighborhood,
+                      `${order.delivery_address_snapshot.city}/${order.delivery_address_snapshot.state}`,
+                      `CEP: ${order.delivery_address_snapshot.zip_code}`,
+                    ].filter(Boolean).join('\n');
+                    navigator.clipboard.writeText(txt);
+                    toast.success('Endereço copiado!');
+                  }}
+                  className="mt-2 w-full text-xs text-[#3b82f6] hover:underline text-left"
+                >
+                  📋 Copiar endereço
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Progress Steps */}
         {!isCancelled && (
