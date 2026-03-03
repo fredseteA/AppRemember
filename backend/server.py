@@ -131,6 +131,16 @@ class UpdateMemorialRequest(BaseModel):
     plan_type: Optional[str] = None
     qr_code_url: Optional[str] = None
 
+class DeliveryAddress(BaseModel):
+    recipient_name: str
+    phone: str
+    zip_code: str
+    street: str
+    number: str
+    complement: Optional[str] = None
+    neighborhood: str
+    city: str
+    state: str
 
 class Payment(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -144,6 +154,7 @@ class Payment(BaseModel):
     status: str = "pending"
     mercadopago_payment_id: Optional[str] = None
     payment_method: Optional[str] = None
+    delivery_address_snapshot: Optional[DeliveryAddress] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -179,6 +190,7 @@ class CreatePaymentRequest(BaseModel):
     payer_email: EmailStr
     payment_method_id: str = "pix"
     supporter_code: Optional[str] = None
+    delivery_address: Optional[DeliveryAddress] = None
 
 
 class ConfirmPaymentRequest(BaseModel):
@@ -311,6 +323,7 @@ class User(BaseModel):
     state: Optional[str] = None
     zip_code: Optional[str] = None
     photo_url: Optional[str] = None
+    delivery_address: Optional[DeliveryAddress] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -941,6 +954,33 @@ async def update_current_user(
         user_ref.update(update_dict)
     return user_ref.get().to_dict()
 
+@api_router.get("/auth/me/address")
+async def get_my_address(token_data: dict = Depends(verify_firebase_token)):
+    user_ref = db.collection("users").document(token_data["uid"])
+    doc = user_ref.get()
+    if not doc.exists:
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="User not found")
+    user_data = doc.to_dict()
+    address = user_data.get("delivery_address")
+    return {"has_address": address is not None, "address": address}
+
+
+@api_router.put("/auth/me/address")
+async def update_my_address(
+    address: DeliveryAddress,
+    token_data: dict = Depends(verify_firebase_token)
+):
+    user_ref = db.collection("users").document(token_data["uid"])
+    doc = user_ref.get()
+    if not doc.exists:
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="User not found")
+    address_dict = address.model_dump()
+    user_ref.update({
+        "delivery_address": address_dict,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    })
+    return {"message": "Endereço salvo com sucesso", "address": address_dict}
+
 
 # ========== MEMORIAL ENDPOINTS ==========
 
@@ -1050,6 +1090,33 @@ async def create_checkout(
 
     memorial = memorial_doc.to_dict()
 
+    # ===== VALIDAÇÃO DE ENDEREÇO PARA PLANOS FÍSICOS =====
+    PHYSICAL_PLAN_TYPES = {"plaque", "complete", "qrcode_plaque"}
+    is_physical_plan = payment_req.plan_type in PHYSICAL_PLAN_TYPES
+
+    if is_physical_plan:
+        if not payment_req.delivery_address:
+            raise HTTPException(
+                status_code=422,
+                detail="Endereço de entrega obrigatório para planos físicos."
+            )
+        addr = payment_req.delivery_address
+        missing = []
+        if not addr.recipient_name: missing.append("nome do destinatário")
+        if not addr.phone:          missing.append("telefone")
+        if not addr.zip_code:       missing.append("CEP")
+        if not addr.street:         missing.append("rua")
+        if not addr.number:         missing.append("número")
+        if not addr.neighborhood:   missing.append("bairro")
+        if not addr.city:           missing.append("cidade")
+        if not addr.state:          missing.append("estado")
+        if missing:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Endereço incompleto. Campos faltando: {', '.join(missing)}."
+            )
+    # ===== FIM VALIDAÇÃO =====
+
     if not mp_access_token:
         raise HTTPException(status_code=500, detail="Mercado Pago não configurado")
 
@@ -1091,6 +1158,12 @@ async def create_checkout(
         status="pending"
     )
 
+    # Snapshot do endereço — imutável por pedido
+    delivery_snapshot = None
+    if is_physical_plan and payment_req.delivery_address:
+        delivery_snapshot = payment_req.delivery_address.model_dump()
+
+
     payment_dict = payment.model_dump()
     payment_dict.update({
         "original_amount":    original_amount,
@@ -1101,6 +1174,7 @@ async def create_checkout(
         "commission_rate":    commission_rate,
         "commission_amount":  commission_amount,
         "commission_status":  commission_status,
+        "delivery_address_snapshot": delivery_snapshot,
     })
     payment_dict = serialize_datetime(payment_dict)
 

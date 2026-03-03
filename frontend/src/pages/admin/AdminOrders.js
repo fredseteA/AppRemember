@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import axios from 'axios';
 import { toast } from 'sonner';
+import DeliveryAddressPanel from '../../components/DeliveryAddressPanel';
 import {
   Search,
   Filter,
@@ -90,6 +91,7 @@ const AdminOrders = () => {
   const [showArchived, setShowArchived] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showHistory, setShowHistory] = useState(null);
+  const [expandedOrder, setExpandedOrder] = useState(null);
 
   useEffect(() => {
     fetchOrders();
@@ -313,123 +315,148 @@ const AdminOrders = () => {
                 </tr>
               ) : (
                 filteredOrders.map(order => (
-                  <tr 
-                    key={order.id} 
-                    className="hover:bg-[#1e2b3e]/50 transition-colors"
-                    data-testid={`order-row-${order.id}`}
-                  >
-                    <td className="px-4 py-4">
-                      <p className="text-sm font-medium text-white">
-                        #{order.id?.substring(0, 8)}
-                      </p>
-                      <p className="text-xs text-[#94a3b8] mt-0.5">
-                        {order.memorial_id?.substring(0, 8)}
-                      </p>
-                    </td>
-                    <td className="px-4 py-4">
-                      <p className="text-sm text-white truncate max-w-[200px]">
-                        {order.user_email}
-                      </p>
-                    </td>
-                    <td className="px-4 py-4">
-                      <span className={`
-                        inline-flex px-2 py-1 rounded text-xs font-medium
-                        ${order.plan_type?.includes('plaque') || order.plan_type === 'complete'
-                          ? 'bg-[#f59e0b]/10 text-[#f59e0b]'
-                          : 'bg-[#3b82f6]/10 text-[#3b82f6]'
-                        }
-                      `}>
-                        {order.plan_type === 'digital' ? 'Digital' : 
-                         order.plan_type === 'plaque' || order.plan_type === 'qrcode_plaque' ? 'Placa QR' :
-                         order.plan_type === 'complete' ? 'Completo' : order.plan_type}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4">
-                      <p className="text-sm font-semibold text-white">
-                        {formatCurrency(order.amount)}
-                      </p>
-                    </td>
-                    <td className="px-4 py-4">
-                      <StatusBadge status={order.status} />
-                    </td>
-                    <td className="px-4 py-4">
-                      <p className="text-sm text-[#94a3b8]">
-                        {formatDate(order.created_at)}
-                      </p>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="flex items-center justify-end gap-2">
-                        {/* Status Dropdown */}
-                        <div className="relative">
-                          <select
-                            value={order.status}
-                            onChange={(e) => updateStatus(order.id, e.target.value)}
-                            className="appearance-none bg-[#0b121b] border border-[#2d3a52] rounded-lg px-3 py-1.5 pr-8 text-sm text-white cursor-pointer focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]"
-                            data-testid={`status-select-${order.id}`}
-                          >
-                            {STATUS_OPTIONS.map(opt => (
-                              <option key={opt.value} value={opt.value}>
-                                {opt.label}
-                              </option>
-                            ))}
-                          </select>
-                          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-[#94a3b8] pointer-events-none" size={14} />
-                        </div>
-                        
-                        {/* History Button */}
-                        <button
-                          onClick={() => setShowHistory(showHistory === order.id ? null : order.id)}
-                          className="p-2 rounded-lg text-[#94a3b8] hover:text-white hover:bg-[#2d3a52] transition-colors"
-                          title="Histórico"
-                          data-testid={`history-btn-${order.id}`}
-                        >
-                          <History size={16} />
-                        </button>
-                        
-                        {/* Archive Button */}
-                        {!order.archived && (
-                          <button
-                            onClick={() => archiveOrder(order.id)}
-                            className="p-2 rounded-lg text-[#94a3b8] hover:text-[#f59e0b] hover:bg-[#f59e0b]/10 transition-colors"
-                            title="Arquivar"
-                            data-testid={`archive-btn-${order.id}`}
-                          >
-                            <Archive size={16} />
-                          </button>
-                        )}
-                        
-                        {/* Cancel Button */}
-                        {order.status !== 'cancelled' && order.status !== 'delivered' && (
-                          <button
-                            onClick={() => cancelOrder(order.id)}
-                            className="p-2 rounded-lg text-[#94a3b8] hover:text-[#ef4444] hover:bg-[#ef4444]/10 transition-colors"
-                            title="Cancelar"
-                            data-testid={`cancel-btn-${order.id}`}
-                          >
-                            <X size={16} />
-                          </button>
-                        )}
-                      </div>
-                      
-                      {/* History Panel */}
-                      {showHistory === order.id && order.status_history?.length > 0 && (
-                        <div className="absolute right-4 mt-2 w-72 bg-[#1e2b3e] border border-[#2d3a52] rounded-lg shadow-xl z-10 p-4">
-                          <h4 className="text-sm font-semibold text-white mb-3">Histórico de Status</h4>
-                          <div className="space-y-2 max-h-48 overflow-y-auto">
-                            {order.status_history.map((entry, idx) => (
-                              <div key={idx} className="text-xs border-l-2 border-[#3b82f6] pl-3 py-1">
-                                <p className="text-white">
-                                  {STATUS_CONFIG[entry.from_status]?.label || entry.from_status} → {STATUS_CONFIG[entry.to_status]?.label || entry.to_status}
-                                </p>
-                                <p className="text-[#94a3b8] mt-0.5">{entry.changed_by}</p>
-                                <p className="text-[#94a3b8]">{formatDate(entry.changed_at)}</p>
-                              </div>
-                            ))}
+                  <>
+                    <tr 
+                      key={order.id} 
+                      className="hover:bg-[#1e2b3e]/50 transition-colors"
+                      data-testid={`order-row-${order.id}`}
+                    >
+                      <td className="px-4 py-4">
+                        <p className="text-sm font-medium text-white">
+                          #{order.id?.substring(0, 8)}
+                        </p>
+                        <p className="text-xs text-[#94a3b8] mt-0.5">
+                          {order.memorial_id?.substring(0, 8)}
+                        </p>
+                      </td>
+                      <td className="px-4 py-4">
+                        <p className="text-sm text-white truncate max-w-[200px]">
+                          {order.user_email}
+                        </p>
+                      </td>
+                      <td className="px-4 py-4">
+                        <span className={`
+                          inline-flex px-2 py-1 rounded text-xs font-medium
+                          ${order.plan_type?.includes('plaque') || order.plan_type === 'complete'
+                            ? 'bg-[#f59e0b]/10 text-[#f59e0b]'
+                            : 'bg-[#3b82f6]/10 text-[#3b82f6]'
+                          }
+                        `}>
+                          {order.plan_type === 'digital' ? 'Digital' : 
+                          order.plan_type === 'plaque' || order.plan_type === 'qrcode_plaque' ? 'Placa QR' :
+                          order.plan_type === 'complete' ? 'Completo' : order.plan_type}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4">
+                        <p className="text-sm font-semibold text-white">
+                          {formatCurrency(order.amount)}
+                        </p>
+                      </td>
+                      <td className="px-4 py-4">
+                        <StatusBadge status={order.status} />
+                      </td>
+                      <td className="px-4 py-4">
+                        <p className="text-sm text-[#94a3b8]">
+                          {formatDate(order.created_at)}
+                        </p>
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="flex items-center justify-end gap-2">
+                          {/* Status Dropdown */}
+                          <div className="relative">
+                            <select
+                              value={order.status}
+                              onChange={(e) => updateStatus(order.id, e.target.value)}
+                              className="appearance-none bg-[#0b121b] border border-[#2d3a52] rounded-lg px-3 py-1.5 pr-8 text-sm text-white cursor-pointer focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]"
+                              data-testid={`status-select-${order.id}`}
+                            >
+                              {STATUS_OPTIONS.map(opt => (
+                                <option key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </option>
+                              ))}
+                            </select>
+                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-[#94a3b8] pointer-events-none" size={14} />
                           </div>
+                          
+                          {/* History Button */}
+                          <button
+                            onClick={() => setShowHistory(showHistory === order.id ? null : order.id)}
+                            className="p-2 rounded-lg text-[#94a3b8] hover:text-white hover:bg-[#2d3a52] transition-colors"
+                            title="Histórico"
+                            data-testid={`history-btn-${order.id}`}
+                          >
+                            <History size={16} />
+                          </button>
+                          
+                          {['plaque', 'complete', 'qrcode_plaque'].includes(order.plan_type) && (
+                            <button
+                              onClick={() => setExpandedOrder(expandedOrder === order.id ? null : order.id)}
+                              className={`p-2 rounded-lg transition-colors ${
+                                expandedOrder === order.id
+                                  ? 'text-[#3b82f6] bg-[#3b82f6]/10'
+                                  : 'text-[#94a3b8] hover:text-[#3b82f6] hover:bg-[#3b82f6]/10'
+                              }`}
+                              title="Ver endereço de entrega"
+                            >
+                              <Package size={16} />
+                            </button>
+                          )}
+
+                          {/* Archive Button */}
+                          {!order.archived && (
+                            <button
+                              onClick={() => archiveOrder(order.id)}
+                              className="p-2 rounded-lg text-[#94a3b8] hover:text-[#f59e0b] hover:bg-[#f59e0b]/10 transition-colors"
+                              title="Arquivar"
+                              data-testid={`archive-btn-${order.id}`}
+                            >
+                              <Archive size={16} />
+                            </button>
+                          )}
+                          
+                          {/* Cancel Button */}
+                          {order.status !== 'cancelled' && order.status !== 'delivered' && (
+                            <button
+                              onClick={() => cancelOrder(order.id)}
+                              className="p-2 rounded-lg text-[#94a3b8] hover:text-[#ef4444] hover:bg-[#ef4444]/10 transition-colors"
+                              title="Cancelar"
+                              data-testid={`cancel-btn-${order.id}`}
+                            >
+                              <X size={16} />
+                            </button>
+                          )}
                         </div>
-                      )}
-                    </td>
-                  </tr>
+                        
+                        {/* History Panel */}
+                        {showHistory === order.id && order.status_history?.length > 0 && (
+                          <div className="absolute right-4 mt-2 w-72 bg-[#1e2b3e] border border-[#2d3a52] rounded-lg shadow-xl z-10 p-4">
+                            <h4 className="text-sm font-semibold text-white mb-3">Histórico de Status</h4>
+                            <div className="space-y-2 max-h-48 overflow-y-auto">
+                              {order.status_history.map((entry, idx) => (
+                                <div key={idx} className="text-xs border-l-2 border-[#3b82f6] pl-3 py-1">
+                                  <p className="text-white">
+                                    {STATUS_CONFIG[entry.from_status]?.label || entry.from_status} → {STATUS_CONFIG[entry.to_status]?.label || entry.to_status}
+                                  </p>
+                                  <p className="text-[#94a3b8] mt-0.5">{entry.changed_by}</p>
+                                  <p className="text-[#94a3b8]">{formatDate(entry.changed_at)}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                    {/* Linha expansível com endereço — só para planos físicos */}
+                    {['plaque', 'complete', 'qrcode_plaque'].includes(order.plan_type) && 
+                    expandedOrder === order.id && (
+                      <tr>
+                        <td colSpan={7} style={{ padding: '0 16px 16px' }}>
+                          <DeliveryAddressPanel order={order} />
+                        </td>
+                      </tr>
+                    )}
+                 </>
                 ))
               )}
             </tbody>

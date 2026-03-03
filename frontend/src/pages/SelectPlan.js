@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { Check, Loader2, Tag, X, CheckCircle2 } from 'lucide-react';
+import AddressCheckStep from '../components/AddressCheckStep';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -22,7 +23,10 @@ const SelectPlan = () => {
   const [codeValid, setCodeValid]               = useState(false);   // true = validado com sucesso
   const [codeError, setCodeError]               = useState('');
   const [discountInfo, setDiscountInfo]         = useState(null);
-  // discountInfo = { discount_percentage: 5, supporter_name: "João" }
+  
+  const [deliveryAddress, setDeliveryAddress] = useState(null);
+  const [showAddressStep, setShowAddressStep] = useState(false);
+  const [pendingPlan, setPendingPlan] = useState(null);
 
   useEffect(() => {
     const fetchMemorial = async () => {
@@ -115,25 +119,37 @@ const SelectPlan = () => {
     setDiscountInfo(null);
   };
 
+  const PHYSICAL_PLANS = ['plaque', 'complete', 'qrcode_plaque'];
+
   const handleSelectPlan = async (plan) => {
     if (!user) {
       toast.error('Faça login para continuar');
       return;
     }
 
-    setLoading(true);
+    // Plano físico → verificar endereço antes de ir ao pagamento
+    if (PHYSICAL_PLANS.includes(plan.id)) {
+      setPendingPlan(plan);
+      setShowAddressStep(true);
+      return;
+    }
 
+    // Plano digital → fluxo normal direto
+    await processCheckout(plan, null);
+  };
+
+  const processCheckout = async (plan, address) => {
+    setLoading(true);
     try {
       const payload = {
         memorial_id: id,
         plan_type: plan.id,
-        // Sempre envia o preço ORIGINAL — o backend aplica o desconto
         transaction_amount: plan.price,
         description: `${plan.name} - Memorial de ${memorial?.person_data?.full_name || 'homenageado'}`,
         payer_email: user.email,
         payment_method_id: 'account_money',
-        // Campo novo — null se não houver código
         supporter_code: supporterCode || null,
+        delivery_address: address || null,  // ← novo campo
       };
 
       const response = await axios.post(
@@ -156,6 +172,36 @@ const SelectPlan = () => {
       setLoading(false);
     }
   };
+
+
+  if (showAddressStep && pendingPlan) {
+    return (
+      <div style={{
+        background: 'linear-gradient(180deg, #c8e8f5 0%, #ddf0f7 35%, #eef8fb 70%, #eef8fb 100%)',
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '100px 20px 60px',
+      }}>
+        <div style={{ width: '100%', maxWidth: 560 }}>
+          <AddressCheckStep
+            authToken={token}
+            apiBase={API}
+            onAddressReady={(addr) => {
+              setDeliveryAddress(addr);
+              setShowAddressStep(false);
+              processCheckout(pendingPlan, addr);
+            }}
+            onBack={() => {
+              setShowAddressStep(false);
+              setPendingPlan(null);
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
