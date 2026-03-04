@@ -136,25 +136,6 @@ export default function QRCodeModal({ slug, name, onClose, highRes = false }) {
         ctx.restore();
       }
 
-      // ── 5. URL rodapé ────────────────────────────────────────────────
-      const urlY    = qrY + qrSize + gap * 0.8;
-      const urlSize = Math.round(plateSize * 0.028);
-      ctx.font      = `${urlSize}px monospace`;
-      ctx.fillStyle = '#9ca3af';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'top';
-
-      const shortUrl = memorialUrl
-        .replace('https://', '')
-        .replace('http://', '');
-
-      // Trunca se necessário para não sair da margem
-      let displayUrl = shortUrl;
-      while (ctx.measureText(displayUrl).width > inner && displayUrl.length > 20) {
-        displayUrl = displayUrl.slice(0, -4) + '...';
-      }
-      ctx.fillText(displayUrl, cx, urlY);
-
       setQrReady(true);
     };
 
