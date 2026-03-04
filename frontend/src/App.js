@@ -21,6 +21,7 @@ import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import MyMemorials from './pages/MyMemorials';
 import MyPurchases from './pages/MyPurchases';
+import EditMemorial from './pages/EditMemorial';
 
 // Admin Pages
 import AdminLayout from './components/admin/AdminLayout';
@@ -173,6 +174,14 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <MyMemorials />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/edit-memorial/:id"
+                  element={
+                    <ProtectedRoute>
+                      <EditMemorial />
                     </ProtectedRoute>
                   }
                 />
