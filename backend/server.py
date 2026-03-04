@@ -218,6 +218,7 @@ class CreatePartnerRequest(BaseModel):
     phone: Optional[str] = None
     supporter_code: str
     commission_rate: float = 0.10
+    firebase_uid: Optional[str] = None
 
 class SupporterCommission(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -2272,6 +2273,15 @@ async def create_partner(
     if existing:
         raise HTTPException(status_code=400, detail=f"Código '{code}' já está em uso.")
 
+    if partner_req.firebase_uid:
+        uid_existing = list(
+            db.collection("partners")
+            .where(filter=firestore.FieldFilter("firebase_uid", "==", partner_req.firebase_uid.strip()))
+            .limit(1).stream()
+        )
+        if uid_existing:
+            raise HTTPException(status_code=400, detail="Este Firebase UID já está vinculado a outro parceiro.")
+
     partner_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc).isoformat()
 
@@ -2292,6 +2302,7 @@ async def create_partner(
         "total_revenue_all_time": 0.0,
         "created_at": now,
         "updated_at": now,
+        "firebase_uid": partner_req.firebase_uid.strip() if partner_req.firebase_uid else None,
     }
     db.collection("partners").document(partner_id).set(partner_dict)
     background_tasks.add_task(
@@ -2322,6 +2333,17 @@ async def update_partner(
     partner_ref = db.collection("partners").document(partner_id)
     if not partner_ref.get().exists:
         raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Parceiro não encontrado")
+    
+    if updates.firebase_uid:
+        uid_existing = list(
+            db.collection("partners")
+            .where(filter=firestore.FieldFilter("firebase_uid", "==", updates.firebase_uid.strip()))
+            .limit(1).stream()
+        )
+        for doc in uid_existing:
+            if doc.id != partner_id:
+                raise HTTPException(status_code=400, detail="Este Firebase UID já está vinculado a outro parceiro.")
+    
     updates_dict = {k: v for k, v in updates.model_dump().items() if v is not None}
     updates_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
     partner_ref.update(updates_dict)

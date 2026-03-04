@@ -492,6 +492,26 @@ const AdminPartners = () => {
       const err = validateCode(formData.supporter_code);
       if (err) { setCodeError(err); return; }
     }
+    // Validação do Firebase UID (se preenchido)
+    if (formData.firebase_uid) {
+      const uid = formData.firebase_uid.trim();
+      if (uid.length < 20 || uid.length > 128) {
+        toast.error('Firebase UID inválido. Deve ter entre 20 e 128 caracteres.');
+        return;
+      }
+      if (!/^[a-zA-Z0-9]+$/.test(uid)) {
+        toast.error('Firebase UID inválido. Apenas letras e números.');
+        return;
+      }
+      // Verifica unicidade localmente antes de enviar
+      const duplicate = partners.find(p =>
+        p.firebase_uid === uid && p.id !== editingPartner?.id
+      );
+      if (duplicate) {
+        toast.error(`Este UID já está vinculado ao parceiro "${duplicate.name}".`);
+        return;
+      }
+    }
     try {
       if (editingPartner) {
         await axios.put(`${API}/admin/partners/${editingPartner.id}`,
@@ -752,13 +772,21 @@ const AdminPartners = () => {
                   <span className="text-xs text-[#94a3b8]/60 ml-2">(para vincular ao painel do apoiador)</span>
                 </label>
                 <input type="text" value={formData.firebase_uid}
-                  onChange={e => setFormData(f => ({ ...f, firebase_uid: e.target.value }))}
+                  onChange={e => setFormData(f => ({ ...f, firebase_uid: e.target.value.trim() }))}
                   placeholder="Ex: abc123XYZ..."
                   className="w-full px-4 py-2.5 bg-[#0b121b] border border-[#2d3a52] rounded-lg text-white focus:border-[#3b82f6] outline-none font-mono text-sm"
                   data-testid="partner-uid-input" />
                 <p className="text-[#94a3b8]/60 text-xs mt-1">
                   Encontre no Firebase Console → Authentication → UID do usuário.
                 </p>
+                {!formData.firebase_uid && (
+                  <p className="text-amber-400/70 text-xs mt-1">
+                    ⚠️ Sem UID, o apoiador não acessará o painel.
+                  </p>
+                )}
+                {formData.firebase_uid && formData.firebase_uid.length >= 20 && (
+                  <p className="text-green-400/70 text-xs mt-1">✓ UID válido</p>
+                )}
               </div>
 
               <div className="flex gap-3 pt-2">
