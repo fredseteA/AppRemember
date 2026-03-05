@@ -304,20 +304,6 @@ const Footer = ({ startColor = '#eef8fb' }) => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
               <div className="footer-contact-row">
                 <div className="footer-contact-icon">
-                  <Phone size={13} strokeWidth={2} style={{ color: '#5aa8e0' }} />
-                </div>
-                <div>
-                  <p style={{ fontSize: '0.67rem', color: 'rgba(26,39,68,0.4)', fontFamily: '"Georgia", serif', marginBottom: 2, letterSpacing: '0.05em' }}>
-                    Telefone / WhatsApp
-                  </p>
-                  <a href={PHONE_HREF} target="_blank" rel="noopener noreferrer"
-                    className="footer-link" style={{ fontSize: '0.8rem' }}>
-                    {PHONE_NUMBER}
-                  </a>
-                </div>
-              </div>
-              <div className="footer-contact-row">
-                <div className="footer-contact-icon">
                   <Mail size={13} strokeWidth={2} style={{ color: '#5aa8e0' }} />
                 </div>
                 <div>
