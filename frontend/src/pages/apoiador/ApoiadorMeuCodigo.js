@@ -4,7 +4,7 @@ import ApoiadorLayout from '../../layouts/ApoiadorLayout';
 import axios from 'axios';
 import { QrCode, Copy, Check, RefreshCw, Link2, BarChart2, Download, Share2 } from 'lucide-react';
 
-const API = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001/api';
+const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const FRONTEND_URL = process.env.REACT_APP_FRONTEND_URL || 'https://rememberqr.online';
 
 function useQRCode(text, size = 200) {

@@ -6,7 +6,7 @@ import {
   LayoutDashboard, TrendingUp, Coins, Wallet, Percent, Star, ArrowUpRight, RefreshCw,
 } from 'lucide-react';
 
-const API = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001/api';
+const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 const LEVELS = [
   { min: 0,  max: 9,        rate: 10, label: 'Iniciante', color: '#64748b' },

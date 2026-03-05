@@ -4,7 +4,7 @@ import ApoiadorLayout from '../../layouts/ApoiadorLayout';
 import axios from 'axios';
 import { ShoppingBag, RefreshCw, Filter, ChevronDown, TrendingUp, Coins, Search, X } from 'lucide-react';
 
-const API = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001/api';
+const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 const PLAN_LABELS = { digital: 'Digital', plaque: 'Placa QR', qrcode_plaque: 'Placa QR', complete: 'Completo' };
 

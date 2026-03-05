@@ -4,7 +4,7 @@ import ApoiadorLayout from '../../layouts/ApoiadorLayout';
 import axios from 'axios';
 import { Coins, RefreshCw, Clock, Wallet, CheckCircle, ChevronDown, Filter, X } from 'lucide-react';
 
-const API = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001/api';
+const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 const COMMISSION_STATUS = {
   pending:   { label: 'Pendente',   color: '#f59e0b', desc: 'Aguardando entrega do pedido' },
