@@ -6,19 +6,18 @@ import axios from 'axios';
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 export default function ApoiadorRoute({ children }) {
-  const { user } = useAuth();
-  const [status, setStatus] = useState('loading'); // 'loading' | 'allowed' | 'denied'
+  const { user, token } = useAuth(); 
+  const [status, setStatus] = useState('loading');
 
   useEffect(() => {
-    if (!user) {
+    if (!user || !token) { 
       setStatus('denied');
       return;
     }
     (async () => {
       try {
-        const token = await user.getIdToken();
         const res = await axios.get(`${API}/auth/me`, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` } 
         });
         const role = res.data?.role || 'user';
         if (role === 'apoiador' || role === 'admin') {
@@ -26,11 +25,12 @@ export default function ApoiadorRoute({ children }) {
         } else {
           setStatus('denied');
         }
-      } catch {
+      } catch (e) {
+        console.error('ApoiadorRoute erro:', e);
         setStatus('denied');
       }
     })();
-  }, [user]);
+  }, [user, token]); 
 
   if (status === 'loading') {
     return (
