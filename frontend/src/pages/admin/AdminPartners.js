@@ -135,7 +135,7 @@ const ReportModal = ({ partner, token, onClose }) => {
   const [sales, setSales]   = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState({ start: '', end: '' });
-
+  
   const fetchSales = async () => {
     setLoading(true);
     try {
@@ -247,7 +247,7 @@ const ReportModal = ({ partner, token, onClose }) => {
 
 // ─── Card de parceiro expandido (ETAPA 7) ────────────────────────────────────
 const PartnerCard = ({
-  partner, copiedCode, onCopy, onEdit, onToggle, onReport, onViewAs, token
+  partner, copiedCode, onCopy, onEdit, onToggle, onReport, onViewAs, onCreateAccess, token
 }) => {
   const [expanded, setExpanded] = useState(false);
   const code = partner.supporter_code || partner.code;
@@ -361,6 +361,11 @@ const PartnerCard = ({
             data-testid={`viewas-partner-${partner.id}`}>
             <Eye size={14} />
           </button>
+          <button onClick={() => onCreateAccess(partner)}
+            className="px-3 py-2 bg-green-500/10 text-green-400 rounded-lg text-sm hover:bg-green-500/20 transition-colors"
+            title="Criar Acesso Apoiador">
+            <UserCheck size={14} />
+          </button>
         </div>
       </div>
 
@@ -455,6 +460,10 @@ const AdminPartners = () => {
   const [copiedCode, setCopiedCode]         = useState(null);
   const [reportPartner, setReportPartner]   = useState(null);
   const [viewAsPartner, setViewAsPartner]   = useState(null); // NOVO
+  const [createAccessPartner, setCreateAccessPartner] = useState(null);
+  const [accessForm, setAccessForm] = useState({ email: '', password: '' });
+  const [creatingAccess, setCreatingAccess] = useState(false);
+
 
   const [formData, setFormData] = useState({
     name: '', email: '', phone: '',
@@ -541,6 +550,26 @@ const AdminPartners = () => {
         toast.error(msg);
       }
     }
+    const handleCreateAccess = async (e) => {
+      e.preventDefault();
+      setCreatingAccess(true);
+      try {
+        await axios.post(`${API}/admin/apoiador/create-user`, {
+          email: accessForm.email,
+          password: accessForm.password,
+          name: createAccessPartner.name,
+          partner_id: createAccessPartner.id,
+        }, { headers: { Authorization: `Bearer ${token}` } });
+        toast.success(`Acesso criado! Login: ${accessForm.email}`);
+        setCreateAccessPartner(null);
+        setAccessForm({ email: '', password: '' });
+        fetchPartners();
+      } catch (err) {
+        toast.error(err.response?.data?.detail || 'Erro ao criar acesso.');
+      } finally {
+        setCreatingAccess(false);
+      }
+    };
   };
 
   const toggleStatus = async (partner) => {
@@ -606,7 +635,54 @@ const AdminPartners = () => {
       {viewAsPartner && (
         <ViewAsApoiadorModal partner={viewAsPartner} onClose={() => setViewAsPartner(null)} />
       )}
-
+      {createAccessPartner && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#16202e] border border-[#2d3a52] rounded-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-5 border-b border-[#2d3a52]">
+              <div>
+                <h2 className="text-lg font-semibold text-white">Criar Acesso</h2>
+                <p className="text-xs text-[#94a3b8] mt-0.5">
+                  Parceiro: <span className="text-white font-medium">{createAccessPartner.name}</span>
+                </p>
+              </div>
+              <button onClick={() => setCreateAccessPartner(null)}
+                className="p-2 rounded-lg hover:bg-[#2d3a52] text-[#94a3b8] hover:text-white transition-colors">
+                <X size={18} />
+              </button>
+            </div>
+            <form onSubmit={handleCreateAccess} className="p-5 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-[#94a3b8] mb-1.5">Email de acesso</label>
+                <input type="email" required value={accessForm.email}
+                  onChange={e => setAccessForm(f => ({ ...f, email: e.target.value }))}
+                  className="w-full px-4 py-2.5 bg-[#0b121b] border border-[#2d3a52] rounded-lg text-white focus:border-[#3b82f6] outline-none" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#94a3b8] mb-1.5">Senha</label>
+                <input type="password" required minLength={6} value={accessForm.password}
+                  onChange={e => setAccessForm(f => ({ ...f, password: e.target.value }))}
+                  placeholder="Mínimo 6 caracteres"
+                  className="w-full px-4 py-2.5 bg-[#0b121b] border border-[#2d3a52] rounded-lg text-white focus:border-[#3b82f6] outline-none" />
+              </div>
+              <div className="bg-[#0b121b] rounded-lg p-3">
+                <p className="text-xs text-[#94a3b8]">
+                  ℹ️ Será criada uma conta com <strong className="text-white">role: apoiador</strong> já vinculada a este parceiro. Entregue o email e senha ao apoiador.
+                </p>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => setCreateAccessPartner(null)}
+                  className="flex-1 px-4 py-2.5 bg-[#2d3a52] text-white rounded-lg font-medium hover:bg-[#374763] transition-colors">
+                  Cancelar
+                </button>
+                <button type="submit" disabled={creatingAccess}
+                  className="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50">
+                  {creatingAccess ? 'Criando...' : 'Criar Acesso'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -665,6 +741,7 @@ const AdminPartners = () => {
               onToggle={toggleStatus}
               onReport={setReportPartner}
               onViewAs={setViewAsPartner}
+              onCreateAccess={(p) => { setCreateAccessPartner(p); setAccessForm({ email: p.email, password: '' }); }}
             />
           ))}
         </div>

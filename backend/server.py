@@ -351,6 +351,13 @@ class MarkCommissionPaidRequest(BaseModel):
     period: str          # "2025-03" (ano-mês)
     payment_method: Optional[str] = "pix"
     payment_notes: Optional[str] = None
+
+class CreateApoiadorUserRequest(BaseModel):
+    email: EmailStr
+    password: str
+    name: str
+    partner_id: Optional[str] = None
+
 # ========== FIREBASE AUTH VERIFICATION ==========
 
 async def verify_firebase_token(
@@ -2695,6 +2702,64 @@ async def mark_commissions_paid(
         "period": body.period,
         "count": len(updated),
         "total_paid": total_paid,
+    }
+
+@api_router.post("/admin/apoiador/create-user")
+async def create_apoiador_user(
+    body: CreateApoiadorUserRequest,
+    background_tasks: BackgroundTasks,
+    admin: dict = Depends(verify_admin)
+):
+    """Admin cria usuário apoiador no Firebase Auth + Firestore + vincula ao parceiro."""
+
+    # 1. Cria usuário no Firebase Authentication
+    try:
+        firebase_user = auth.create_user(
+            email=body.email,
+            password=body.password,
+            display_name=body.name,
+        )
+    except auth.EmailAlreadyExistsError:
+        raise HTTPException(status_code=400, detail="Este email já está cadastrado no Firebase.")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Erro ao criar usuário: {str(e)}")
+
+    uid = firebase_user.uid
+    now = datetime.now(timezone.utc).isoformat()
+
+    # 2. Cria documento na coleção users com role = apoiador
+    user_dict = {
+        "firebase_uid": uid,
+        "email": body.email,
+        "name": body.name,
+        "role": "apoiador",
+        "phone": None,
+        "created_at": now,
+        "updated_at": now,
+    }
+    db.collection("users").document(uid).set(user_dict)
+
+    # 3. Vincula ao parceiro se informado
+    if body.partner_id:
+        partner_ref = db.collection("partners").document(body.partner_id)
+        if not partner_ref.get().exists:
+            raise HTTPException(status_code=404, detail="Parceiro não encontrado.")
+        partner_ref.update({
+            "firebase_uid": uid,
+            "updated_at": now,
+        })
+
+    background_tasks.add_task(
+        create_admin_log, admin.get("uid"), admin.get("email"),
+        "create_apoiador_user", "user", uid,
+        {"email": body.email, "partner_id": body.partner_id}
+    )
+
+    return {
+        "message": "Usuário apoiador criado com sucesso.",
+        "uid": uid,
+        "email": body.email,
+        "role": "apoiador",
     }
 
 # ========== FINANCIAL ENDPOINTS ==========
