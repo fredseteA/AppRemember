@@ -110,7 +110,7 @@ function RecentSales({ sales }) {
 }
 
 export default function ApoiadorDashboard() {
-  const { user } = useAuth(); // ← CORRIGIDO: era currentUser
+  const { user, getToken } = useAuth(); // ← CORRIGIDO
   const [partner, setPartner] = useState(null);
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -119,13 +119,14 @@ export default function ApoiadorDashboard() {
 
   const fetchData = async () => {
     try {
-      const token = await user.getIdToken(); // ← CORRIGIDO
+      const token = await getToken(); // ← CORRIGIDO
       const headers = { Authorization: `Bearer ${token}` };
       const partnerRes = await axios.get(`${API}/apoiador/me`, { headers });
       setPartner(partnerRes.data);
       const salesRes = await axios.get(`${API}/apoiador/sales`, { headers });
       setSales(salesRes.data?.sales || []);
-    } catch {
+    } catch (e) {
+      console.error('Dashboard erro:', e?.response?.data || e.message);
       setError('Não foi possível carregar seus dados. Tente novamente.');
     } finally {
       setLoading(false);
@@ -133,7 +134,7 @@ export default function ApoiadorDashboard() {
     }
   };
 
-  useEffect(() => { if (user) fetchData(); }, [user]); // ← CORRIGIDO
+  useEffect(() => { if (user) fetchData(); }, [user]);
   const handleRefresh = () => { setRefreshing(true); fetchData(); };
 
   const now = new Date();
@@ -178,7 +179,7 @@ export default function ApoiadorDashboard() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
               <LayoutDashboard size={22} style={{ color: '#5aa8e0' }} />
               <h1 style={{ fontFamily: '"Georgia", serif', fontSize: 'clamp(1.3rem, 3vw, 1.7rem)', fontWeight: 700, color: '#1a2744', margin: 0 }}>
-                Olá, {partner?.name?.split(' ')[0] || 'Apoiador'} 👋
+                Olá, {partner?.name?.split(' ')[0] || user?.name?.split(' ')[0] || 'Apoiador'} 👋
               </h1>
             </div>
             <p style={{ color: '#5a6a8a', fontSize: '0.86rem', margin: 0 }}>
@@ -193,10 +194,10 @@ export default function ApoiadorDashboard() {
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 16 }}>
-          <StatCard icon={TrendingUp} label="Vendido no mês"       value={`R$ ${monthRevenue.toFixed(2)}`}       sub={`${monthSalesCount} venda${monthSalesCount !== 1 ? 's' : ''} este mês`} accent="#16a34a" delay={0} />
-          <StatCard icon={Coins}      label="Comissão do mês"      value={`R$ ${monthCommission.toFixed(2)}`}    sub={`${level.rate}% aplicado este mês`}                                   accent="#f59e0b" delay={80} />
-          <StatCard icon={Wallet}     label="Comissão disponível"  value={`R$ ${availableCommission.toFixed(2)}`} sub="Pronta para recebimento"                                             accent="#8b5cf6" delay={160} />
-          <StatCard icon={Percent}    label="Percentual atual"     value={`${level.rate}%`}                       sub={`Nível: ${level.label}`}                                             accent={level.color} delay={240} />
+          <StatCard icon={TrendingUp} label="Vendido no mês"      value={`R$ ${monthRevenue.toFixed(2)}`}        sub={`${monthSalesCount} venda${monthSalesCount !== 1 ? 's' : ''} este mês`} accent="#16a34a" delay={0} />
+          <StatCard icon={Coins}      label="Comissão do mês"     value={`R$ ${monthCommission.toFixed(2)}`}     sub={`${level.rate}% aplicado este mês`}                                   accent="#f59e0b" delay={80} />
+          <StatCard icon={Wallet}     label="Comissão disponível" value={`R$ ${availableCommission.toFixed(2)}`} sub="Pronta para recebimento"                                              accent="#8b5cf6" delay={160} />
+          <StatCard icon={Percent}    label="Percentual atual"    value={`${level.rate}%`}                       sub={`Nível: ${level.label}`}                                              accent={level.color} delay={240} />
         </div>
 
         <div style={{ marginBottom: 24 }}>

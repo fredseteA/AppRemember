@@ -88,7 +88,7 @@ function PeriodRow({ group }) {
 }
 
 export function ApoiadorComissoes() {
-  const { user } = useAuth(); // ← CORRIGIDO: era currentUser
+  const { user, getToken } = useAuth(); // ← CORRIGIDO
   const [commissions, setCommissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -97,14 +97,16 @@ export function ApoiadorComissoes() {
 
   const fetchData = async () => {
     try {
-      const token = await user.getIdToken(); // ← CORRIGIDO
+      const token = await getToken(); // ← CORRIGIDO
       const res = await axios.get(`${API}/apoiador/commissions`, { headers: { Authorization: `Bearer ${token}` } });
       setCommissions(res.data?.commissions || []);
-    } catch { setError('Não foi possível carregar as comissões.'); }
-    finally { setLoading(false); setRefreshing(false); }
+    } catch (e) {
+      console.error('Comissões erro:', e?.response?.data || e.message);
+      setError('Não foi possível carregar as comissões.');
+    } finally { setLoading(false); setRefreshing(false); }
   };
 
-  useEffect(() => { if (user) fetchData(); }, [user]); // ← CORRIGIDO
+  useEffect(() => { if (user) fetchData(); }, [user]);
   const handleRefresh = () => { setRefreshing(true); fetchData(); };
 
   const totalPending   = commissions.filter(c => c.commission_status === 'pending').reduce((a, c) => a + (c.commission_amount || 0), 0);

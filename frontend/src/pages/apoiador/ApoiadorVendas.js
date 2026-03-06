@@ -62,7 +62,7 @@ function maskEmail(email) {
 const selectStyle = { padding: '8px 12px', border: '1px solid #e8edf4', borderRadius: 8, fontSize: '0.83rem', color: '#1a2744', fontFamily: '"Georgia", serif', background: '#fff', cursor: 'pointer', minWidth: 160 };
 
 export function ApoiadorVendas() {
-  const { user } = useAuth(); // ← CORRIGIDO: era currentUser
+  const { user, getToken } = useAuth(); // ← CORRIGIDO
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -76,14 +76,16 @@ export function ApoiadorVendas() {
 
   const fetchData = async () => {
     try {
-      const token = await user.getIdToken(); // ← CORRIGIDO
+      const token = await getToken(); // ← CORRIGIDO
       const res = await axios.get(`${API}/apoiador/sales`, { headers: { Authorization: `Bearer ${token}` } });
       setSales(res.data?.sales || []);
-    } catch { setError('Não foi possível carregar as vendas.'); }
-    finally { setLoading(false); setRefreshing(false); }
+    } catch (e) {
+      console.error('Vendas erro:', e?.response?.data || e.message);
+      setError('Não foi possível carregar as vendas.');
+    } finally { setLoading(false); setRefreshing(false); }
   };
 
-  useEffect(() => { if (user) fetchData(); }, [user]); // ← CORRIGIDO
+  useEffect(() => { if (user) fetchData(); }, [user]);
   const handleRefresh = () => { setRefreshing(true); fetchData(); };
 
   const filtered = useMemo(() => sales.filter(s => {
@@ -144,12 +146,11 @@ export function ApoiadorVendas() {
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 22 }}>
-          <SummaryCard icon={ShoppingBag} label="Vendas (filtro)"  value={filtered.length}                   accent="#5aa8e0" delay={0} />
-          <SummaryCard icon={TrendingUp}  label="Total vendido"    value={`R$ ${totalRevenue.toFixed(2)}`}   accent="#16a34a" delay={80} />
+          <SummaryCard icon={ShoppingBag} label="Vendas (filtro)"  value={filtered.length}                    accent="#5aa8e0" delay={0} />
+          <SummaryCard icon={TrendingUp}  label="Total vendido"    value={`R$ ${totalRevenue.toFixed(2)}`}    accent="#16a34a" delay={80} />
           <SummaryCard icon={Coins}       label="Comissão gerada"  value={`R$ ${totalCommission.toFixed(2)}`} accent="#f59e0b" delay={160} />
         </div>
 
-        {/* Filtros */}
         <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #e8edf4', marginBottom: 18, overflow: 'hidden' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', flexWrap: 'wrap' }}>
             <div style={{ position: 'relative', flex: 1, minWidth: 180 }}>
@@ -184,7 +185,6 @@ export function ApoiadorVendas() {
           )}
         </div>
 
-        {/* Tabela */}
         <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e8edf4', boxShadow: '0 2px 12px rgba(26,39,68,0.05)', overflow: 'hidden' }}>
           {filtered.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px 20px', color: '#9aaac0' }}>

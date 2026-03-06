@@ -58,7 +58,7 @@ function CopyButton({ text, label = 'Copiar', style: extraStyle = {} }) {
 }
 
 export function ApoiadorMeuCodigo() {
-  const { user } = useAuth(); // ← CORRIGIDO: era currentUser
+  const { user, getToken } = useAuth(); // ← CORRIGIDO
   const [partner, setPartner] = useState(null);
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -68,7 +68,7 @@ export function ApoiadorMeuCodigo() {
 
   const fetchData = async () => {
     try {
-      const token = await user.getIdToken(); // ← CORRIGIDO
+      const token = await getToken(); // ← CORRIGIDO
       const headers = { Authorization: `Bearer ${token}` };
       const [partnerRes, salesRes] = await Promise.all([
         axios.get(`${API}/apoiador/me`, { headers }),
@@ -76,11 +76,17 @@ export function ApoiadorMeuCodigo() {
       ]);
       setPartner(partnerRes.data);
       setSales(salesRes.data?.sales || []);
-    } catch { setError('Não foi possível carregar seus dados.'); }
-    finally { setLoading(false); setRefreshing(false); setTimeout(() => setVisible(true), 100); }
+    } catch (e) {
+      console.error('MeuCodigo erro:', e?.response?.data || e.message);
+      setError('Não foi possível carregar seus dados.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+      setTimeout(() => setVisible(true), 100);
+    }
   };
 
-  useEffect(() => { if (user) fetchData(); }, [user]); // ← CORRIGIDO
+  useEffect(() => { if (user) fetchData(); }, [user]);
   const handleRefresh = () => { setRefreshing(true); fetchData(); };
 
   const code = partner?.supporter_code || '';
@@ -92,8 +98,11 @@ export function ApoiadorMeuCodigo() {
   const totalCommission = sales.reduce((a, s) => a + (s.commission_amount || 0), 0);
 
   const handleShare = async () => {
-    if (navigator.share) { await navigator.share({ title: 'Remember QRCode', text: `Use meu código ${code} e ganhe desconto em memórias eternas ❤️`, url: referralLink }).catch(() => {}); }
-    else { navigator.clipboard.writeText(referralLink); }
+    if (navigator.share) {
+      await navigator.share({ title: 'Remember QRCode', text: `Use meu código ${code} e ganhe desconto em memórias eternas ❤️`, url: referralLink }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(referralLink);
+    }
   };
 
   if (loading) return (
@@ -145,9 +154,9 @@ export function ApoiadorMeuCodigo() {
             <CopyButton text={code} label="Copiar código" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '12px 20px' }} />
           </div>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <StatPill label="Usos totais" value={totalUses} accent="#5aa8e0" />
-            <StatPill label="Vendido" value={`R$${totalRevenue.toFixed(0)}`} accent="#34d399" />
-            <StatPill label="Comissões" value={`R$${totalCommission.toFixed(0)}`} accent="#f59e0b" />
+            <StatPill label="Usos totais"  value={totalUses}                    accent="#5aa8e0" />
+            <StatPill label="Vendido"      value={`R$${totalRevenue.toFixed(0)}`}    accent="#34d399" />
+            <StatPill label="Comissões"    value={`R$${totalCommission.toFixed(0)}`} accent="#f59e0b" />
           </div>
         </div>
 
@@ -203,7 +212,11 @@ export function ApoiadorMeuCodigo() {
           <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
             {[
               { label: 'Total de usos', value: totalUses, color: '#5aa8e0' },
-              { label: 'Usos este mês', value: sales.filter(s => { if (!s.created_at || s.status === 'cancelled') return false; const d = new Date(s.created_at); const now = new Date(); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); }).length, color: '#8b5cf6' },
+              { label: 'Usos este mês', value: sales.filter(s => {
+                if (!s.created_at || s.status === 'cancelled') return false;
+                const d = new Date(s.created_at); const now = new Date();
+                return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+              }).length, color: '#8b5cf6' },
               { label: 'Cancelamentos', value: sales.filter(s => s.status === 'cancelled').length, color: '#ef4444' },
             ].map(({ label, value, color }) => (
               <div key={label} style={{ flex: 1, minWidth: 120, background: `${color}08`, border: `1px solid ${color}25`, borderRadius: 12, padding: '14px 16px', textAlign: 'center' }}>
