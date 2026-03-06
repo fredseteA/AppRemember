@@ -6,7 +6,7 @@ import axios from 'axios';
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 export default function ApoiadorRoute({ children }) {
-  const { user } = useAuth();
+  const { user, getToken } = useAuth(); // ← usa getToken que sempre retorna token fresco
   const [status, setStatus] = useState('loading');
 
   useEffect(() => {
@@ -17,8 +17,12 @@ export default function ApoiadorRoute({ children }) {
 
     (async () => {
       try {
-        // Sempre obtém token fresco — nunca usa token estático do contexto
-        const token = await user.getIdToken();
+        const token = await getToken(); // ← token fresco via firebaseUser.getIdToken()
+
+        if (!token) {
+          setStatus('denied');
+          return;
+        }
 
         const res = await axios.get(`${API}/auth/me`, {
           headers: { Authorization: `Bearer ${token}` }

@@ -17,61 +17,77 @@ const API = `${BACKEND_URL}/api`;
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(null);         // dados do Firestore (name, role, etc)
+  const [firebaseUser, setFirebaseUser] = useState(null); // objeto Firebase original (tem getIdToken)
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(null);
 
   useEffect(() => {
-  const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-    if (firebaseUser) {
-      const idToken = await firebaseUser.getIdToken(true);
-      setToken(idToken);
+    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      if (fbUser) {
+        // Salva o objeto Firebase original SEPARADO — nunca fazer spread nele
+        setFirebaseUser(fbUser);
 
-      let tokenResult;
+        const idToken = await fbUser.getIdToken(true);
+        setToken(idToken);
 
-      try {
-        tokenResult = await firebaseUser.getIdTokenResult();
-        console.log('Claims:', tokenResult.claims);
+        let tokenResult;
+        try {
+          tokenResult = await fbUser.getIdTokenResult();
+          console.log('Claims:', tokenResult.claims);
 
-        await axios.post(`${API}/auth/register`, {
-          firebase_uid: firebaseUser.uid,
-          email: firebaseUser.email,
-          name: firebaseUser.displayName || firebaseUser.email.split('@')[0]
-        });
+          await axios.post(`${API}/auth/register`, {
+            firebase_uid: fbUser.uid,
+            email: fbUser.email,
+            name: fbUser.displayName || fbUser.email.split('@')[0]
+          });
 
-        const userResponse = await axios.get(`${API}/auth/me`, {
-          headers: { Authorization: `Bearer ${idToken}` }
-        });
+          const userResponse = await axios.get(`${API}/auth/me`, {
+            headers: { Authorization: `Bearer ${idToken}` }
+          });
 
-        setUser({
-          ...firebaseUser,
-          ...userResponse.data,
-          is_admin: tokenResult.claims.admin || false
-        });
-      } catch (error) {
-        console.error('Error registering user:', error);
-        setUser({
-          ...firebaseUser,
-          is_admin: tokenResult?.claims?.admin || false
-        });
+          // user contém dados do Firestore + flags — NÃO mistura com fbUser
+          setUser({
+            uid: fbUser.uid,
+            email: fbUser.email,
+            displayName: fbUser.displayName,
+            photoURL: fbUser.photoURL,
+            ...userResponse.data,
+            is_admin: tokenResult.claims.admin || false,
+          });
+        } catch (error) {
+          console.error('Error registering user:', error);
+          setUser({
+            uid: fbUser.uid,
+            email: fbUser.email,
+            displayName: fbUser.displayName,
+            photoURL: fbUser.photoURL,
+            is_admin: tokenResult?.claims?.admin || false,
+          });
+        }
+      } else {
+        setUser(null);
+        setFirebaseUser(null);
+        setToken(null);
       }
-    } else {
-      setUser(null);
-      setToken(null);
-    }
-    setLoading(false);
-  });
+      setLoading(false);
+    });
 
-  return unsubscribe;
-}, []);
+    return unsubscribe;
+  }, []);
+
+  // Sempre retorna token fresco — use isso em vez do token estático
+  const getToken = async () => {
+    if (!firebaseUser) return null;
+    return await firebaseUser.getIdToken();
+  };
 
   const signIn = async (email, password) => {
     return signInWithEmailAndPassword(auth, email, password);
   };
 
   const signUp = async (email, password, name) => {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    return userCredential;
+    return createUserWithEmailAndPassword(auth, email, password);
   };
 
   const signInWithGoogle = async () => {
@@ -84,7 +100,9 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     user,
-    token,
+    firebaseUser,  // expõe o objeto Firebase original para quem precisar de getIdToken
+    token,         // mantido para não quebrar quem já usa
+    getToken,      // novo — sempre fresco
     loading,
     signIn,
     signUp,
