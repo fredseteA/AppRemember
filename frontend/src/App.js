@@ -22,6 +22,7 @@ import Profile from './pages/Profile';
 import MyMemorials from './pages/MyMemorials';
 import MyPurchases from './pages/MyPurchases';
 import EditMemorial from './pages/EditMemorial';
+import { useEffect } from 'react';
 
 //Apoiador Pages
 import ApoiadorRoute from './routes/ApoiadorRoute';
@@ -90,6 +91,11 @@ const DEFAULT_FOOTER_COLOR = '#ffffff'; // fallback para demais páginas
 // Layout wrapper component that conditionally shows header/footer
 const AppLayout = ({ children }) => {
   const location = useLocation();
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const apoio = params.get('apoio');
+    if (apoio) sessionStorage.setItem('apoio_code', apoio.toUpperCase());
+  }, []);
   const isMemorialPage = location.pathname.startsWith('/memorial/');
   const isAdminPage = location.pathname.startsWith('/admin');
   const isApoiadorPage = location.pathname.startsWith('/apoiador'); // ← ADICIONAR

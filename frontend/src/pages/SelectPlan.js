@@ -78,7 +78,7 @@ const SelectPlan = () => {
 
   // ── Auto-aplicar código da URL (?apoio=FRED5) ─────────────────
   useEffect(() => {
-    const apoio = searchParams.get('apoio');
+    const apoio = searchParams.get('apoio') || sessionStorage.getItem('apoio_code');
     if (apoio) {
       setCodeInput(apoio.toUpperCase());
       validateCode(apoio.toUpperCase());
