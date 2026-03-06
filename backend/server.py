@@ -3,7 +3,7 @@ from fastapi import status as http_status  # ✅ FIX 1: import de status sem con
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from starlette.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, EmailStr, ConfigDict
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Literal
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 from pathlib import Path
@@ -73,6 +73,22 @@ ADMIN_EMAIL = os.getenv('ADMIN_EMAIL', 'rememberqrcode@gmail.com')
 SENDER_EMAIL = os.getenv('SENDER_EMAIL', 'onboarding@resend.dev')
 
 
+# ========== CONSTANTES DE STATUS ==========
+
+ORDER_STATUS_VALUES = Literal[
+    "pending", "approved", "paid",
+    "in_production", "produced",
+    "shipped", "entregue",
+    "cancelled", "cancel_requested"
+]
+
+# Status que representam pedidos efetivamente pagos (usados no dashboard e financeiro)
+PAID_STATUSES = {"approved", "paid", "in_production", "produced", "shipped", "entregue"}
+
+# Planos que exigem entrega física
+PHYSICAL_PLAN_TYPES = {"plaque", "complete", "qrcode_plaque"}
+
+
 # ========== PYDANTIC MODELS ==========
 
 class PersonData(BaseModel):
@@ -87,19 +103,27 @@ class PersonData(BaseModel):
     photo_url: Optional[str] = None
     public_memorial: bool = False
 
-
 class MemorialContent(BaseModel):
     main_phrase: str
     biography: str
     gallery_urls: List[str] = []
     audio_url: Optional[str] = None
 
-
 class ResponsibleData(BaseModel):
     name: str
     phone: str
     email: EmailStr
 
+class DeliveryAddress(BaseModel):
+    recipient_name: str
+    phone: str
+    zip_code: str
+    street: str
+    number: str
+    complement: Optional[str] = None
+    neighborhood: str
+    city: str
+    state: str
 
 class Memorial(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -113,15 +137,15 @@ class Memorial(BaseModel):
     plan_type: Optional[str] = None
     qr_code_url: Optional[str] = None
     slug: Optional[str] = None
+    # [A-3.5] display_name para facilitar visualização no Firestore Console
+    display_name: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
 
 class CreateMemorialRequest(BaseModel):
     person_data: PersonData
     content: MemorialContent
     responsible: ResponsibleData
-
 
 class UpdateMemorialRequest(BaseModel):
     person_data: Optional[PersonData] = None
@@ -130,17 +154,6 @@ class UpdateMemorialRequest(BaseModel):
     status: Optional[str] = None
     plan_type: Optional[str] = None
     qr_code_url: Optional[str] = None
-
-class DeliveryAddress(BaseModel):
-    recipient_name: str
-    phone: str
-    zip_code: str
-    street: str
-    number: str
-    complement: Optional[str] = None
-    neighborhood: str
-    city: str
-    state: str
 
 class Payment(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -158,7 +171,6 @@ class Payment(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-
 class Review(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
@@ -173,15 +185,11 @@ class Review(BaseModel):
     approved: bool = False
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-
 class CreateReviewRequest(BaseModel):
     rating: int = Field(ge=1, le=5)
     title: Optional[str] = None
     comment: Optional[str] = None
 
-
-# ✅ CORREÇÃO PROBLEMA 1 (apoio): CreatePaymentRequest definido UMA única vez,
-# já com o campo supporter_code. A duplicação original causava shadowing silencioso.
 class CreatePaymentRequest(BaseModel):
     memorial_id: str
     plan_type: str
@@ -192,14 +200,17 @@ class CreatePaymentRequest(BaseModel):
     supporter_code: Optional[str] = None
     delivery_address: Optional[DeliveryAddress] = None
 
-
 class ConfirmPaymentRequest(BaseModel):
     payment_id: str
     mp_payment_id: Optional[str] = None
 
-
+#status validado com Literal — Pydantic rejeita strings inválidas automaticamente
 class UpdateOrderStatusRequest(BaseModel):
-    status: str
+    status: ORDER_STATUS_VALUES
+
+#Notas internas do admin em pedidos
+class UpdateOrderNotesRequest(BaseModel):
+    notes: str
 
 class CreatePartnerRequest(BaseModel):
     name: str
@@ -207,7 +218,7 @@ class CreatePartnerRequest(BaseModel):
     phone: Optional[str] = None
     supporter_code: str
     commission_rate: float = 0.10
-
+    firebase_uid: Optional[str] = None
 
 class SupporterCommission(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -242,14 +253,14 @@ class Partner(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-
 class UpdatePartnerRequest(BaseModel):
     name: Optional[str] = None
     email: Optional[EmailStr] = None
     phone: Optional[str] = None
     commission_rate: Optional[float] = None
     status: Optional[str] = None
-
+    firebase_uid: Optional[str] = None
+    monthly_goal: Optional[int] = None
 
 class AdminLog(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -262,7 +273,6 @@ class AdminLog(BaseModel):
     entity_id: str
     details: dict = {}
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
 
 class AdminNotification(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -278,7 +288,6 @@ class AdminNotification(BaseModel):
     read: bool = False
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-
 class CommissionPayment(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
@@ -293,21 +302,17 @@ class CommissionPayment(BaseModel):
     paid_at: Optional[datetime] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-
 class UpdateTrackingRequest(BaseModel):
     tracking_code: str
     delivery_type: str = "correios"
 
-
 class RespondReviewRequest(BaseModel):
     response: str
-
 
 class UpdateMemorialAdminRequest(BaseModel):
     featured: Optional[bool] = None
     active: Optional[bool] = None
     admin_notes: Optional[str] = None
-
 
 class User(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -324,8 +329,8 @@ class User(BaseModel):
     zip_code: Optional[str] = None
     photo_url: Optional[str] = None
     delivery_address: Optional[DeliveryAddress] = None
+    role: str = "user"  # "user" | "admin" | "apoiador"
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
 
 class UpdateUserRequest(BaseModel):
     name: Optional[str] = None
@@ -337,7 +342,30 @@ class UpdateUserRequest(BaseModel):
     state: Optional[str] = None
     zip_code: Optional[str] = None
     photo_url: Optional[str] = None
+    role: Optional[str] = None
 
+class UpdateRoleRequest(BaseModel):
+    role: str  # "user" | "admin" | "apoiador"
+
+class MarkCommissionPaidRequest(BaseModel):
+    period: str          # "2025-03" (ano-mês)
+    payment_method: Optional[str] = "pix"
+    payment_notes: Optional[str] = None
+
+class CreateApoiadorUserRequest(BaseModel):
+    email: EmailStr
+    password: str
+    name: str
+    partner_id: Optional[str] = None
+
+class CreatePartnerWithAccessRequest(BaseModel):
+    name: str
+    email: EmailStr
+    password: str
+    phone: Optional[str] = None
+    supporter_code: str
+    commission_rate: float = 0.10
+    monthly_goal: int = 10
 
 # ========== FIREBASE AUTH VERIFICATION ==========
 
@@ -370,15 +398,62 @@ async def verify_firebase_token(
             detail="Invalid authentication token"
         )
 
-
 async def verify_admin(token_data: dict = Depends(verify_firebase_token)):
-    if token_data is None or not token_data.get("admin", False):
+    """Admin verificado tanto pelo custom claim quanto pelo Firestore role."""
+    if token_data is None:
+        raise HTTPException(status_code=http_status.HTTP_401_UNAUTHORIZED, detail="Não autenticado")
+
+    if not token_data.get("admin"):
+        
+        uid = token_data.get("uid")
+        if uid:
+            user_doc = db.collection("users").document(uid).get()
+            if user_doc.exists:
+                role = user_doc.to_dict().get("role", "user")
+                if role == "admin":
+                    return {**token_data, "role": "admin"}
         raise HTTPException(
             status_code=http_status.HTTP_403_FORBIDDEN,
-            detail="Admin access required. User does not have admin privileges."
+            detail="Acesso negado. Área restrita a administradores."
         )
-    return token_data
 
+    return {**token_data, "role": "admin"}
+
+async def verify_apoiador(token_data: dict = Depends(verify_firebase_token)):
+    """
+    Permite acesso APENAS a usuários com role 'apoiador' ou 'admin'.
+    Retorna token_data enriquecido com role e partner_uid para filtros.
+    """
+    if token_data is None:
+        raise HTTPException(
+            status_code=http_status.HTTP_401_UNAUTHORIZED,
+            detail="Token inválido ou expirado"
+        )
+
+    uid = token_data.get("uid")
+    if not uid:
+        raise HTTPException(
+            status_code=http_status.HTTP_401_UNAUTHORIZED,
+            detail="UID não encontrado no token"
+        )
+
+    user_doc = db.collection("users").document(uid).get()
+    if not user_doc.exists:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail="Usuário não encontrado"
+        )
+
+    user_data = user_doc.to_dict()
+    role = user_data.get("role", "user")
+
+    if role not in ("apoiador", "admin"):
+        raise HTTPException(
+            status_code=http_status.HTTP_403_FORBIDDEN,
+            detail="Acesso negado. Área restrita a apoiadores."
+        )
+
+    return {**token_data, "role": role, "user_data": user_data}
 
 # ========== UTILITY FUNCTIONS ==========
 
@@ -392,7 +467,6 @@ def generate_qr_code(memorial_url: str) -> str:
     img_str = base64.b64encode(buffered.getvalue()).decode()
     return f"data:image/png;base64,{img_str}"
 
-
 def slugify(text: str) -> str:
     text = unicodedata.normalize('NFKD', text)
     text = text.encode('ascii', 'ignore').decode('ascii')
@@ -400,7 +474,6 @@ def slugify(text: str) -> str:
     text = re.sub(r'[^\w\s-]', '', text)
     text = re.sub(r'[-\s]+', '-', text).strip('-')
     return text
-
 
 def generate_unique_slug(full_name: str) -> str:
     base_slug = slugify(full_name)
@@ -415,7 +488,6 @@ def generate_unique_slug(full_name: str) -> str:
         slug = f"{base_slug}-{counter}"
         counter += 1
 
-
 def serialize_datetime(data: Any) -> Any:
     if isinstance(data, datetime):
         return data.isoformat()
@@ -424,7 +496,6 @@ def serialize_datetime(data: Any) -> Any:
     elif isinstance(data, list):
         return [serialize_datetime(item) for item in data]
     return data
-
 
 def deserialize_datetime(data: dict, datetime_fields: List[str]) -> dict:
     if not data:
@@ -438,9 +509,7 @@ def deserialize_datetime(data: dict, datetime_fields: List[str]) -> dict:
                 pass
     return result
 
-
 DISCOUNT_PERCENTAGE = 5.0
-
 
 def supporter_service_validate(code: str) -> Optional[dict]:
     if not code:
@@ -455,7 +524,6 @@ def supporter_service_validate(code: str) -> Optional[dict]:
     )
     return docs[0].to_dict() if docs else None
 
-
 def commission_service_calculate(original_amount: float, commission_rate: float) -> dict:
     discount_amount   = round(original_amount * (DISCOUNT_PERCENTAGE / 100), 2)
     final_amount      = round(original_amount - discount_amount, 2)
@@ -469,8 +537,6 @@ def commission_service_calculate(original_amount: float, commission_rate: float)
         "discount_percentage": DISCOUNT_PERCENTAGE,
     }
 
-
-# ✅ CORREÇÃO PROBLEMA 2: helper central para criar notificações com prioridade
 # Mapa de prioridades por tipo de notificação
 NOTIFICATION_PRIORITY = {
     "cancellation_request": 1,   # crítico — aparece primeiro
@@ -505,7 +571,6 @@ async def create_admin_notification_with_priority(
     notif_dict = serialize_datetime(notif_dict)
     db.collection("admin_notifications").document(notification.id).set(notif_dict)
     return notification
-
 
 async def send_supporter_sale_email(partner_data: dict, payment_data: dict, calc: dict):
     try:
@@ -577,17 +642,13 @@ async def create_admin_log(admin_uid: str, admin_email: str, action: str, entity
     db.collection("admin_logs").document(log.id).set(log_dict)
     return log
 
-
-# Mantido para compatibilidade com chamadas existentes (request_cancel_payment usava direto)
 async def create_admin_notification(type: str, title: str, message: str, entity_type: str = None, entity_id: str = None):
     return await create_admin_notification_with_priority(type, title, message, entity_type, entity_id)
-
 
 def generate_partner_code(name: str) -> str:
     base_code = slugify(name)[:8].upper().replace('-', '')
     suffix = str(uuid.uuid4())[:4].upper()
     return f"{base_code}{suffix}"
-
 
 async def send_admin_notification_email(subject: str, html_content: str):
     try:
@@ -720,7 +781,6 @@ async def send_payment_notification_email(payment_data: dict, memorial_data: dic
         logger.error(f"❌ Erro ao enviar e-mail de notificação: {str(e)}")
         return False
 
-
 async def send_order_status_email(
     order_data: dict,
     memorial_data: dict,
@@ -847,7 +907,6 @@ async def send_order_status_email(
         logger.error(f"❌ Erro ao enviar email de status '{new_status}': {str(e)}")
         return False
 
-
 def get_memorial_for_order(order_data: dict) -> dict:
     memorial_id = order_data.get("memorial_id")
     if memorial_id:
@@ -879,7 +938,6 @@ def _set_commission_available_on_deliver(order_id: str):
                 "available_at": datetime.now(timezone.utc).isoformat()
             })
         logger.info(f"✅ Comissão do pedido {order_id} marcada como 'available'")
-
 
 def _cancel_commission(order_id: str):
     order_ref = db.collection("payments").document(order_id)
@@ -915,6 +973,70 @@ def _cancel_commission(order_id: str):
             "created_at": datetime.now(timezone.utc).isoformat()
         })
         logger.warning(f"⚠️ Pedido {order_id} cancelado mas comissão já estava 'paid'. Ajuste manual registrado.")
+
+async def _process_approved_payment(
+    payment_ref,
+    payment_data: dict,
+    background_tasks: BackgroundTasks,
+    source: str = "unknown"
+) -> bool:
+    """
+    Processa aprovação de pagamento de forma idempotente.
+    Retorna True se processou, False se já estava processado.
+    """
+    current_status = payment_data.get("status", "")
+
+    # Guard de idempotência: status em PAID_STATUSES significa que já foi processado
+    if current_status in PAID_STATUSES:
+        logger.info(f"[{source}] Pagamento {payment_data.get('id')} já processado (status={current_status}). Ignorando.")
+        return False
+
+    memorial_id = payment_data["memorial_id"]
+    plan_type = payment_data["plan_type"]
+    frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:3000')
+
+    memorial_doc = db.collection("memorials").document(memorial_id).get()
+    if not memorial_doc.exists:
+        logger.error(f"[{source}] Memorial {memorial_id} não encontrado para pagamento {payment_data.get('id')}")
+        return False
+
+    memorial_doc_data = memorial_doc.to_dict()
+    memorial_slug = memorial_doc_data.get("slug") or memorial_id
+    memorial_url = f"{frontend_url}/memorial/{memorial_slug}"
+    qr_code_data = generate_qr_code(memorial_url)
+
+    db.collection("memorials").document(memorial_id).update({
+        "status": "published",
+        "plan_type": plan_type,
+        "qr_code_url": qr_code_data,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    })
+
+    payment_ref.update({
+        "status": "approved",
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    })
+
+    updated_payment = payment_ref.get().to_dict()
+    memorial_data = db.collection("memorials").document(memorial_id).get().to_dict()
+
+    if updated_payment and memorial_data:
+        person_name = memorial_data.get("person_data", {}).get("full_name", "N/A")
+        amount = updated_payment.get("amount", 0)
+        plan_names = {'digital': 'Digital', 'plaque': 'Placa QR', 'qrcode_plaque': 'Placa QR', 'complete': 'Completo'}
+        plan_label = plan_names.get(plan_type, plan_type)
+        background_tasks.add_task(send_payment_notification_email, updated_payment, memorial_data)
+        background_tasks.add_task(
+            create_admin_notification_with_priority,
+            "payment_approved", "Pagamento Aprovado",
+            f"Pedido #{payment_data.get('id','')[:8]} aprovado — {person_name} ({plan_label}) — R$ {amount:.2f}",
+            "order", payment_data.get("id"),
+            {"plan_type": plan_type, "amount": amount, "person_name": person_name, "user_email": updated_payment.get("user_email")}
+        )
+
+    logger.info(f"[{source}] Pagamento {payment_data.get('id')} processado com sucesso.")
+    return True
+
 
 # ========== AUTH ENDPOINTS ==========
 
@@ -954,6 +1076,7 @@ async def update_current_user(
         user_ref.update(update_dict)
     return user_ref.get().to_dict()
 
+
 @api_router.get("/auth/me/address")
 async def get_my_address(token_data: dict = Depends(verify_firebase_token)):
     user_ref = db.collection("users").document(token_data["uid"])
@@ -982,6 +1105,32 @@ async def update_my_address(
     return {"message": "Endereço salvo com sucesso", "address": address_dict}
 
 
+@api_router.put("/admin/users/{uid}/role")
+async def update_user_role(
+    uid: str,
+    body: UpdateRoleRequest,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(verify_admin)
+):
+    valid_roles = {"user", "admin", "apoiador"}
+    if body.role not in valid_roles:
+        raise HTTPException(status_code=400, detail=f"Role inválido. Use: {valid_roles}")
+    user_ref = db.collection("users").document(uid)
+    if not user_ref.get().exists:
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Usuário não encontrado")
+    user_ref.update({
+        "role": body.role,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    })
+    background_tasks.add_task(
+        create_admin_log, user.get("uid"), user.get("email"),
+        "update_user_role", "user", uid, {"new_role": body.role}
+    )
+    return {"message": f"Role atualizado para '{body.role}'", "uid": uid}
+
+
+
+
 # ========== MEMORIAL ENDPOINTS ==========
 
 @api_router.post("/memorials", response_model=Memorial)
@@ -994,6 +1143,11 @@ async def create_memorial(memorial_request: CreateMemorialRequest, token_data: d
     )
     slug = generate_unique_slug(memorial_request.person_data.full_name)
     memorial.slug = slug
+    # [A-3.5] display_name para facilitar visualização no Firestore Console
+    full_name = memorial_request.person_data.full_name
+    relationship = memorial_request.person_data.relationship
+    year = datetime.now(timezone.utc).year
+    memorial.display_name = f"{full_name} — {relationship} — {year}"
     memorial_dict = memorial.model_dump()
     memorial_dict = serialize_datetime(memorial_dict)
     db.collection("memorials").document(memorial.id).set(memorial_dict)
@@ -1090,10 +1244,11 @@ async def create_checkout(
 
     memorial = memorial_doc.to_dict()
 
-    # ===== VALIDAÇÃO DE ENDEREÇO PARA PLANOS FÍSICOS =====
-    PHYSICAL_PLAN_TYPES = {"plaque", "complete", "qrcode_plaque"}
-    is_physical_plan = payment_req.plan_type in PHYSICAL_PLAN_TYPES
+    if not mp_access_token:
+        raise HTTPException(status_code=500, detail="Mercado Pago não configurado")
 
+    # Validação de endereço para planos físicos
+    is_physical_plan = payment_req.plan_type in PHYSICAL_PLAN_TYPES
     if is_physical_plan:
         if not payment_req.delivery_address:
             raise HTTPException(
@@ -1101,24 +1256,21 @@ async def create_checkout(
                 detail="Endereço de entrega obrigatório para planos físicos."
             )
         addr = payment_req.delivery_address
-        missing = []
-        if not addr.recipient_name: missing.append("nome do destinatário")
-        if not addr.phone:          missing.append("telefone")
-        if not addr.zip_code:       missing.append("CEP")
-        if not addr.street:         missing.append("rua")
-        if not addr.number:         missing.append("número")
-        if not addr.neighborhood:   missing.append("bairro")
-        if not addr.city:           missing.append("cidade")
-        if not addr.state:          missing.append("estado")
+        missing = [f for f, v in [
+            ("nome do destinatário", addr.recipient_name),
+            ("telefone", addr.phone),
+            ("CEP", addr.zip_code),
+            ("rua", addr.street),
+            ("número", addr.number),
+            ("bairro", addr.neighborhood),
+            ("cidade", addr.city),
+            ("estado", addr.state),
+        ] if not v]
         if missing:
             raise HTTPException(
                 status_code=422,
                 detail=f"Endereço incompleto. Campos faltando: {', '.join(missing)}."
             )
-    # ===== FIM VALIDAÇÃO =====
-
-    if not mp_access_token:
-        raise HTTPException(status_code=500, detail="Mercado Pago não configurado")
 
     supporter_data    = None
     calc              = None
@@ -1158,12 +1310,6 @@ async def create_checkout(
         status="pending"
     )
 
-    # Snapshot do endereço — imutável por pedido
-    delivery_snapshot = None
-    if is_physical_plan and payment_req.delivery_address:
-        delivery_snapshot = payment_req.delivery_address.model_dump()
-
-
     payment_dict = payment.model_dump()
     payment_dict.update({
         "original_amount":    original_amount,
@@ -1174,7 +1320,12 @@ async def create_checkout(
         "commission_rate":    commission_rate,
         "commission_amount":  commission_amount,
         "commission_status":  commission_status,
-        "delivery_address_snapshot": delivery_snapshot,
+        # Snapshot imutável do endereço no momento da compra
+        "delivery_address_snapshot": (
+            payment_req.delivery_address.model_dump()
+            if is_physical_plan and payment_req.delivery_address
+            else None
+        ),
     })
     payment_dict = serialize_datetime(payment_dict)
 
@@ -1292,13 +1443,23 @@ async def get_my_payments(token_data: dict = Depends(verify_firebase_token)):
 
 
 @api_router.post("/payments/confirm")
-async def confirm_payment(body: ConfirmPaymentRequest, background_tasks: BackgroundTasks):
+async def confirm_payment(
+    body: ConfirmPaymentRequest,
+    background_tasks: BackgroundTasks,
+    # [A-1.6] Exige autenticação — apenas o dono do pedido pode confirmar
+    token_data: dict = Depends(verify_firebase_token)
+):
     payment_ref = db.collection("payments").document(body.payment_id)
     payment_doc = payment_ref.get()
     if not payment_doc.exists:
         raise HTTPException(status_code=404, detail="Pagamento não encontrado")
 
     payment_data = payment_doc.to_dict()
+
+    # [A-1.6] Verifica ownership — usuário autenticado deve ser dono do pedido
+    if payment_data.get("user_id") != token_data["uid"]:
+        raise HTTPException(status_code=http_status.HTTP_403_FORBIDDEN, detail="Sem permissão para confirmar este pagamento")
+
     mp_status = "approved"
 
     if body.mp_payment_id:
@@ -1309,56 +1470,24 @@ async def confirm_payment(body: ConfirmPaymentRequest, background_tasks: Backgro
         except Exception as e:
             logger.warning(f"Não foi possível verificar MP: {e}.")
 
+    if mp_status != "approved":
+        payment_ref.update({
+            "status": mp_status,
+            "mercadopago_payment_id": body.mp_payment_id or payment_data.get("mercadopago_payment_id"),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        })
+        return {"status": mp_status, "memorial_published": False}
+
+    # Salvar mp_payment_id antes de processar
     payment_ref.update({
-        "status": mp_status,
         "mercadopago_payment_id": body.mp_payment_id or payment_data.get("mercadopago_payment_id"),
         "updated_at": datetime.now(timezone.utc).isoformat()
     })
+    payment_data = payment_ref.get().to_dict()
 
-    if mp_status == "approved":
-        memorial_id = payment_data["memorial_id"]
-        plan_type = payment_data["plan_type"]
-        frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:3000')
-        memorial_doc = db.collection("memorials").document(memorial_id).get().to_dict()
-        memorial_slug = memorial_doc.get("slug") or memorial_id
-        memorial_url = f"{frontend_url}/memorial/{memorial_slug}"
-        qr_code_data = generate_qr_code(memorial_url)
-        db.collection("memorials").document(memorial_id).update({
-            "status": "published",
-            "plan_type": plan_type,
-            "qr_code_url": qr_code_data,
-            "updated_at": datetime.now(timezone.utc).isoformat()
-        })
-        updated_payment = payment_ref.get().to_dict()
-        memorial_data = db.collection("memorials").document(memorial_id).get().to_dict()
-
-        if updated_payment and memorial_data:
-            background_tasks.add_task(send_payment_notification_email, updated_payment, memorial_data)
-
-            # ✅ CORREÇÃO PROBLEMA 2: notificação de pagamento aprovado
-            person_name = memorial_data.get("person_data", {}).get("full_name", "N/A")
-            amount = updated_payment.get("amount", 0)
-            plan_names = {
-                'digital': 'Digital', 'plaque': 'Placa QR',
-                'qrcode_plaque': 'Placa QR', 'complete': 'Completo'
-            }
-            plan_label = plan_names.get(plan_type, plan_type)
-            background_tasks.add_task(
-                create_admin_notification_with_priority,
-                "payment_approved",
-                "Pagamento Aprovado",
-                f"Pedido #{body.payment_id[:8]} aprovado — {person_name} ({plan_label}) — R$ {amount:.2f}",
-                "order",
-                body.payment_id,
-                {
-                    "plan_type": plan_type,
-                    "amount": amount,
-                    "person_name": person_name,
-                    "user_email": updated_payment.get("user_email"),
-                }
-            )
-
-    return {"status": mp_status, "memorial_published": mp_status == "approved"}
+    # [A-1.5] Função central com idempotência — não reprocessa se já aprovado
+    processed = await _process_approved_payment(payment_ref, payment_data, background_tasks, source="confirm_payment")
+    return {"status": "approved", "memorial_published": processed}
 
 
 @api_router.post("/payments/{payment_id}/request-cancel")
@@ -1475,53 +1604,25 @@ async def handle_mercadopago_webhook(request: Request, background_tasks: Backgro
                         mp_payment = payment_info["response"]
                         external_ref = mp_payment.get("external_reference")
                         new_status = mp_payment.get("status")
+
                         if external_ref:
                             payment_ref = db.collection("payments").document(external_ref)
                             payment_doc = payment_ref.get()
                             if payment_doc.exists:
                                 payment_data = payment_doc.to_dict()
-                                payment_ref.update({"status": new_status, "updated_at": datetime.now(timezone.utc).isoformat()})
+
                                 if new_status == "approved":
-                                    memorial_id = payment_data["memorial_id"]
-                                    plan_type = payment_data["plan_type"]
-                                    frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:3000')
-                                    memorial_doc = db.collection("memorials").document(memorial_id).get().to_dict()
-                                    memorial_slug = memorial_doc.get("slug") or memorial_id
-                                    memorial_url = f"{frontend_url}/memorial/{memorial_slug}"
-                                    qr_code_data = generate_qr_code(memorial_url)
-                                    db.collection("memorials").document(memorial_id).update({
-                                        "status": "published",
-                                        "plan_type": plan_type,
-                                        "qr_code_url": qr_code_data,
+                                    # [A-1.5] Usa função central com idempotência
+                                    await _process_approved_payment(
+                                        payment_ref, payment_data, background_tasks, source="webhook"
+                                    )
+                                else:
+                                    # Para outros status (rejected, cancelled, etc.) — apenas atualiza
+                                    payment_ref.update({
+                                        "status": new_status,
                                         "updated_at": datetime.now(timezone.utc).isoformat()
                                     })
-                                    updated_payment = payment_ref.get().to_dict()
-                                    memorial_data = db.collection("memorials").document(memorial_id).get().to_dict()
-                                    if updated_payment and memorial_data:
-                                        background_tasks.add_task(send_payment_notification_email, updated_payment, memorial_data)
 
-                                        # ✅ CORREÇÃO PROBLEMA 2: notificação via webhook também
-                                        person_name = memorial_data.get("person_data", {}).get("full_name", "N/A")
-                                        amount = updated_payment.get("amount", 0)
-                                        plan_names = {
-                                            'digital': 'Digital', 'plaque': 'Placa QR',
-                                            'qrcode_plaque': 'Placa QR', 'complete': 'Completo'
-                                        }
-                                        plan_label = plan_names.get(plan_type, plan_type)
-                                        background_tasks.add_task(
-                                            create_admin_notification_with_priority,
-                                            "payment_approved",
-                                            "Pagamento Aprovado",
-                                            f"Pedido #{external_ref[:8]} aprovado — {person_name} ({plan_label}) — R$ {amount:.2f}",
-                                            "order",
-                                            external_ref,
-                                            {
-                                                "plan_type": plan_type,
-                                                "amount": amount,
-                                                "person_name": person_name,
-                                                "user_email": updated_payment.get("user_email"),
-                                            }
-                                        )
                 except Exception as e:
                     logger.error(f"Error processing payment webhook: {str(e)}")
 
@@ -1541,12 +1642,6 @@ async def get_admin_stats(user: dict = Depends(verify_admin)):
     return {"total_memorials": len(memorials_docs), "total_orders": len(payments_docs), "total_plaques": total_plaques}
 
 
-# ✅ CORREÇÃO PROBLEMA 3: status válidos para contagem de receita
-# Pedidos que avançaram no fluxo (in_production, produced, shipped, entregue)
-# também são receita — foram pagos e aprovados. Só "cancelled" e "pending" ficam fora.
-PAID_STATUSES = {"approved", "paid", "in_production", "produced", "shipped", "entregue"}
-
-
 @api_router.get("/admin/dashboard")
 async def get_admin_dashboard(user: dict = Depends(verify_admin)):
     from datetime import timedelta
@@ -1562,7 +1657,7 @@ async def get_admin_dashboard(user: dict = Depends(verify_admin)):
     total_memorials = len(memorials_docs)
 
     partners_docs = list(db.collection("partners").where(filter=firestore.FieldFilter("status", "==", "active")).stream())
-    total_partners = len(list(partners_docs))
+    total_partners = len(partners_docs)
 
     total_revenue = 0.0
     monthly_revenue = 0.0
@@ -1570,15 +1665,18 @@ async def get_admin_dashboard(user: dict = Depends(verify_admin)):
     monthly_orders = 0
     total_plaques = 0
     monthly_plaques = 0
+    # [A-2.1] Contadores de cancelamento
+    cancelled_orders = 0
+    cancelled_revenue = 0.0
+    monthly_cancelled = 0
+    # [A-2.2] Solicitações pendentes de cancelamento
+    pending_cancellation_requests = 0
     sales_by_month = defaultdict(lambda: {"revenue": 0.0, "orders": 0})
     sales_by_type = {"digital": 0, "plaque": 0, "complete": 0}
     revenue_by_type = {"digital": 0.0, "plaque": 0.0, "complete": 0.0}
 
     for payment in payments:
-        # ✅ CORREÇÃO PROBLEMA 3: usa PAID_STATUSES em vez de ["approved", "paid"]
-        if payment.get("status", "") not in PAID_STATUSES:
-            continue
-
+        p_status = payment.get("status", "")
         amount = payment.get("amount", 0)
         plan_type = payment.get("plan_type", "digital")
         created_at = payment.get("created_at")
@@ -1587,6 +1685,22 @@ async def get_admin_dashboard(user: dict = Depends(verify_admin)):
                 created_at = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
             except:
                 created_at = now
+
+        # [A-2.2] Contabiliza solicitações pendentes de cancelamento não resolvidas
+        if payment.get("cancel_requested") and p_status != "cancelled":
+            pending_cancellation_requests += 1
+
+        # [A-2.1] Contabiliza cancelamentos separadamente
+        if p_status == "cancelled":
+            cancelled_orders += 1
+            cancelled_revenue += payment.get("original_amount", amount)
+            if created_at.month == current_month and created_at.year == current_year:
+                monthly_cancelled += 1
+            continue
+
+        if p_status not in PAID_STATUSES:
+            continue
+
         total_revenue += amount
         total_orders += 1
         if created_at.month == current_month and created_at.year == current_year:
@@ -1605,6 +1719,10 @@ async def get_admin_dashboard(user: dict = Depends(verify_admin)):
 
     avg_ticket = total_revenue / total_orders if total_orders > 0 else 0
     monthly_avg_ticket = monthly_revenue / monthly_orders if monthly_orders > 0 else 0
+
+    # [A-2.1] Taxa de cancelamento
+    total_all = total_orders + cancelled_orders
+    cancel_rate = round((cancelled_orders / total_all * 100) if total_all > 0 else 0.0, 1)
 
     pending_commissions = 0.0
     comm_docs = list(db.collection("commission_payments").where(filter=firestore.FieldFilter("status", "==", "pending")).stream())
@@ -1632,6 +1750,13 @@ async def get_admin_dashboard(user: dict = Depends(verify_admin)):
         "total_memorials": total_memorials, "total_plaques": total_plaques,
         "monthly_plaques": monthly_plaques, "total_partners": total_partners,
         "pending_commissions": pending_commissions,
+        # [A-2.1] Métricas de cancelamento
+        "cancelled_orders": cancelled_orders,
+        "monthly_cancelled_orders": monthly_cancelled,
+        "cancelled_revenue": round(cancelled_revenue, 2),
+        "cancel_rate": cancel_rate,
+        # [A-2.2] Alerta operacional de cancelamentos aguardando ação
+        "pending_cancellation_requests": pending_cancellation_requests,
         "sales_chart": chart_data, "type_chart": type_chart_data
     }
 
@@ -1653,25 +1778,31 @@ async def test_email_notification(user: dict = Depends(verify_admin)):
 # Busca TODOS os documentos e filtra archived em Python — resolve o bug do Firestore
 # onde documentos sem o campo "archived" eram excluídos pela query de desigualdade.
 @api_router.get("/admin/orders")
-async def get_all_orders(user: dict = Depends(verify_admin), status: Optional[str] = None, archived: bool = False):
-    # Busca todos os pagamentos sem filtro de campo inexistente
-    payments_ref = db.collection("payments")
-    docs = list(payments_ref.stream())
-
+async def get_all_orders(
+    user: dict = Depends(verify_admin),
+    status: Optional[str] = None,
+    archived: bool = False,
+    # [A-2.4] Filtro para ver pedidos aguardando decisão de cancelamento
+    cancel_requested: Optional[bool] = None,
+):
+    docs = list(db.collection("payments").stream())
     orders = []
     for doc in docs:
         order_data = doc.to_dict()
 
-        # Filtro de archived feito em Python — seguro para documentos sem o campo
-        is_archived = order_data.get("archived", False)  # default False se campo não existe
+        is_archived = order_data.get("archived", False)
         if not archived and is_archived:
             continue
         if archived and not is_archived:
             continue
 
-        # Filtro de status opcional
         if status and order_data.get("status") != status:
             continue
+
+        # [A-2.4] Filtro por solicitação de cancelamento pendente
+        if cancel_requested is not None:
+            if order_data.get("cancel_requested", False) != cancel_requested:
+                continue
 
         order_data = deserialize_datetime(order_data, ["created_at", "updated_at"])
         orders.append(order_data)
@@ -1786,13 +1917,22 @@ async def cancel_order(
 
     _cancel_commission(order_id)
 
+    # [A-1.7] Soft-delete: arquiva memorial em vez de deletar permanentemente
     memorial_id = order_data.get("memorial_id")
     if memorial_id:
         try:
-            db.collection("memorials").document(memorial_id).delete()
-            logger.info(f"Memorial {memorial_id} deletado após cancelamento do pedido {order_id}")
+            mem_ref = db.collection("memorials").document(memorial_id)
+            if mem_ref.get().exists:
+                mem_ref.update({
+                    "status": "cancelled",
+                    "active": False,
+                    "cancelled_at": datetime.now(timezone.utc).isoformat(),
+                    "cancelled_by_order": order_id,
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                })
+                logger.info(f"Memorial {memorial_id} arquivado (soft-delete) após cancelamento do pedido {order_id}")
         except Exception as e:
-            logger.error(f"Erro ao deletar memorial {memorial_id}: {str(e)}")
+            logger.error(f"Erro ao arquivar memorial {memorial_id}: {str(e)}")
 
     background_tasks.add_task(
         create_admin_log,
@@ -1807,13 +1947,88 @@ async def cancel_order(
     return {"message": "Pedido cancelado com sucesso"}
 
 
+# [A-1.2] Endpoint /archive — simétrico ao /unarchive
+@api_router.put("/admin/orders/{order_id}/archive")
+async def archive_order(
+    order_id: str,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(verify_admin)
+):
+    order_ref = db.collection("payments").document(order_id)
+    doc = order_ref.get()
+    if not doc.exists:
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Pedido não encontrado")
+
+    order_data = doc.to_dict()
+    order_status = order_data.get("status", "")
+
+    # Só permite arquivar pedidos finalizados
+    if order_status not in ["entregue", "cancelled"]:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Apenas pedidos 'entregue' ou 'cancelled' podem ser arquivados. Status atual: {order_status}"
+        )
+
+    order_ref.update({
+        "archived": True,
+        "archived_at": datetime.now(timezone.utc).isoformat(),
+        "archived_by": user.get("email"),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    })
+
+    background_tasks.add_task(
+        create_admin_log, user.get("uid"), user.get("email"),
+        "archive_order", "order", order_id, {"status": order_status}
+    )
+
+    return {"message": "Pedido arquivado com sucesso"}
+
+
 @api_router.put("/admin/orders/{order_id}/unarchive")
-async def unarchive_order(order_id: str, user: dict = Depends(verify_admin)):
+async def unarchive_order(
+    order_id: str,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(verify_admin)
+):
     order_ref = db.collection("payments").document(order_id)
     if not order_ref.get().exists:
         raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Pedido não encontrado")
-    order_ref.update({"archived": False, "updated_at": datetime.now(timezone.utc).isoformat()})
+    order_ref.update({
+        "archived": False,
+        "unarchived_at": datetime.now(timezone.utc).isoformat(),
+        "unarchived_by": user.get("email"),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    })
+    background_tasks.add_task(
+        create_admin_log, user.get("uid"), user.get("email"),
+        "unarchive_order", "order", order_id, {}
+    )
     return {"message": "Pedido desarquivado com sucesso"}
+
+
+# [A-1.3] Notas internas do admin em pedidos
+@api_router.put("/admin/orders/{order_id}/notes")
+async def update_order_notes(
+    order_id: str,
+    notes_data: UpdateOrderNotesRequest,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(verify_admin)
+):
+    order_ref = db.collection("payments").document(order_id)
+    if not order_ref.get().exists:
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Pedido não encontrado")
+    order_ref.update({
+        "admin_notes": notes_data.notes,
+        "admin_notes_updated_at": datetime.now(timezone.utc).isoformat(),
+        "admin_notes_updated_by": user.get("email"),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    })
+    background_tasks.add_task(
+        create_admin_log, user.get("uid"), user.get("email"),
+        "update_notes", "order", order_id,
+        {"notes_preview": notes_data.notes[:100]}
+    )
+    return {"message": "Notas atualizadas com sucesso"}
 
 
 @api_router.put("/admin/orders/{order_id}/tracking")
@@ -1869,7 +2084,8 @@ async def update_tracking(
 async def get_production_queue(user: dict = Depends(verify_admin)):
     PHYSICAL_TYPES = {"plaque", "complete", "qrcode_plaque"}
     DIGITAL_TYPES  = {"digital"}
-    VALID_STATUSES = {"approved", "paid", "in_production", "produced", "shipped", "entregue", "cancelled"}
+    # [A-6.1] Removido "cancelled" — pedidos cancelados não aparecem na fila de produção
+    VALID_STATUSES = {"approved", "paid", "in_production", "produced", "shipped", "entregue"}
 
     payments_ref = db.collection("payments")
     docs = payments_ref.stream()
@@ -1960,10 +2176,31 @@ async def complete_production(order_id: str, background_tasks: BackgroundTasks, 
 
 
 @api_router.delete("/admin/orders/{order_id}")
-async def delete_order(order_id: str, user: dict = Depends(verify_admin)):
+async def delete_order(
+    order_id: str,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(verify_admin)
+):
     order_ref = db.collection("payments").document(order_id)
-    if not order_ref.get().exists:
+    doc = order_ref.get()
+    if not doc.exists:
         raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Pedido não encontrado")
+
+    order_data = doc.to_dict()
+
+    # [A-5.3] Log de auditoria ANTES de deletar — único jeito de ter rastro
+    await create_admin_log(
+        user.get("uid"), user.get("email"),
+        "delete_order", "order", order_id,
+        {
+            "status": order_data.get("status"),
+            "amount": order_data.get("amount"),
+            "user_email": order_data.get("user_email"),
+            "plan_type": order_data.get("plan_type"),
+            "memorial_id": order_data.get("memorial_id"),
+        }
+    )
+
     order_ref.delete()
     return {"message": "Pedido excluído com sucesso"}
 
@@ -2031,7 +2268,7 @@ async def get_all_partners(user: dict = Depends(verify_admin)):
 
 @api_router.post("/admin/partners")
 async def create_partner(
-    partner_req: CreatePartnerRequest,
+    partner_req: CreatePartnerWithAccessRequest,
     background_tasks: BackgroundTasks,
     user: dict = Depends(verify_admin)
 ):
@@ -2039,22 +2276,45 @@ async def create_partner(
     code = partner_req.supporter_code.strip().upper()
 
     if not _re.match(r'^[A-Z0-9_\-]{3,20}$', code):
-        raise HTTPException(
-            status_code=400,
-            detail="Código inválido. Use letras maiúsculas, números, _ ou -. Entre 3 e 20 caracteres."
-        )
+        raise HTTPException(status_code=400, detail="Código inválido.")
 
-    existing = list(
+    # Verifica código duplicado
+    existing_code = list(
         db.collection("partners")
         .where(filter=firestore.FieldFilter("supporter_code", "==", code))
         .limit(1).stream()
     )
-    if existing:
+    if existing_code:
         raise HTTPException(status_code=400, detail=f"Código '{code}' já está em uso.")
 
-    partner_id = str(uuid.uuid4())
-    now = datetime.now(timezone.utc).isoformat()
+    # Cria usuário no Firebase Auth
+    try:
+        firebase_user = auth.create_user(
+            email=partner_req.email,
+            password=partner_req.password,
+            display_name=partner_req.name,
+        )
+    except auth.EmailAlreadyExistsError:
+        raise HTTPException(status_code=400, detail="Este email já está cadastrado.")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Erro ao criar usuário: {str(e)}")
 
+    uid = firebase_user.uid
+    now = datetime.now(timezone.utc).isoformat()
+    partner_id = str(uuid.uuid4())
+
+    # Cria documento users com role apoiador
+    db.collection("users").document(uid).set({
+        "firebase_uid": uid,
+        "email": partner_req.email,
+        "name": partner_req.name,
+        "role": "apoiador",
+        "phone": partner_req.phone,
+        "created_at": now,
+        "updated_at": now,
+    })
+
+    # Cria documento partners vinculado
     partner_dict = {
         "id": partner_id,
         "name": partner_req.name,
@@ -2062,25 +2322,28 @@ async def create_partner(
         "phone": partner_req.phone,
         "supporter_code": code,
         "code": code,
+        "firebase_uid": uid,
         "commission_rate": partner_req.commission_rate,
+        "monthly_goal": partner_req.monthly_goal,
         "status": "active",
-        "commission_pending":   0.0,
+        "commission_pending": 0.0,
         "commission_available": 0.0,
-        "commission_paid":      0.0,
-        "total_sales_month":    0,
-        "total_revenue_month":  0.0,
+        "commission_paid": 0.0,
+        "total_sales_month": 0,
+        "total_revenue_month": 0.0,
         "total_revenue_all_time": 0.0,
         "created_at": now,
         "updated_at": now,
     }
     db.collection("partners").document(partner_id).set(partner_dict)
+
     background_tasks.add_task(
         create_admin_log, user.get("uid"), user.get("email"),
-        "create_partner", "partner", partner_id,
-        {"name": partner_req.name, "code": code}
+        "create_partner_with_access", "partner", partner_id,
+        {"name": partner_req.name, "code": code, "email": partner_req.email}
     )
-    return partner_dict
 
+    return partner_dict
 
 @api_router.get("/admin/partners/{partner_id}")
 async def get_partner(partner_id: str, user: dict = Depends(verify_admin)):
@@ -2102,6 +2365,17 @@ async def update_partner(
     partner_ref = db.collection("partners").document(partner_id)
     if not partner_ref.get().exists:
         raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Parceiro não encontrado")
+    
+    if updates.firebase_uid:
+        uid_existing = list(
+            db.collection("partners")
+            .where(filter=firestore.FieldFilter("firebase_uid", "==", updates.firebase_uid.strip()))
+            .limit(1).stream()
+        )
+        for doc in uid_existing:
+            if doc.id != partner_id:
+                raise HTTPException(status_code=400, detail="Este Firebase UID já está vinculado a outro parceiro.")
+    
     updates_dict = {k: v for k, v in updates.model_dump().items() if v is not None}
     updates_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
     partner_ref.update(updates_dict)
@@ -2211,6 +2485,307 @@ async def pay_commission(
     )
     return {"message": "Comissão marcada como paga", "amount": comm_data.get("commission_amount")}
 
+
+@api_router.get("/apoiador/me")
+async def get_apoiador_me(token_data: dict = Depends(verify_apoiador)):
+    """Retorna dados do parceiro vinculado ao uid autenticado."""
+    uid = token_data["uid"]
+
+    docs = list(
+        db.collection("partners")
+        .where(filter=firestore.FieldFilter("firebase_uid", "==", uid))
+        .limit(1)
+        .stream()
+    )
+    if not docs:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail="Nenhum parceiro vinculado a este usuário"
+        )
+
+    partner_data = docs[0].to_dict()
+    partner_data["id"] = docs[0].id
+
+    # Remove campos sensíveis antes de retornar
+    partner_data.pop("firebase_uid", None)
+
+    partner_data = deserialize_datetime(partner_data, ["created_at", "updated_at"])
+    return partner_data
+
+@api_router.get("/apoiador/sales")
+async def get_apoiador_sales(token_data: dict = Depends(verify_apoiador)):
+    """
+    Apoiador busca APENAS suas próprias vendas.
+    Filtro duplo: firebase_uid → supporter_code → payments.
+    Nunca retorna vendas de outros apoiadores.
+    """
+    uid = token_data["uid"]
+
+    # 1. Busca parceiro pelo firebase_uid — garante propriedade
+    docs = list(
+        db.collection("partners")
+        .where(filter=firestore.FieldFilter("firebase_uid", "==", uid))
+        .limit(1)
+        .stream()
+    )
+    if not docs:
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+
+    partner_data = docs[0].to_dict()
+    partner_id = docs[0].id
+    supporter_code = partner_data.get("supporter_code") or partner_data.get("code")
+
+    if not supporter_code:
+        raise HTTPException(status_code=400, detail="Parceiro sem código configurado")
+
+    # 2. Busca vendas filtrando TANTO por supporter_code QUANTO por partner_id
+    #    para garantir consistência mesmo que o código mude no futuro
+    payments_by_code = list(
+        db.collection("payments")
+        .where(filter=firestore.FieldFilter("supporter_code", "==", supporter_code))
+        .stream()
+    )
+
+    sales = []
+    for pd in payments_by_code:
+        p = pd.to_dict()
+        p["id"] = pd.id
+
+        # Validação extra: se tiver partner_id salvo, deve bater com o parceiro autenticado
+        if p.get("partner_id") and p.get("partner_id") != partner_id:
+            continue  # Ignora silenciosamente — dado inconsistente
+
+        p = deserialize_datetime(p, ["created_at", "updated_at"])
+
+        # Remove dados sensíveis do comprador
+        p.pop("user_id", None)
+        p.pop("mercadopago_payment_id", None)
+        p.pop("mercadopago_preference_id", None)
+        p.pop("delivery_address_snapshot", None)
+        p.pop("payer_document", None)
+
+        # Mascara email parcialmente (mantém domínio)
+        if p.get("user_email"):
+            email = p["user_email"]
+            parts = email.split("@")
+            if len(parts) == 2:
+                p["user_email"] = parts[0][:3] + "***@" + parts[1]
+
+        sales.append(p)
+
+    # 3. Ordena por data decrescente
+    sales.sort(
+        key=lambda x: x.get("created_at") if isinstance(x.get("created_at"), datetime)
+        else datetime.min.replace(tzinfo=timezone.utc),
+        reverse=True
+    )
+
+    return {
+        "sales": sales,
+        "total": len(sales),
+        "partner_id": partner_id,
+    }
+
+@api_router.get("/apoiador/commissions")
+async def get_apoiador_commissions(token_data: dict = Depends(verify_apoiador)):
+    """
+    Apoiador busca APENAS suas próprias comissões.
+    Filtro por firebase_uid → partner_id.
+    """
+    uid = token_data["uid"]
+
+    # 1. Busca parceiro pelo firebase_uid
+    docs = list(
+        db.collection("partners")
+        .where(filter=firestore.FieldFilter("firebase_uid", "==", uid))
+        .limit(1)
+        .stream()
+    )
+    if not docs:
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+
+    partner_id = docs[0].id
+    partner_data = docs[0].to_dict()
+
+    # 2. Busca comissões filtrando por partner_id
+    comm_docs = list(
+        db.collection("supporter_commissions")
+        .where(filter=firestore.FieldFilter("partner_id", "==", partner_id))
+        .stream()
+    )
+
+    commissions = []
+    for cd in comm_docs:
+        c = cd.to_dict()
+        c["id"] = cd.id
+
+        # Validação extra de ownership
+        if c.get("partner_id") != partner_id:
+            continue
+
+        c = deserialize_datetime(c, ["created_at", "paid_at", "updated_at"])
+
+        # Remove campos que o apoiador não deve ver
+        c.pop("admin_notes", None)
+        c.pop("pix_key", None)
+        c.pop("bank_data", None)
+
+        commissions.append(c)
+
+    commissions.sort(
+        key=lambda x: x.get("created_at") if isinstance(x.get("created_at"), datetime)
+        else datetime.min.replace(tzinfo=timezone.utc),
+        reverse=True
+    )
+
+    totals = {
+        "pending":   sum(c.get("commission_amount", 0) for c in commissions if c.get("commission_status") == "pending"),
+        "available": sum(c.get("commission_amount", 0) for c in commissions if c.get("commission_status") == "available"),
+        "paid":      sum(c.get("commission_amount", 0) for c in commissions if c.get("commission_status") == "paid"),
+    }
+
+    return {
+        "commissions": commissions,
+        "totals": totals,
+    }
+
+@api_router.post("/admin/partners/{partner_id}/commissions/pay")
+async def mark_commissions_paid(
+    partner_id: str,
+    body: MarkCommissionPaidRequest,
+    background_tasks: BackgroundTasks,
+    admin: dict = Depends(verify_admin),
+):
+    """
+    Admin marca todas as comissões 'available' de um período como 'paid'.
+    Apenas admin pode chamar este endpoint.
+    """
+    # Valida formato do período
+    import re
+    if not re.match(r"^\d{4}-\d{2}$", body.period):
+        raise HTTPException(status_code=400, detail="Formato de período inválido. Use YYYY-MM")
+
+    # Confirma que o parceiro existe
+    partner_ref = db.collection("partners").document(partner_id)
+    if not partner_ref.get().exists:
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+
+    # Busca comissões available do parceiro
+    comm_docs = list(
+        db.collection("supporter_commissions")
+        .where(filter=firestore.FieldFilter("partner_id", "==", partner_id))
+        .where(filter=firestore.FieldFilter("commission_status", "==", "available"))
+        .stream()
+    )
+
+    # Filtra pelo período
+    now = datetime.now(timezone.utc)
+    updated = []
+    total_paid = 0.0
+
+    for cd in comm_docs:
+        c = cd.to_dict()
+        created = c.get("created_at")
+        if isinstance(created, str):
+            try:
+                created = datetime.fromisoformat(created)
+            except Exception:
+                continue
+
+        if created:
+            period_key = f"{created.year}-{str(created.month).zfill(2)}"
+            if period_key != body.period:
+                continue
+
+        # Atualiza para paid
+        cd.reference.update({
+            "commission_status": "paid",
+            "paid_at": now.isoformat(),
+            "payment_method": body.payment_method,
+            "payment_notes": body.payment_notes,
+            "paid_by_admin_uid": admin.get("uid"),
+            "updated_at": now.isoformat(),
+        })
+        total_paid += c.get("commission_amount", 0)
+        updated.append(cd.id)
+
+    if not updated:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Nenhuma comissão disponível encontrada para o período {body.period}"
+        )
+
+    background_tasks.add_task(
+        create_admin_log,
+        admin.get("uid"), admin.get("email"),
+        "mark_commissions_paid", "partner", partner_id,
+        {"period": body.period, "count": len(updated), "total_paid": total_paid}
+    )
+
+    return {
+        "message": f"{len(updated)} comissão(ões) marcada(s) como paga(s)",
+        "period": body.period,
+        "count": len(updated),
+        "total_paid": total_paid,
+    }
+
+@api_router.post("/admin/apoiador/create-user")
+async def create_apoiador_user(
+    body: CreateApoiadorUserRequest,
+    background_tasks: BackgroundTasks,
+    admin: dict = Depends(verify_admin)
+):
+    """Admin cria usuário apoiador no Firebase Auth + Firestore + vincula ao parceiro."""
+
+    # 1. Cria usuário no Firebase Authentication
+    try:
+        firebase_user = auth.create_user(
+            email=body.email,
+            password=body.password,
+            display_name=body.name,
+        )
+    except auth.EmailAlreadyExistsError:
+        raise HTTPException(status_code=400, detail="Este email já está cadastrado no Firebase.")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Erro ao criar usuário: {str(e)}")
+
+    uid = firebase_user.uid
+    now = datetime.now(timezone.utc).isoformat()
+
+    # 2. Cria documento na coleção users com role = apoiador
+    user_dict = {
+        "firebase_uid": uid,
+        "email": body.email,
+        "name": body.name,
+        "role": "apoiador",
+        "phone": None,
+        "created_at": now,
+        "updated_at": now,
+    }
+    db.collection("users").document(uid).set(user_dict)
+
+    # 3. Vincula ao parceiro se informado
+    if body.partner_id:
+        partner_ref = db.collection("partners").document(body.partner_id)
+        if not partner_ref.get().exists:
+            raise HTTPException(status_code=404, detail="Parceiro não encontrado.")
+        partner_ref.update({
+            "firebase_uid": uid,
+            "updated_at": now,
+        })
+
+    background_tasks.add_task(
+        create_admin_log, admin.get("uid"), admin.get("email"),
+        "create_apoiador_user", "user", uid,
+        {"email": body.email, "partner_id": body.partner_id}
+    )
+
+    return {
+        "message": "Usuário apoiador criado com sucesso.",
+        "uid": uid,
+        "email": body.email,
+        "role": "apoiador",
+    }
 
 # ========== FINANCIAL ENDPOINTS ==========
 
@@ -2381,6 +2956,81 @@ async def feature_memorial(memorial_id: str, background_tasks: BackgroundTasks, 
     return {"message": f"Memorial {'destacado' if new_featured else 'removido dos destaques'}", "featured": new_featured}
 
 
+# [A-3.3] Regenerar QR Code de um memorial (quando URL muda, erro na geração, etc.)
+@api_router.post("/admin/memorials/{memorial_id}/regenerate-qr")
+async def regenerate_qr_code(
+    memorial_id: str,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(verify_admin)
+):
+    memorial_ref = db.collection("memorials").document(memorial_id)
+    doc = memorial_ref.get()
+    if not doc.exists:
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Memorial não encontrado")
+
+    memorial_data = doc.to_dict()
+    memorial_slug = memorial_data.get("slug") or memorial_id
+    frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:3000')
+    memorial_url = f"{frontend_url}/memorial/{memorial_slug}"
+    new_qr_code = generate_qr_code(memorial_url)
+
+    memorial_ref.update({
+        "qr_code_url": new_qr_code,
+        "qr_regenerated_at": datetime.now(timezone.utc).isoformat(),
+        "qr_regenerated_by": user.get("email"),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    })
+
+    background_tasks.add_task(
+        create_admin_log, user.get("uid"), user.get("email"),
+        "regenerate_qr", "memorial", memorial_id,
+        {"memorial_url": memorial_url}
+    )
+
+    return {"message": "QR Code regenerado com sucesso", "memorial_url": memorial_url, "qr_code_url": new_qr_code}
+
+
+# [A-3.4] Reenviar email de confirmação/status ao cliente
+@api_router.post("/admin/orders/{order_id}/resend-email")
+async def resend_confirmation_email(
+    order_id: str,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(verify_admin)
+):
+    doc = db.collection("payments").document(order_id).get()
+    if not doc.exists:
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Pedido não encontrado")
+
+    order_data = doc.to_dict()
+    order_status = order_data.get("status", "")
+
+    sendable_statuses = {"approved", "paid", "in_production", "produced", "shipped", "entregue", "cancelled"}
+    if order_status not in sendable_statuses:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Não é possível reenviar email para pedidos com status '{order_status}'"
+        )
+
+    memorial_data = get_memorial_for_order(order_data)
+    status_to_send = "paid" if order_status == "approved" else order_status
+    tracking_code = order_data.get("tracking_code")
+    delivery_type = order_data.get("delivery_type", "correios")
+
+    background_tasks.add_task(
+        send_order_status_email, order_data, memorial_data, status_to_send, tracking_code, delivery_type
+    )
+    background_tasks.add_task(
+        create_admin_log, user.get("uid"), user.get("email"),
+        "resend_email", "order", order_id,
+        {"status": status_to_send, "customer_email": order_data.get("user_email")}
+    )
+
+    return {
+        "message": f"Email reenviado com sucesso para {order_data.get('user_email')}",
+        "status_template": status_to_send
+    }
+
+
 # ========== NOTIFICATIONS ENDPOINTS ==========
 
 @api_router.get("/admin/notifications")
@@ -2429,6 +3079,29 @@ async def mark_all_notifications_read(user: dict = Depends(verify_admin)):
     for doc in docs:
         doc.reference.update({"read": True})
     return {"message": "Todas as notificações marcadas como lidas"}
+
+
+# [A-6.6] Deletar notificação individual
+@api_router.delete("/admin/notifications/{notification_id}")
+async def delete_notification(notification_id: str, user: dict = Depends(verify_admin)):
+    notif_ref = db.collection("admin_notifications").document(notification_id)
+    if not notif_ref.get().exists:
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Notificação não encontrada")
+    notif_ref.delete()
+    return {"message": "Notificação excluída"}
+
+
+# [A-6.6] Limpar todas as notificações já lidas — evita crescimento indefinido da coleção
+@api_router.delete("/admin/notifications/clear-read")
+async def clear_read_notifications(user: dict = Depends(verify_admin)):
+    docs = list(db.collection("admin_notifications").where(
+        filter=firestore.FieldFilter("read", "==", True)
+    ).stream())
+    count = 0
+    for doc in docs:
+        doc.reference.delete()
+        count += 1
+    return {"message": f"{count} notificações lidas foram excluídas", "deleted_count": count}
 
 
 # ========== ADMIN LOGS ENDPOINTS ==========

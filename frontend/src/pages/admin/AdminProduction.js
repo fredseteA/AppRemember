@@ -339,6 +339,17 @@ const ProductionCard = ({ order, onAction }) => {
             </div>
           )}
 
+          {/* Botão QR Code */}
+          {!isCancelled && order.memorial_slug && (
+            <button
+              onClick={() => setQrModal(true)}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#3b82f6]/10 border border-[#3b82f6]/20 text-[#3b82f6] rounded-lg font-medium text-sm hover:bg-[#3b82f6]/20 transition-colors"
+            >
+              <QrCode size={16} />
+              QR Code
+            </button>
+          )}
+
           {!isCancelled && !isDelivered && (
             <button
               onClick={() => setShowCancelModal(true)}

@@ -233,6 +233,14 @@ const Header = () => {
                         <><DropdownMenuSeparator />
                         <DropdownMenuItem asChild><Link to="/admin" data-testid="nav-admin">{t('nav.admin')}</Link></DropdownMenuItem></>
                       )}
+                      {user.role === 'apoiador' && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem asChild>
+                            <Link to="/apoiador" data-testid="nav-apoiador">Painel do Apoiador</Link>
+                          </DropdownMenuItem>
+                        </>
+                      )}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={handleLogout} data-testid="logout-button">{t('nav.logout')}</DropdownMenuItem>
                     </DropdownMenuContent>
@@ -277,16 +285,41 @@ const Header = () => {
             {user ? (
               <div style={{ marginTop: 8 }}>
                 <p className="mobile-section-label">Minha conta</p>
-                <Link to="/dashboard" className="mobile-nav-secondary" onClick={closeMobile}>{t('nav.myAccount')}</Link>
-                <Link to="/my-memorials" className="mobile-nav-secondary" onClick={closeMobile}>{t('nav.myMemorials')}</Link>
-                <Link to="/my-purchases" className="mobile-nav-secondary" onClick={closeMobile}>{t('nav.myPurchases')}</Link>
-                <button className="mobile-nav-secondary" onClick={() => { openWhatsApp(); closeMobile(); }}>{t('nav.support')}</button>
-                {user.is_admin && <Link to="/admin" className="mobile-nav-secondary" onClick={closeMobile}>{t('nav.admin')}</Link>}
-                <button onClick={() => { handleLogout(); closeMobile(); }}
-                  style={{ marginTop: 24, width: '100%', borderRadius: '999px', padding: '13px 0',
-                    background: 'rgba(26,39,68,0.08)', border: '1.5px solid rgba(26,39,68,0.15)',
-                    color: '#1a2744', fontFamily: '"Georgia", serif', fontSize: '0.88rem',
-                    fontWeight: 700, cursor: 'pointer', letterSpacing: '0.04em' }}>
+                <Link to="/dashboard" className="mobile-nav-secondary" onClick={closeMobile}>
+                  {t('nav.myAccount')}
+                </Link>
+                <Link to="/my-memorials" className="mobile-nav-secondary" onClick={closeMobile}>
+                  {t('nav.myMemorials')}
+                </Link>
+                <Link to="/my-purchases" className="mobile-nav-secondary" onClick={closeMobile}>
+                  {t('nav.myPurchases')}
+                </Link>
+                <button
+                  className="mobile-nav-secondary"
+                  onClick={() => { openWhatsApp(); closeMobile(); }}
+                >
+                  {t('nav.support')}
+                </button>
+                {user.is_admin && (
+                  <Link to="/admin" className="mobile-nav-secondary" onClick={closeMobile}>
+                    {t('nav.admin')}
+                  </Link>
+                )}
+                {user.role === 'apoiador' && (
+                  <Link to="/apoiador" className="mobile-nav-secondary" onClick={closeMobile}>
+                    Painel do Apoiador
+                  </Link>
+                )}
+                <button
+                  onClick={() => { handleLogout(); closeMobile(); }}
+                  style={{
+                    marginTop: 24, width: '100%', borderRadius: '999px',
+                    padding: '13px 0', background: 'rgba(26,39,68,0.08)',
+                    border: '1.5px solid rgba(26,39,68,0.15)', color: '#1a2744',
+                    fontFamily: '"Georgia", serif', fontSize: '0.88rem',
+                    fontWeight: 700, cursor: 'pointer', letterSpacing: '0.04em',
+                  }}
+                >
                   {t('nav.logout')}
                 </button>
               </div>

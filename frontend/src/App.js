@@ -22,6 +22,12 @@ import Profile from './pages/Profile';
 import MyMemorials from './pages/MyMemorials';
 import MyPurchases from './pages/MyPurchases';
 import EditMemorial from './pages/EditMemorial';
+import { useEffect } from 'react';
+
+//Apoiador Pages
+import ApoiadorRoute from './routes/ApoiadorRoute';
+import ApoiadorDashboard from './pages/apoiador/ApoiadorDashboard';
+import { ApoiadorVendas, ApoiadorComissoes, ApoiadorMeuCodigo } from './pages/apoiador/ApoiadorPages';
 import SobrePage from './pages/SobrePage';
 import PoliticaResponsabilidadePage from './pages/PoliticaResponsabilidadePage';
 import PoliticaPrivacidadePage from './pages/PoliticaPrivacidadePage';
@@ -91,11 +97,16 @@ const DEFAULT_FOOTER_COLOR = '#ffffff'; // fallback para demais páginas
 // Layout wrapper component that conditionally shows header/footer
 const AppLayout = ({ children }) => {
   const location = useLocation();
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const apoio = params.get('apoio');
+    if (apoio) sessionStorage.setItem('apoio_code', apoio.toUpperCase());
+  }, []);
   const isMemorialPage = location.pathname.startsWith('/memorial/');
   const isAdminPage = location.pathname.startsWith('/admin');
+  const isApoiadorPage = location.pathname.startsWith('/apoiador'); // ← ADICIONAR
 
-  // Admin pages have their own layout
-  if (isAdminPage) {
+  if (isAdminPage || isApoiadorPage) { // ← ADICIONAR isApoiadorPage aqui
     return (
       <div className="App min-h-screen">
         {children}
@@ -205,6 +216,20 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
+
+                {/* Apoiador Routes */}
+                <Route path="/apoiador" element={
+                  <ApoiadorRoute><ApoiadorDashboard /></ApoiadorRoute>
+                } />
+                <Route path="/apoiador/vendas" element={
+                  <ApoiadorRoute><ApoiadorVendas /></ApoiadorRoute>
+                } />
+                <Route path="/apoiador/comissoes" element={
+                  <ApoiadorRoute><ApoiadorComissoes /></ApoiadorRoute>
+                } />
+                <Route path="/apoiador/meu-codigo" element={
+                  <ApoiadorRoute><ApoiadorMeuCodigo /></ApoiadorRoute>
+                } />
                 
                 {/* Admin Routes */}
                 <Route
