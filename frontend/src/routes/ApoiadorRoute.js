@@ -6,19 +6,24 @@ import axios from 'axios';
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 export default function ApoiadorRoute({ children }) {
-  const { user, token } = useAuth(); 
+  const { user } = useAuth();
   const [status, setStatus] = useState('loading');
 
   useEffect(() => {
-    if (!user || !token) { 
+    if (!user) {
       setStatus('denied');
       return;
     }
+
     (async () => {
       try {
+        // Sempre obtém token fresco — nunca usa token estático do contexto
+        const token = await user.getIdToken();
+
         const res = await axios.get(`${API}/auth/me`, {
-          headers: { Authorization: `Bearer ${token}` } 
+          headers: { Authorization: `Bearer ${token}` }
         });
+
         const role = res.data?.role || 'user';
         if (role === 'apoiador' || role === 'admin') {
           setStatus('allowed');
@@ -26,27 +31,30 @@ export default function ApoiadorRoute({ children }) {
           setStatus('denied');
         }
       } catch (e) {
-        console.error('ApoiadorRoute erro:', e);
+        console.error('ApoiadorRoute erro:', e?.response?.data || e.message);
         setStatus('denied');
       }
     })();
-  }, [user, token]); 
+  }, [user]);
 
   if (status === 'loading') {
     return (
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         minHeight: '100vh', background: '#f0f4f8',
-        fontFamily: '"Georgia", serif', color: '#1a2744', fontSize: '0.95rem'
+        fontFamily: '"Georgia", serif', color: '#1a2744', fontSize: '0.95rem',
+        gap: 12,
       }}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5aa8e0" strokeWidth="2.5" strokeLinecap="round" style={{ animation: 'spin 1s linear infinite' }}>
+          <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+        </svg>
         Verificando acesso...
+        <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
       </div>
     );
   }
 
-  if (status === 'denied') {
-    return <Navigate to="/" replace />;
-  }
+  if (status === 'denied') return <Navigate to="/" replace />;
 
   return children;
 }

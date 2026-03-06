@@ -1,8 +1,6 @@
-// ApoiadorVendas.js
+// Re-exports centralizados das páginas do painel apoiador
+// O App.js importa tudo daqui: import { ApoiadorVendas, ApoiadorComissoes, ApoiadorMeuCodigo } from './pages/apoiador/ApoiadorPages'
+
 export { ApoiadorVendas } from './ApoiadorVendas';
-
-// ApoiadorComissoes.js
 export { ApoiadorComissoes } from './ApoiadorComissoes';
-
-// ApoiadorMeuCodigo.js
 export { ApoiadorMeuCodigo } from './ApoiadorMeuCodigo';
