@@ -28,6 +28,12 @@ import { useEffect } from 'react';
 import ApoiadorRoute from './routes/ApoiadorRoute';
 import ApoiadorDashboard from './pages/apoiador/ApoiadorDashboard';
 import { ApoiadorVendas, ApoiadorComissoes, ApoiadorMeuCodigo } from './pages/apoiador/ApoiadorPages';
+import SobrePage from './pages/SobrePage';
+import PoliticaResponsabilidadePage from './pages/PoliticaResponsabilidadePage';
+import PoliticaPrivacidadePage from './pages/PoliticaPrivacidadePage';
+import PoliticaTrocaDevolucaoPage from './pages/PoliticaTrocaDevolucaoPage';
+import TermosCondicoesPage from './pages/TermosCondicoesPage';
+import PoliticaEntregaPage from './pages/PoliticaEntregaPage'
 
 // Admin Pages
 import AdminLayout from './components/admin/AdminLayout';
@@ -137,6 +143,12 @@ function App() {
               <Route path="/explore" element={<Explore />} />
               <Route path="/create-memorial" element={<CreateMemorial />} />
               <Route path="/memorial/:id" element={<MemorialView />} />
+              <Route path="/sobre" element={<SobrePage />} />
+              <Route path="/politica-de-responsabilidade" element={<PoliticaResponsabilidadePage />} />
+              <Route path="/politica-de-privacidade" element={<PoliticaPrivacidadePage />} />
+              <Route path="/politica-de-troca-devolucao-reembolso" element={<PoliticaTrocaDevolucaoPage />} />
+              <Route path="/termos-e-condicoes" element={<TermosCondicoesPage />} />
+              <Route path="/politica-de-entrega" element={<PoliticaEntregaPage />} />
               <Route
                   path="/preview/:id"
                   element={

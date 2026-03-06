@@ -851,7 +851,7 @@ function FAQSection() {
     },
     {
       q: "Posso editar o memorial depois de criado?",
-      a: "Sim! Você pode solicitar edições por uma taxa de R$ 9,90. Entre em contato com nosso suporte pelo WhatsApp.",
+      a: "Sim! Após adquirir um plano, você pode editar seu documento gratuitamente e a qualquer momento. Basta acessar a página 'Meus Memoriais' e clicar no botão de edição disponível no card do memorial.",
     },
     {
       q: "Quanto tempo demora a entrega da placa?",

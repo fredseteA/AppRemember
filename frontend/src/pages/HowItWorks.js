@@ -368,14 +368,12 @@ function IncludedSection() {
   ];
 
   useEffect(() => {
-    // Observer do título
     const titleObs = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) setTitleVisible(true); },
       { threshold: 0.2 }
     );
     if (titleRef.current) titleObs.observe(titleRef.current);
 
-    // Observer de cada card
     const cardObs = cardRefs.current.map((ref, i) => {
       if (!ref) return null;
       const obs = new IntersectionObserver(
@@ -397,6 +395,16 @@ function IncludedSection() {
       cardObs.forEach(o => o && o.disconnect());
     };
   }, []);
+
+  // Duração e delay únicos por card para parecerem independentes
+  const floatParams = [
+    { duration: '4.8s', delay: '0s',    distance: '7px'  },
+    { duration: '5.6s', delay: '0.6s',  distance: '9px'  },
+    { duration: '4.2s', delay: '1.1s',  distance: '6px'  },
+    { duration: '6.0s', delay: '0.3s',  distance: '8px'  },
+    { duration: '5.0s', delay: '0.9s',  distance: '7px'  },
+    { duration: '4.6s', delay: '1.4s',  distance: '10px' },
+  ];
 
   return (
     <section
@@ -424,30 +432,24 @@ function IncludedSection() {
           from { opacity: 0; transform: translateY(32px) scale(0.97); filter: blur(4px); }
           to   { opacity: 1; transform: translateY(0)    scale(1);    filter: blur(0);   }
         }
-        @keyframes floatCard0 {
-          0%,100% { transform: translateY(0); }
-          50%     { transform: translateY(-6px); }
+
+        /* Float suave — apenas translateY, sem conflito com outras anims */
+        @keyframes floatSmooth {
+          0%, 100% { transform: translateY(0); }
+          50%      { transform: translateY(var(--float-dist, -7px)); }
         }
-        @keyframes floatCard1 {
-          0%,100% { transform: translateY(0); }
-          50%     { transform: translateY(-8px); }
+
+        /* Wrapper que carrega o reveal */
+        .inc-card-reveal {
+          animation: revealCard 0.65s cubic-bezier(.22,1,.36,1) both;
         }
-        @keyframes floatCard2 {
-          0%,100% { transform: translateY(0); }
-          50%     { transform: translateY(-5px); }
+
+        /* Wrapper interno que carrega o float — separado do reveal */
+        .inc-card-float {
+          animation: floatSmooth var(--float-dur, 5s) ease-in-out var(--float-delay, 0s) infinite;
+          will-change: transform;
         }
-        @keyframes floatCard3 {
-          0%,100% { transform: translateY(0); }
-          50%     { transform: translateY(-7px); }
-        }
-        @keyframes floatCard4 {
-          0%,100% { transform: translateY(0); }
-          50%     { transform: translateY(-6px); }
-        }
-        @keyframes floatCard5 {
-          0%,100% { transform: translateY(0); }
-          50%     { transform: translateY(-9px); }
-        }
+
         .inc-card {
           transition: box-shadow 0.3s ease;
         }
@@ -509,49 +511,66 @@ function IncludedSection() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
           {items.map((item, i) => {
             const isVisible = visibleCards.includes(i);
+            const fp = floatParams[i];
+
             return (
+              /* Camada 1 — reveal (entra de baixo, desaparece após completar) */
               <div
                 key={i}
                 ref={el => { cardRefs.current[i] = el; }}
-                className="inc-card"
+                className={isVisible ? 'inc-card-reveal' : ''}
                 style={{
-                  display: 'flex', alignItems: 'flex-start', gap: 14,
-                  padding: 'clamp(16px, 2.5vw, 24px)',
-                  borderRadius: '18px',
-                  background: 'rgba(255,255,255,0.48)',
-                  backdropFilter: 'blur(16px)',
-                  WebkitBackdropFilter: 'blur(16px)',
-                  border: '1px solid rgba(255,255,255,0.75)',
-                  boxShadow: '0 4px 18px rgba(26,39,68,0.07)',
                   opacity: isVisible ? 1 : 0,
-                  animation: isVisible
-                    ? 'revealCard 0.65s cubic-bezier(.22,1,.36,1) ' + (i * 0.08) + 's both, floatCard' + i + ' ' + (4 + i * 0.4) + 's ease-in-out ' + (i * 0.3) + 's infinite'
-                    : 'none',
+                  animationDelay: isVisible ? `${i * 0.08}s` : '0s',
                 }}
               >
-                <div style={{
-                  width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
-                  background: 'rgba(26,39,68,0.08)',
-                  border: '1px solid rgba(26,39,68,0.12)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  marginTop: 2,
-                }}>
-                  <CheckCircle2 size={16} style={{ color: '#5aa8e0' }} />
-                </div>
-                <div>
-                  <h3 style={{
-                    fontFamily: '"Georgia", serif',
-                    fontSize: 'clamp(0.88rem, 1.4vw, 1rem)',
-                    fontWeight: 700, color: '#1a2744', marginBottom: 4,
-                  }}>
-                    {item.title}
-                  </h3>
-                  <p style={{
-                    fontFamily: '"Georgia", serif',
-                    fontSize: '0.82rem', color: '#3a5070', lineHeight: 1.6,
-                  }}>
-                    {item.desc}
-                  </p>
+                {/* Camada 2 — float contínuo e suave, só começa após o reveal */}
+                <div
+                  className={isVisible ? 'inc-card-float' : ''}
+                  style={{
+                    '--float-dur':   fp.duration,
+                    '--float-delay': isVisible ? `${parseFloat(fp.delay) + i * 0.08 + 0.65}s` : '0s',
+                    '--float-dist':  `-${fp.distance}`,
+                  }}
+                >
+                  <div
+                    className="inc-card"
+                    style={{
+                      display: 'flex', alignItems: 'flex-start', gap: 14,
+                      padding: 'clamp(16px, 2.5vw, 24px)',
+                      borderRadius: '18px',
+                      background: 'rgba(255,255,255,0.48)',
+                      backdropFilter: 'blur(16px)',
+                      WebkitBackdropFilter: 'blur(16px)',
+                      border: '1px solid rgba(255,255,255,0.75)',
+                      boxShadow: '0 4px 18px rgba(26,39,68,0.07)',
+                    }}
+                  >
+                    <div style={{
+                      width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
+                      background: 'rgba(26,39,68,0.08)',
+                      border: '1px solid rgba(26,39,68,0.12)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      marginTop: 2,
+                    }}>
+                      <CheckCircle2 size={16} style={{ color: '#5aa8e0' }} />
+                    </div>
+                    <div>
+                      <h3 style={{
+                        fontFamily: '"Georgia", serif',
+                        fontSize: 'clamp(0.88rem, 1.4vw, 1rem)',
+                        fontWeight: 700, color: '#1a2744', marginBottom: 4,
+                      }}>
+                        {item.title}
+                      </h3>
+                      <p style={{
+                        fontFamily: '"Georgia", serif',
+                        fontSize: '0.82rem', color: '#3a5070', lineHeight: 1.6,
+                      }}>
+                        {item.desc}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             );
