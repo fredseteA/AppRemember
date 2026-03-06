@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import { toast } from 'sonner';
@@ -11,26 +11,28 @@ const API = `${BACKEND_URL}/api`;
 
 const SelectPlan = () => {
   const { id } = useParams();
-  const { user, token } = useAuth();
+  const { user, getToken } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams(); // ← lê parâmetros da URL
   const [loading, setLoading] = useState(false);
   const [memorial, setMemorial] = useState(null);
 
   // ── Código do apoiador ──────────────────────────────────────
-  const [supporterCode, setSupporterCode]       = useState('');
-  const [codeInput, setCodeInput]               = useState('');
-  const [codeValidating, setCodeValidating]     = useState(false);
-  const [codeValid, setCodeValid]               = useState(false);   // true = validado com sucesso
-  const [codeError, setCodeError]               = useState('');
-  const [discountInfo, setDiscountInfo]         = useState(null);
-  
+  const [supporterCode, setSupporterCode]   = useState('');
+  const [codeInput, setCodeInput]           = useState('');
+  const [codeValidating, setCodeValidating] = useState(false);
+  const [codeValid, setCodeValid]           = useState(false);
+  const [codeError, setCodeError]           = useState('');
+  const [discountInfo, setDiscountInfo]     = useState(null);
+
   const [deliveryAddress, setDeliveryAddress] = useState(null);
   const [showAddressStep, setShowAddressStep] = useState(false);
-  const [pendingPlan, setPendingPlan] = useState(null);
+  const [pendingPlan, setPendingPlan]         = useState(null);
 
   useEffect(() => {
     const fetchMemorial = async () => {
       try {
+        const token = await getToken();
         const res = await axios.get(`${API}/memorials/${id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -40,7 +42,56 @@ const SelectPlan = () => {
       }
     };
     if (user) fetchMemorial();
-  }, [id, user, token]);
+  }, [id, user]);
+
+  // ── Validar código no backend ─────────────────────────────────
+  const validateCode = useCallback(async (codeToValidate) => {
+    const code = (codeToValidate || codeInput).trim().toUpperCase();
+    if (!code) return;
+
+    setCodeValidating(true);
+    setCodeError('');
+    setCodeValid(false);
+    setDiscountInfo(null);
+
+    try {
+      const res = await axios.get(`${API}/supporters/validate/${code}`);
+      if (res.data.valid) {
+        setSupporterCode(code);
+        setCodeInput(code);
+        setCodeValid(true);
+        setDiscountInfo({
+          discount_percentage: res.data.discount_percentage,
+          supporter_name: res.data.supporter_name,
+        });
+        toast.success(`Código ${code} aplicado! ${res.data.discount_percentage}% de desconto`);
+      } else {
+        setCodeError('Código inválido ou inativo.');
+      }
+    } catch (e) {
+      const msg = e.response?.data?.detail || 'Código inválido ou inativo.';
+      setCodeError(msg);
+    } finally {
+      setCodeValidating(false);
+    }
+  }, [codeInput]);
+
+  // ── Auto-aplicar código da URL (?apoio=FRED5) ─────────────────
+  useEffect(() => {
+    const apoio = searchParams.get('apoio');
+    if (apoio) {
+      setCodeInput(apoio.toUpperCase());
+      validateCode(apoio.toUpperCase());
+    }
+  }, []); // roda só uma vez ao montar
+
+  const removeCode = () => {
+    setSupporterCode('');
+    setCodeInput('');
+    setCodeValid(false);
+    setCodeError('');
+    setDiscountInfo(null);
+  };
 
   const plans = [
     {
@@ -72,51 +123,10 @@ const SelectPlan = () => {
     }
   ];
 
-  // Calcula preço final com desconto (apenas visual — backend recalcula)
   const getFinalPrice = (originalPrice) => {
     if (!codeValid || !discountInfo) return originalPrice;
     const disc = originalPrice * (discountInfo.discount_percentage / 100);
     return originalPrice - disc;
-  };
-
-  // ── Validar código no backend ─────────────────────────────────
-  const validateCode = async () => {
-    const code = codeInput.trim().toUpperCase();
-    if (!code) return;
-
-    setCodeValidating(true);
-    setCodeError('');
-    setCodeValid(false);
-    setDiscountInfo(null);
-
-    try {
-      const res = await axios.get(`${API}/supporters/validate/${code}`);
-      // Espera: { valid: true, supporter_name: "...", discount_percentage: 5 }
-      if (res.data.valid) {
-        setSupporterCode(code);
-        setCodeValid(true);
-        setDiscountInfo({
-          discount_percentage: res.data.discount_percentage,
-          supporter_name: res.data.supporter_name,
-        });
-        toast.success(`Código aplicado! ${res.data.discount_percentage}% de desconto`);
-      } else {
-        setCodeError('Código inválido ou inativo.');
-      }
-    } catch (e) {
-      const msg = e.response?.data?.detail || 'Código inválido ou inativo.';
-      setCodeError(msg);
-    } finally {
-      setCodeValidating(false);
-    }
-  };
-
-  const removeCode = () => {
-    setSupporterCode('');
-    setCodeInput('');
-    setCodeValid(false);
-    setCodeError('');
-    setDiscountInfo(null);
   };
 
   const PHYSICAL_PLANS = ['plaque', 'complete', 'qrcode_plaque'];
@@ -126,21 +136,18 @@ const SelectPlan = () => {
       toast.error('Faça login para continuar');
       return;
     }
-
-    // Plano físico → verificar endereço antes de ir ao pagamento
     if (PHYSICAL_PLANS.includes(plan.id)) {
       setPendingPlan(plan);
       setShowAddressStep(true);
       return;
     }
-
-    // Plano digital → fluxo normal direto
     await processCheckout(plan, null);
   };
 
   const processCheckout = async (plan, address) => {
     setLoading(true);
     try {
+      const token = await getToken();
       const payload = {
         memorial_id: id,
         plan_type: plan.id,
@@ -149,7 +156,7 @@ const SelectPlan = () => {
         payer_email: user.email,
         payment_method_id: 'account_money',
         supporter_code: supporterCode || null,
-        delivery_address: address || null,  // ← novo campo
+        delivery_address: address || null,
       };
 
       const response = await axios.post(
@@ -173,7 +180,6 @@ const SelectPlan = () => {
     }
   };
 
-
   if (showAddressStep && pendingPlan) {
     return (
       <div style={{
@@ -186,7 +192,7 @@ const SelectPlan = () => {
       }}>
         <div style={{ width: '100%', maxWidth: 560 }}>
           <AddressCheckStep
-            authToken={token}
+            authToken={getToken}
             apiBase={API}
             onAddressReady={(addr) => {
               setDeliveryAddress(addr);
@@ -231,6 +237,7 @@ const SelectPlan = () => {
           from { opacity: 0; transform: translateY(20px) scale(0.98); }
           to   { opacity: 1; transform: translateY(0) scale(1); }
         }
+        @keyframes spin { to { transform: rotate(360deg); } }
         .sp-card {
           transition: transform 0.38s cubic-bezier(.22,1,.36,1), box-shadow 0.38s ease;
         }
@@ -382,7 +389,7 @@ const SelectPlan = () => {
                 />
                 <button
                   className="code-btn"
-                  onClick={validateCode}
+                  onClick={() => validateCode()}
                   disabled={!codeInput.trim() || codeValidating}
                   data-testid="apply-code-btn"
                 >
@@ -403,7 +410,6 @@ const SelectPlan = () => {
               )}
             </>
           ) : (
-            /* Código aplicado com sucesso */
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               background: 'rgba(34,197,94,0.10)',
@@ -429,10 +435,7 @@ const SelectPlan = () => {
               </div>
               <button
                 onClick={removeCode}
-                style={{
-                  background: 'none', border: 'none', cursor: 'pointer',
-                  padding: 4, color: '#64748b',
-                }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#64748b' }}
                 title="Remover código"
               >
                 <X size={16} />
@@ -487,8 +490,6 @@ const SelectPlan = () => {
                 )}
 
                 <div style={{ padding: 'clamp(24px, 4vw, 36px)', flex: 1, display: 'flex', flexDirection: 'column' }}>
-
-                  {/* Nome e preço */}
                   <div style={{ marginBottom: 24 }}>
                     <h3 style={{
                       fontFamily: '"Georgia", serif',
@@ -497,8 +498,6 @@ const SelectPlan = () => {
                     }}>
                       {plan.name}
                     </h3>
-
-                    {/* Preço — mostra original riscado + final se houver desconto */}
                     <div style={{ marginBottom: 6 }}>
                       {hasDiscount && (
                         <div style={{
@@ -520,7 +519,6 @@ const SelectPlan = () => {
                         R$ {finalPrice.toFixed(2).replace('.', ',')}
                       </div>
                     </div>
-
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                       <span style={{
                         fontFamily: '"Georgia", serif',
@@ -545,10 +543,8 @@ const SelectPlan = () => {
                     </div>
                   </div>
 
-                  {/* Divisor */}
                   <div style={{ height: 1, background: 'rgba(26,39,68,0.07)', marginBottom: 20 }} />
 
-                  {/* Features */}
                   <div style={{ flex: 1, marginBottom: 28 }}>
                     {plan.features.map((feature, i) => (
                       <div key={i} className="sp-feature">
@@ -571,7 +567,6 @@ const SelectPlan = () => {
                     ))}
                   </div>
 
-                  {/* Botão */}
                   {plan.highlighted ? (
                     <button
                       className="sp-btn-primary"
