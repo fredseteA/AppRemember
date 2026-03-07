@@ -340,7 +340,7 @@ const ProductionCard = ({ order, onAction }) => {
           )}
 
           {/* Botão QR Code */}
-          {!isCancelled && order.memorial_slug && (
+          {!isCancelled && (order.memorial_slug || order.memorial_id) && (
             <button
               onClick={() => setQrModal(true)}
               className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#3b82f6]/10 border border-[#3b82f6]/20 text-[#3b82f6] rounded-lg font-medium text-sm hover:bg-[#3b82f6]/20 transition-colors"
@@ -364,10 +364,11 @@ const ProductionCard = ({ order, onAction }) => {
           {/* ← MODAL FORA do bloco de cancelar */}
           {qrModal && (
             <QRCodeModal
-              slug={order.memorial_slug}
+              slug={order.memorial_slug || order.memorial_id}
               name={order.person_name || 'Memorial'}
               onClose={() => setQrModal(false)}
               highRes={true}
+              adminOnly={true}
             />
           )}
 
