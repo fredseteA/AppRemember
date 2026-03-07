@@ -210,7 +210,7 @@ const AdminMemorials = () => {
           <p className="text-[#94a3b8]">Tente ajustar os filtros de busca.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {filteredMemorials.map(memorial => (
             <div 
               key={memorial.id}
@@ -218,7 +218,7 @@ const AdminMemorials = () => {
               data-testid={`memorial-card-${memorial.id}`}
             >
               {/* Image */}
-              <div className="relative h-40 bg-[#0b121b]">
+              <div className="relative h-28 bg-[#0b121b]">
                 {memorial.person_data?.photo_url ? (
                   <img 
                     src={memorial.person_data.photo_url} 
@@ -261,7 +261,7 @@ const AdminMemorials = () => {
               </div>
               
               {/* Content */}
-              <div className="p-4">
+              <div className="p-3">
                 <h3 className="text-lg font-semibold text-white mb-1">
                   {memorial.person_data?.full_name || 'Sem nome'}
                 </h3>
