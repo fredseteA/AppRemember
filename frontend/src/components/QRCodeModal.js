@@ -3,7 +3,7 @@ import { X, Download, Copy, CheckCircle, FileCode } from 'lucide-react';
 
 const FRONTEND_URL = process.env.REACT_APP_FRONTEND_URL || window.location.origin;
 
-export default function QRCodeModal({ slug, name, onClose, highRes = false }) {
+export default function QRCodeModal({ slug, name, onClose, highRes = false, adminOnly = false }) {
   const qrContainerRef = useRef(null);
   const plateCanvasRef = useRef(null);
   const [copied, setCopied]             = useState(false);
@@ -127,8 +127,8 @@ export default function QRCodeModal({ slug, name, onClose, highRes = false }) {
     logo.crossOrigin = 'anonymous';
     const finalize   = () => {
       if (logo.complete && logo.naturalWidth > 0) {
-        const logoSize = qrSize * 0.22;   // era 0.18 — maior
-        const padding  = logoSize * 0.35; // era 0.22 — anel mais espesso
+        const logoSize = qrSize * 0.28;  //logo width 
+        const padding  = logoSize * 0.18;
         const lcx      = qrX + qrSize / 2;
         const lcy      = qrY + qrSize / 2;
         const bgR      = logoSize / 2 + padding;
@@ -349,28 +349,30 @@ export default function QRCodeModal({ slug, name, onClose, highRes = false }) {
         </div>
 
         {/* Seletor de formato */}
-        <div style={{ display: 'flex', gap: 8, padding: '0 20px 4px' }}>
-          {[
-            { key: 'png', label: 'PNG (alta resolução)' },
-            { key: 'pdf', label: 'PDF (5×5cm — gráfica)' },
-            { key: 'svg', label: 'SVG (vetorizado)' },
-          ].map(f => (
-            <button
-              key={f.key}
-              onClick={() => setActiveFormat(f.key)}
-              style={{
-                flex: 1, padding: '8px 6px', borderRadius: 8,
-                border: activeFormat === f.key ? '2px solid #1a2744' : '1.5px solid #e5e7eb',
-                background: activeFormat === f.key ? '#1a2744' : 'transparent',
-                color: activeFormat === f.key ? '#fff' : '#6b7280',
-                fontSize: 10, fontWeight: 700, cursor: 'pointer',
-                transition: 'all 0.15s ease',
-              }}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
+        {adminOnly && (
+          <div style={{ display: 'flex', gap: 8, padding: '0 20px 4px' }}>
+            {[
+              { key: 'png', label: 'PNG (alta resolução)' },
+              { key: 'pdf', label: 'PDF (5×5cm — gráfica)' },
+              { key: 'svg', label: 'SVG (vetorizado)' },
+            ].map(f => (
+              <button
+                key={f.key}
+                onClick={() => setActiveFormat(f.key)}
+                style={{
+                  flex: 1, padding: '8px 6px', borderRadius: 8,
+                  border: activeFormat === f.key ? '2px solid #1a2744' : '1.5px solid #e5e7eb',
+                  background: activeFormat === f.key ? '#1a2744' : 'transparent',
+                  color: activeFormat === f.key ? '#fff' : '#6b7280',
+                  fontSize: 10, fontWeight: 700, cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Preview */}
         <div style={S.previewWrap}>
