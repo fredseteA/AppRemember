@@ -3,12 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { Textarea } from '../components/ui/textarea';
 import { Checkbox } from '../components/ui/checkbox';
-import { Card, CardContent } from '../components/ui/card';
 import { toast } from 'sonner';
 import { ChevronLeft, ChevronRight, Upload } from 'lucide-react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -29,6 +24,8 @@ const CreateMemorial = () => {
   const [personData, setPersonData] = useState({
     full_name: '',
     relationship: '',
+    birth_date: '',
+    death_date: '',
     birth_city: '',
     birth_state: '',
     death_city: '',
@@ -322,13 +319,11 @@ const CreateMemorial = () => {
           transition: all 0.5s ease;
           flex-shrink: 0;
         }
-        /* Mobile grid: colunas lado a lado mas mais espaçadas */
         .cm-grid-2 {
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 12px;
         }
-        /* Nav buttons full width no mobile */
         .cm-nav {
           display: flex;
           justify-content: space-between;
@@ -529,6 +524,32 @@ const CreateMemorial = () => {
                       value={personData.relationship}
                       onChange={(e) => setPersonData({ ...personData, relationship: e.target.value })}
                       data-testid="input-relationship" />
+                  </div>
+
+                  {/* ── Datas ── */}
+                  <div className="cm-grid-2">
+                    <div>
+                      <label className="cm-label" htmlFor="birth_date">Data de Nascimento</label>
+                      <input
+                        id="birth_date"
+                        type="date"
+                        className="cm-input"
+                        value={personData.birth_date}
+                        onChange={(e) => setPersonData({ ...personData, birth_date: e.target.value })}
+                        data-testid="input-birth-date"
+                      />
+                    </div>
+                    <div>
+                      <label className="cm-label" htmlFor="death_date">Data de Falecimento</label>
+                      <input
+                        id="death_date"
+                        type="date"
+                        className="cm-input"
+                        value={personData.death_date}
+                        onChange={(e) => setPersonData({ ...personData, death_date: e.target.value })}
+                        data-testid="input-death-date"
+                      />
+                    </div>
                   </div>
 
                   <div className="cm-grid-2">

@@ -1779,7 +1779,7 @@ async def get_admin_dashboard(user: dict = Depends(verify_admin)):
 @api_router.post("/admin/test-email")
 async def test_email_notification(user: dict = Depends(verify_admin)):
     try:
-        test_payment = {"id": "test-payment-123", "user_email": "teste@exemplo.com", "plan_type": "plaque", "amount": 119.90, "status": "approved", "updated_at": datetime.now(timezone.utc).isoformat()}
+        test_payment = {"id": "test-payment-123", "user_email": "teste@exemplo.com", "plan_type": "plaque", "amount": 149.90, "status": "approved", "updated_at": datetime.now(timezone.utc).isoformat()}
         test_memorial = {"id": "test-memorial-456", "person_data": {"full_name": "Maria da Silva (TESTE)"}, "responsible": {"name": "João da Silva (TESTE)", "email": "joao@teste.com", "phone": "(22) 99999-9999"}}
         result = await send_payment_notification_email(test_payment, test_memorial)
         if result:

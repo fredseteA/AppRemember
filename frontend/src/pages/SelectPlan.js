@@ -110,7 +110,7 @@ const SelectPlan = () => {
     {
       id: 'plaque',
       name: 'Plano Placa QR Code',
-      price: 119.90,
+      price: 149.90,
       features: [
         'Tudo do Plano Digital',
         'Placa física em aço inox',
