@@ -1,102 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
-import { ShoppingCart, XCircle } from 'lucide-react';
-import { toast } from 'sonner';
+import { ShoppingCart } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
-
-// Quantos dias o cliente tem para solicitar cancelamento
-const CANCEL_WINDOW_DAYS = 7;
-
-const canRequestCancel = (createdAt, status) => {
-  if (['cancelled', 'entregue', 'shipped'].includes(status)) return false;
-  const created = new Date(createdAt);
-  const now = new Date();
-  const diffDays = (now - created) / (1000 * 60 * 60 * 24);
-  return diffDays <= CANCEL_WINDOW_DAYS;
-};
-
-const daysRemaining = (createdAt) => {
-  const created = new Date(createdAt);
-  const now = new Date();
-  const diffDays = (now - created) / (1000 * 60 * 60 * 24);
-  return Math.max(0, Math.ceil(CANCEL_WINDOW_DAYS - diffDays));
-};
-
-// ─── Modal de confirmação de cancelamento ────────────────────────────────────
-const CancelRequestModal = ({ purchase, onConfirm, onClose }) => (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-    style={{ fontFamily: '"Georgia", serif' }}>
-    <div style={{
-      background: 'rgba(255,255,255,0.97)',
-      borderRadius: 20,
-      padding: 'clamp(24px,4vw,36px)',
-      maxWidth: 440,
-      width: '90%',
-      boxShadow: '0 24px 64px rgba(26,39,68,0.18)',
-      border: '1px solid rgba(239,68,68,0.2)',
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-        <XCircle size={24} color="#ef4444" />
-        <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1a2744' }}>
-          Solicitar Cancelamento
-        </h3>
-      </div>
-      <p style={{ fontSize: '0.88rem', color: '#3a5070', lineHeight: 1.7, marginBottom: 8 }}>
-        Você está solicitando o cancelamento do pedido{' '}
-        <strong>#{purchase.id.substring(0, 8)}</strong> — Plano {purchase.plan_type}.
-      </p>
-      <p style={{ fontSize: '0.88rem', color: '#3a5070', lineHeight: 1.7, marginBottom: 20 }}>
-        Após a confirmação pelo administrador, o reembolso de{' '}
-        <strong>R$ {purchase.amount.toFixed(2).replace('.', ',')}</strong> será
-        processado em até <strong>7 dias úteis</strong>.
-      </p>
-      <div style={{
-        background: 'rgba(251,191,36,0.1)',
-        border: '1px solid rgba(251,191,36,0.3)',
-        borderRadius: 10,
-        padding: '10px 14px',
-        marginBottom: 24,
-        fontSize: '0.78rem',
-        color: '#92400e',
-      }}>
-        ⚠️ Seu memorial será removido após a confirmação do cancelamento.
-      </div>
-      <div style={{ display: 'flex', gap: 10 }}>
-        <button
-          onClick={onClose}
-          style={{
-            flex: 1, padding: '11px 0', borderRadius: 999,
-            background: 'transparent', border: '1.5px solid rgba(26,39,68,0.18)',
-            color: '#2a3d5e', fontFamily: '"Georgia", serif',
-            fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer',
-          }}
-        >
-          Voltar
-        </button>
-        <button
-          onClick={() => { onConfirm(purchase.id); onClose(); }}
-          style={{
-            flex: 1, padding: '11px 0', borderRadius: 999,
-            background: '#ef4444', border: 'none',
-            color: 'white', fontFamily: '"Georgia", serif',
-            fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer',
-          }}
-        >
-          Confirmar Solicitação
-        </button>
-      </div>
-    </div>
-  </div>
-);
 
 const MyPurchases = () => {
   const { token } = useAuth();
   const [purchases, setPurchases] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [cancelModal, setCancelModal] = useState(null); // purchase object
 
   useEffect(() => {
     const fetchPurchases = async () => {
@@ -113,23 +26,6 @@ const MyPurchases = () => {
     };
     fetchPurchases();
   }, [token]);
-
-  const handleRequestCancel = async (paymentId) => {
-    try {
-      await axios.post(
-        `${API}/payments/${paymentId}/request-cancel`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setPurchases(prev => prev.map(p =>
-        p.id === paymentId ? { ...p, cancel_requested: true } : p
-      ));
-      toast.success('Solicitação enviada! Você receberá um email de confirmação.');
-    } catch (error) {
-      const msg = error.response?.data?.detail || 'Erro ao solicitar cancelamento.';
-      toast.error(msg);
-    }
-  };
 
   if (loading) {
     return (
@@ -188,36 +84,7 @@ const MyPurchases = () => {
           transform: translateY(-3px);
           box-shadow: 0 16px 40px rgba(26,39,68,0.11) !important;
         }
-        .mp-cancel-btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          padding: 7px 16px;
-          border-radius: 999px;
-          background: rgba(239,68,68,0.08);
-          border: 1.5px solid rgba(239,68,68,0.25);
-          color: #ef4444;
-          font-family: "Georgia", serif;
-          font-size: 0.72rem;
-          font-weight: 700;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          white-space: nowrap;
-        }
-        .mp-cancel-btn:hover {
-          background: rgba(239,68,68,0.15);
-          border-color: rgba(239,68,68,0.4);
-        }
       `}</style>
-
-      {/* Modal */}
-      {cancelModal && (
-        <CancelRequestModal
-          purchase={cancelModal}
-          onConfirm={handleRequestCancel}
-          onClose={() => setCancelModal(null)}
-        />
-      )}
 
       {/* Nuvem esquerda */}
       <div
@@ -312,10 +179,8 @@ const MyPurchases = () => {
             style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(10px, 2vw, 14px)' }}
           >
             {purchases.map((purchase, index) => {
-              const showCancel = canRequestCancel(purchase.created_at, purchase.status);
-              const days = daysRemaining(purchase.created_at);
-              const alreadyRequested = purchase.cancel_requested;
               const isCancelled = purchase.status === 'cancelled';
+              const alreadyRequested = purchase.cancel_requested;
 
               return (
                 <div
@@ -380,7 +245,7 @@ const MyPurchases = () => {
                           );
                         })()}
 
-                        {/* Badge de cancelamento solicitado */}
+                        {/* Badge cancelamento solicitado */}
                         {alreadyRequested && !isCancelled && (
                           <span style={{
                             display: 'inline-block', padding: '3px 11px', borderRadius: 999,
@@ -409,36 +274,6 @@ const MyPurchases = () => {
                         }}>
                           ID Mercado Pago: {purchase.mercadopago_payment_id}
                         </p>
-                      )}
-
-                      {/* Botão cancelar ou aviso */}
-                      {!isCancelled && !alreadyRequested && (
-                        <div style={{ marginTop: 12 }}>
-                          {showCancel ? (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                              <button
-                                className="mp-cancel-btn"
-                                onClick={() => setCancelModal(purchase)}
-                              >
-                                <XCircle size={13} />
-                                Solicitar Cancelamento
-                              </button>
-                              <span style={{
-                                fontSize: '0.68rem', color: 'rgba(58,80,112,0.5)',
-                                fontFamily: '"Georgia", serif',
-                              }}>
-                                {days === 1 ? 'Último dia' : `${days} dias restantes`}
-                              </span>
-                            </div>
-                          ) : (
-                            <p style={{
-                              fontSize: '0.7rem', color: 'rgba(58,80,112,0.45)',
-                              fontFamily: '"Georgia", serif', marginTop: 4,
-                            }}>
-                              Prazo de cancelamento encerrado
-                            </p>
-                          )}
-                        </div>
                       )}
 
                       {isCancelled && (
