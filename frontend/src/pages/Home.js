@@ -1350,7 +1350,7 @@ const Home = () => {
                 Plano Placa QR Code
               </h3>
               <div style={{ fontFamily: '"Georgia", serif', fontSize: "clamp(1.8rem, 7vw, 2.8rem)", fontWeight: 700, color: "#7bbde8", lineHeight: 1, marginBottom: "6px" }}>
-                R$ 119,90
+                R$ 149,90
               </div>
               <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "clamp(0.8rem, 3vw, 0.82rem)", marginBottom: "18px", lineHeight: 1.5 }}>
                 Memorial + Placa física de aço inox
