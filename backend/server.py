@@ -1665,11 +1665,9 @@ async def get_admin_dashboard(user: dict = Depends(verify_admin)):
     monthly_orders = 0
     total_plaques = 0
     monthly_plaques = 0
-    # [A-2.1] Contadores de cancelamento
     cancelled_orders = 0
     cancelled_revenue = 0.0
     monthly_cancelled = 0
-    # [A-2.2] Solicitações pendentes de cancelamento
     pending_cancellation_requests = 0
     sales_by_month = defaultdict(lambda: {"revenue": 0.0, "orders": 0})
     sales_by_type = {"digital": 0, "plaque": 0, "complete": 0}
@@ -1686,11 +1684,9 @@ async def get_admin_dashboard(user: dict = Depends(verify_admin)):
             except:
                 created_at = now
 
-        # [A-2.2] Contabiliza solicitações pendentes de cancelamento não resolvidas
         if payment.get("cancel_requested") and p_status != "cancelled":
             pending_cancellation_requests += 1
 
-        # [A-2.1] Contabiliza cancelamentos separadamente
         if p_status == "cancelled":
             cancelled_orders += 1
             cancelled_revenue += payment.get("original_amount", amount)
@@ -1720,7 +1716,6 @@ async def get_admin_dashboard(user: dict = Depends(verify_admin)):
     avg_ticket = total_revenue / total_orders if total_orders > 0 else 0
     monthly_avg_ticket = monthly_revenue / monthly_orders if monthly_orders > 0 else 0
 
-    # [A-2.1] Taxa de cancelamento
     total_all = total_orders + cancelled_orders
     cancel_rate = round((cancelled_orders / total_all * 100) if total_all > 0 else 0.0, 1)
 
@@ -1738,9 +1733,9 @@ async def get_admin_dashboard(user: dict = Depends(verify_admin)):
         chart_data.append({"month": month_name, "revenue": data["revenue"], "orders": data["orders"]})
 
     type_chart_data = [
-        {"name": "Digital", "value": sales_by_type["digital"], "revenue": revenue_by_type["digital"]},
-        {"name": "Placa QR", "value": sales_by_type["plaque"], "revenue": revenue_by_type["plaque"]},
-        {"name": "Completo", "value": sales_by_type["complete"], "revenue": revenue_by_type["complete"]}
+        {"name": "Digital",   "value": sales_by_type["digital"],  "revenue": revenue_by_type["digital"]},
+        {"name": "Placa QR",  "value": sales_by_type["plaque"],   "revenue": revenue_by_type["plaque"]},
+        {"name": "Completo",  "value": sales_by_type["complete"], "revenue": revenue_by_type["complete"]}
     ]
 
     return {
@@ -1750,12 +1745,10 @@ async def get_admin_dashboard(user: dict = Depends(verify_admin)):
         "total_memorials": total_memorials, "total_plaques": total_plaques,
         "monthly_plaques": monthly_plaques, "total_partners": total_partners,
         "pending_commissions": pending_commissions,
-        # [A-2.1] Métricas de cancelamento
         "cancelled_orders": cancelled_orders,
         "monthly_cancelled_orders": monthly_cancelled,
         "cancelled_revenue": round(cancelled_revenue, 2),
         "cancel_rate": cancel_rate,
-        # [A-2.2] Alerta operacional de cancelamentos aguardando ação
         "pending_cancellation_requests": pending_cancellation_requests,
         "sales_chart": chart_data, "type_chart": type_chart_data
     }
@@ -1774,15 +1767,11 @@ async def test_email_notification(user: dict = Depends(verify_admin)):
         raise HTTPException(status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Erro ao enviar e-mail: {str(e)}")
 
 
-# ✅ CORREÇÃO PROBLEMA 1: get_admin_orders reescrito sem query "!= True"
-# Busca TODOS os documentos e filtra archived em Python — resolve o bug do Firestore
-# onde documentos sem o campo "archived" eram excluídos pela query de desigualdade.
 @api_router.get("/admin/orders")
 async def get_all_orders(
     user: dict = Depends(verify_admin),
     status: Optional[str] = None,
     archived: bool = False,
-    # [A-2.4] Filtro para ver pedidos aguardando decisão de cancelamento
     cancel_requested: Optional[bool] = None,
 ):
     docs = list(db.collection("payments").stream())
@@ -1799,7 +1788,6 @@ async def get_all_orders(
         if status and order_data.get("status") != status:
             continue
 
-        # [A-2.4] Filtro por solicitação de cancelamento pendente
         if cancel_requested is not None:
             if order_data.get("cancel_requested", False) != cancel_requested:
                 continue
@@ -1807,7 +1795,6 @@ async def get_all_orders(
         order_data = deserialize_datetime(order_data, ["created_at", "updated_at"])
         orders.append(order_data)
 
-    # Ordenação por created_at decrescente feita em Python
     orders.sort(
         key=lambda x: x.get("created_at") if isinstance(x.get("created_at"), datetime)
         else datetime.min.replace(tzinfo=timezone.utc),
@@ -1867,14 +1854,18 @@ async def update_order_status(
         "changed_at": datetime.now(timezone.utc).isoformat()
     })
 
-    order_ref.update({
+    update_fields = {
         "status": new_status,
         "status_history": status_history,
         "updated_at": datetime.now(timezone.utc).isoformat()
-    })
+    }
 
+    # ── Etapa 2: timestamp de entrega ────────────────────────────────────────
     if new_status == "entregue":
+        update_fields["delivered_at"] = datetime.now(timezone.utc).isoformat()
         _set_commission_available_on_deliver(order_id)
+
+    order_ref.update(update_fields)
 
     background_tasks.add_task(
         create_admin_log,
@@ -1917,7 +1908,6 @@ async def cancel_order(
 
     _cancel_commission(order_id)
 
-    # [A-1.7] Soft-delete: arquiva memorial em vez de deletar permanentemente
     memorial_id = order_data.get("memorial_id")
     if memorial_id:
         try:
@@ -1930,7 +1920,6 @@ async def cancel_order(
                     "cancelled_by_order": order_id,
                     "updated_at": datetime.now(timezone.utc).isoformat()
                 })
-                logger.info(f"Memorial {memorial_id} arquivado (soft-delete) após cancelamento do pedido {order_id}")
         except Exception as e:
             logger.error(f"Erro ao arquivar memorial {memorial_id}: {str(e)}")
 
@@ -1947,7 +1936,6 @@ async def cancel_order(
     return {"message": "Pedido cancelado com sucesso"}
 
 
-# [A-1.2] Endpoint /archive — simétrico ao /unarchive
 @api_router.put("/admin/orders/{order_id}/archive")
 async def archive_order(
     order_id: str,
@@ -1962,7 +1950,6 @@ async def archive_order(
     order_data = doc.to_dict()
     order_status = order_data.get("status", "")
 
-    # Só permite arquivar pedidos finalizados
     if order_status not in ["entregue", "cancelled"]:
         raise HTTPException(
             status_code=400,
@@ -2006,7 +1993,6 @@ async def unarchive_order(
     return {"message": "Pedido desarquivado com sucesso"}
 
 
-# [A-1.3] Notas internas do admin em pedidos
 @api_router.put("/admin/orders/{order_id}/notes")
 async def update_order_notes(
     order_id: str,
@@ -2059,7 +2045,7 @@ async def update_tracking(
         "delivery_type": tracking_data.delivery_type,
         "status": "shipped",
         "status_history": status_history,
-        "shipped_at": datetime.now(timezone.utc).isoformat(),
+        "shipped_at": datetime.now(timezone.utc).isoformat(),  # já existia
         "updated_at": datetime.now(timezone.utc).isoformat()
     })
 
@@ -2084,7 +2070,6 @@ async def update_tracking(
 async def get_production_queue(user: dict = Depends(verify_admin)):
     PHYSICAL_TYPES = {"plaque", "complete", "qrcode_plaque"}
     DIGITAL_TYPES  = {"digital"}
-    # [A-6.1] Removido "cancelled" — pedidos cancelados não aparecem na fila de produção
     VALID_STATUSES = {"approved", "paid", "in_production", "produced", "shipped", "entregue"}
 
     payments_ref = db.collection("payments")
@@ -2112,8 +2097,13 @@ async def get_production_queue(user: dict = Depends(verify_admin)):
             memorial_doc = db.collection("memorials").document(memorial_id).get()
             if memorial_doc.exists:
                 memorial_data = memorial_doc.to_dict()
-                order_data["person_name"]   = memorial_data.get("person_data", {}).get("full_name", "N/A")
+                person_data = memorial_data.get("person_data", {})
+                order_data["person_name"]   = person_data.get("full_name", "N/A")
                 order_data["memorial_slug"] = memorial_data.get("slug")
+                # ── Etapa 2: campos extras para preview ──────────────────
+                order_data["person_photo"]  = person_data.get("photo_url")
+                order_data["birth_date"]    = person_data.get("birth_date")
+                order_data["death_date"]    = person_data.get("death_date")
 
         order_data["is_physical"] = plan_type in PHYSICAL_TYPES
 
@@ -2188,7 +2178,6 @@ async def delete_order(
 
     order_data = doc.to_dict()
 
-    # [A-5.3] Log de auditoria ANTES de deletar — único jeito de ter rastro
     await create_admin_log(
         user.get("uid"), user.get("email"),
         "delete_order", "order", order_id,
@@ -2203,7 +2192,6 @@ async def delete_order(
 
     order_ref.delete()
     return {"message": "Pedido excluído com sucesso"}
-
 
 # ========== PARTNERS ENDPOINTS ==========
 
