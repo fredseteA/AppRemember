@@ -1200,13 +1200,23 @@ async def get_memorial_by_slug(slug: str):
 
 @api_router.get("/memorials/{memorial_id}", response_model=Memorial)
 async def get_memorial(memorial_id: str):
+    # Tenta primeiro por ID direto
     doc = db.collection("memorials").document(memorial_id).get()
+
+    # Se não encontrou por ID, tenta por slug
     if not doc.exists:
-        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Memorial not found")
+        slug_query = db.collection("memorials") \
+            .where(filter=firestore.FieldFilter("slug", "==", memorial_id)) \
+            .limit(1) \
+            .stream()
+        docs = list(slug_query)
+        if not docs:
+            raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Memorial not found")
+        doc = docs[0]
+
     memorial_data = doc.to_dict()
     memorial_data = deserialize_datetime(memorial_data, ["created_at", "updated_at"])
     return memorial_data
-
 
 @api_router.put("/memorials/{memorial_id}")
 async def update_memorial(
