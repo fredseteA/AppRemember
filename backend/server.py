@@ -1199,7 +1199,7 @@ async def get_memorial_by_slug(slug: str):
 
 @api_router.post("/admin/migrate/slugs")
 async def migrate_slugs(user: dict = Depends(verify_admin)):
-    docs = db.collection("memorials").stream()
+    docs = list(db.collection("memorials").stream())  # ← converte para lista antes
     updated = 0
     for doc in docs:
         data = doc.to_dict()
