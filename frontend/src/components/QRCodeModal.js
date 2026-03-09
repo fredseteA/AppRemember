@@ -35,22 +35,19 @@ export default function QRCodeModal({ slug, name, onClose, highRes = false, admi
   // ─── Desenha finder pattern (canto) arredondado e colorido ───────────────
   const drawFinderPattern = (ctx, x, y, moduleSize, color = '#1a2744') => {
     const outer = moduleSize * 7;
-    const r     = moduleSize * 1.2; // raio do arredondamento
+    const r     = moduleSize * 1.2;
 
-    // Quadrado externo preenchido
     ctx.fillStyle = color;
     ctx.beginPath();
     ctx.roundRect(x, y, outer, outer, r);
     ctx.fill();
 
-    // Quadrado branco interno (separação)
     const sep = moduleSize;
     ctx.fillStyle = '#ffffff';
     ctx.beginPath();
     ctx.roundRect(x + sep, y + sep, outer - sep * 2, outer - sep * 2, r * 0.5);
     ctx.fill();
 
-    // Quadrado escuro central
     const innerSize = moduleSize * 3;
     const innerOff  = moduleSize * 2;
     ctx.fillStyle = color;
@@ -75,7 +72,6 @@ export default function QRCodeModal({ slug, name, onClose, highRes = false, admi
     const margin = plateSize * 0.08;
     const inner  = plateSize - margin * 2;
 
-    // Label
     const labelSize = Math.round(plateSize * 0.045);
     ctx.font         = `${labelSize}px Georgia, serif`;
     ctx.fillStyle    = '#9ca3af';
@@ -84,7 +80,6 @@ export default function QRCodeModal({ slug, name, onClose, highRes = false, admi
     const labelY     = margin;
     ctx.fillText('Em memória de', cx, labelY);
 
-    // Nome
     const nameSize   = Math.round(plateSize * 0.075);
     ctx.font         = `bold ${nameSize}px Georgia, serif`;
     ctx.fillStyle    = '#1a2744';
@@ -94,16 +89,11 @@ export default function QRCodeModal({ slug, name, onClose, highRes = false, admi
     const nameY      = labelY + labelSize * 1.5;
     nameLines.forEach((l, i) => ctx.fillText(l, cx, nameY + i * lineHeight));
 
-    // QR Code
     const gap = plateSize * 0.04;
     const qrY = nameY + nameBlockH + gap;
     const qrX = (plateSize - qrSize) / 2;
     ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
 
-    // ── Finder patterns coloridos sobre o QR ─────────────────────────────
-    // Calcula tamanho de módulo baseado no qrSize renderizado
-    const moduleSize = qrSize / (qrCanvas.width / (qrCanvas.width / 33));
-    // Abordagem mais robusta: detecta via pixels
     const tempCtx  = qrCanvas.getContext('2d');
     const imgData  = tempCtx.getImageData(0, 0, qrCanvas.width, qrCanvas.height);
     const pixels   = imgData.data;
@@ -112,28 +102,23 @@ export default function QRCodeModal({ slug, name, onClose, highRes = false, admi
       if (pixels[(0 * qrCanvas.width + x) * 4] < 128) { mod = x; break; }
     }
     if (mod < 1) mod = Math.round(qrCanvas.width / 33);
-    const scale    = qrSize / qrCanvas.width; // fator de escala canvas→plate
-    const modPx    = mod * scale;             // tamanho de módulo em pixels do plate
+    const scale  = qrSize / qrCanvas.width;
+    const modPx  = mod * scale;
 
-    // Canto superior esquerdo
     drawFinderPattern(ctx, qrX, qrY, modPx);
-    // Canto superior direito
     drawFinderPattern(ctx, qrX + qrSize - modPx * 7, qrY, modPx);
-    // Canto inferior esquerdo
     drawFinderPattern(ctx, qrX, qrY + qrSize - modPx * 7, modPx);
 
-    // ── Logo centralizada maior com anel branco espesso ───────────────────
     const logo       = new Image();
     logo.crossOrigin = 'anonymous';
     const finalize   = () => {
       if (logo.complete && logo.naturalWidth > 0) {
-        const logoSize = qrSize * 0.28;  //logo width 
+        const logoSize = qrSize * 0.28;
         const padding  = logoSize * 0.18;
         const lcx      = qrX + qrSize / 2;
         const lcy      = qrY + qrSize / 2;
         const bgR      = logoSize / 2 + padding;
 
-        // Sombra suave
         ctx.save();
         ctx.shadowColor = 'rgba(0,0,0,0.15)';
         ctx.shadowBlur  = 10;
@@ -143,13 +128,11 @@ export default function QRCodeModal({ slug, name, onClose, highRes = false, admi
         ctx.fill();
         ctx.restore();
 
-        // Círculo branco (sem sombra, limpo)
         ctx.beginPath();
         ctx.arc(lcx, lcy, bgR, 0, Math.PI * 2);
         ctx.fillStyle = '#ffffff';
         ctx.fill();
 
-        // Logo recortada em círculo
         ctx.save();
         ctx.beginPath();
         ctx.arc(lcx, lcy, logoSize / 2, 0, Math.PI * 2);
@@ -210,8 +193,6 @@ export default function QRCodeModal({ slug, name, onClose, highRes = false, admi
   const handleDownloadPdf = () => {
     const c = plateCanvasRef.current;
     if (!c) return;
-
-    // Carrega jsPDF dinamicamente
     const loadAndGenerate = () => {
       const { jsPDF } = window.jspdf;
       const pdf       = new jsPDF({ unit: 'mm', format: [50, 50], orientation: 'portrait' });
@@ -219,7 +200,6 @@ export default function QRCodeModal({ slug, name, onClose, highRes = false, admi
       pdf.addImage(imgData, 'PNG', 0, 0, 50, 50);
       pdf.save(`placa-${slug}.pdf`);
     };
-
     if (window.jspdf) {
       loadAndGenerate();
     } else {
@@ -240,6 +220,7 @@ export default function QRCodeModal({ slug, name, onClose, highRes = false, admi
     const pixels  = imgData.data;
     const cw      = qrCanvas.width;
 
+    // Detecta tamanho do módulo
     let mod = 1;
     for (let x = 0; x < cw; x++) {
       if (pixels[(0 * cw + x) * 4] < 128) { mod = x; break; }
@@ -254,14 +235,21 @@ export default function QRCodeModal({ slug, name, onClose, highRes = false, admi
     const nameSafe = name.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     const urlSafe  = memorialUrl.replace(/&/g, '&amp;');
 
-    const topMargin    = svgSize * 0.06;
-    const labelFs      = svgSize * 0.035;
-    const nameFs       = svgSize * 0.058;
-    const urlFs        = svgSize * 0.025;
-    const gap          = svgSize * 0.03;
-    const totalH       = topMargin + labelFs * 1.4 + nameFs * 1.5 + gap + svgSize + gap + urlFs + svgSize * 0.05;
-    const cx           = svgSize / 2;
-    const qrOffY       = topMargin + labelFs * 1.4 + nameFs * 1.5 + gap;
+    const topMargin = svgSize * 0.06;
+    const labelFs   = svgSize * 0.035;
+    const nameFs    = svgSize * 0.058;
+    const urlFs     = svgSize * 0.025;
+    const gap       = svgSize * 0.03;
+    const totalH    = topMargin + labelFs * 1.4 + nameFs * 1.5 + gap + svgSize + gap + urlFs + svgSize * 0.05;
+    const cx        = svgSize / 2;
+    const qrOffY    = topMargin + labelFs * 1.4 + nameFs * 1.5 + gap;
+
+    // ── Calcula zona de exclusão da logo (mesma lógica do canvas) ──────────
+    const logoSize   = svgSize * 0.28;           // qrSize * 0.28, mas qrSize === svgSize aqui
+    const logoPad    = logoSize * 0.18;
+    const logoRadius = logoSize / 2 + logoPad;   // raio do círculo branco
+    const logoCX     = cx;
+    const logoCY     = qrOffY + svgSize / 2;
 
     // Finder pattern SVG arredondado colorido
     const fp = (fx, fy, m) => {
@@ -273,53 +261,133 @@ export default function QRCodeModal({ slug, name, onClose, highRes = false, admi
       `;
     };
 
-    // Módulos do QR (excluindo regiões dos finder patterns)
+    // Módulos do QR — exclui finder patterns E a zona circular da logo
     let rects = '';
     const fpZones = [
-      { r0: 0, r1: 8, c0: 0,        c1: 8        }, // superior esquerdo
-      { r0: 0, r1: 8, c0: cols - 8, c1: cols      }, // superior direito
-      { r0: rows - 8, r1: rows, c0: 0, c1: 8      }, // inferior esquerdo
+      { r0: 0,        r1: 8,    c0: 0,        c1: 8    }, // superior esquerdo
+      { r0: 0,        r1: 8,    c0: cols - 8, c1: cols  }, // superior direito
+      { r0: rows - 8, r1: rows, c0: 0,        c1: 8    }, // inferior esquerdo
     ];
+
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
+        // Exclui finder patterns
         const inFP = fpZones.some(z => row >= z.r0 && row < z.r1 && col >= z.c0 && col < z.c1);
         if (inFP) continue;
-        const px   = Math.floor((col + 0.5) * mod);
-        const py   = Math.floor((row + 0.5) * mod);
-        const idx  = (py * cw + px) * 4;
+
+        // ── Exclui módulos dentro do círculo da logo ──────────────────────
+        const moduleCX = col * cell + cell / 2;
+        const moduleCY = qrOffY + row * cell + cell / 2;
+        const dist     = Math.sqrt((moduleCX - logoCX) ** 2 + (moduleCY - logoCY) ** 2);
+        if (dist < logoRadius) continue;
+        // ──────────────────────────────────────────────────────────────────
+
+        const px  = Math.floor((col + 0.5) * mod);
+        const py  = Math.floor((row + 0.5) * mod);
+        const idx = (py * cw + px) * 4;
         if (pixels[idx] < 128) {
           rects += `<rect x="${(col*cell).toFixed(2)}" y="${(qrOffY+row*cell).toFixed(2)}" width="${cell.toFixed(2)}" height="${cell.toFixed(2)}" fill="#1a2744"/>`;
         }
       }
     }
 
-    // Logo como círculo branco centralizado (sem imagem externa no SVG)
-    const logoR    = svgSize * 0.22 * 0.5 + svgSize * 0.22 * 0.35;
-    const logoCX   = cx;
-    const logoCY   = qrOffY + svgSize / 2;
-    const logoCirc = `<circle cx="${logoCX}" cy="${logoCY}" r="${logoR}" fill="#ffffff"/>
-    <text x="${logoCX}" y="${(logoCY + svgSize*0.018).toFixed(2)}" font-family="Georgia,serif" font-size="${(svgSize*0.04).toFixed(2)}" fill="#1a2744" text-anchor="middle" font-weight="bold">R</text>`;
+    // ── Logo: tenta embedar como base64, fallback para círculo+texto ───────
+    const buildSvgAndSave = (logoBase64) => {
+      let logoElement;
 
-    const svgContent = `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="${svgSize}" height="${totalH.toFixed(2)}" viewBox="0 0 ${svgSize} ${totalH.toFixed(2)}">
+      if (logoBase64) {
+        // Imagem real embutida em base64 — recortada em círculo via clipPath
+        logoElement = `
+          <defs>
+            <clipPath id="logoClip">
+              <circle cx="${logoCX}" cy="${logoCY}" r="${(logoSize / 2).toFixed(2)}"/>
+            </clipPath>
+          </defs>
+          <!-- Sombra do círculo branco -->
+          <circle cx="${logoCX}" cy="${logoCY}" r="${(logoRadius + 2).toFixed(2)}" fill="rgba(0,0,0,0.06)"/>
+          <!-- Círculo branco de fundo -->
+          <circle cx="${logoCX}" cy="${logoCY}" r="${logoRadius.toFixed(2)}" fill="#ffffff"/>
+          <!-- Logo real recortada em círculo -->
+          <image
+            href="${logoBase64}"
+            x="${(logoCX - logoSize / 2).toFixed(2)}"
+            y="${(logoCY - logoSize / 2).toFixed(2)}"
+            width="${logoSize.toFixed(2)}"
+            height="${logoSize.toFixed(2)}"
+            clip-path="url(#logoClip)"
+            preserveAspectRatio="xMidYMid meet"
+          />`;
+      } else {
+        // Fallback: círculo branco + iniciais estilizadas
+        logoElement = `
+          <circle cx="${logoCX}" cy="${logoCY}" r="${(logoRadius + 2).toFixed(2)}" fill="rgba(0,0,0,0.06)"/>
+          <circle cx="${logoCX}" cy="${logoCY}" r="${logoRadius.toFixed(2)}" fill="#ffffff"/>
+          <text
+            x="${logoCX}"
+            y="${(logoCY + logoSize * 0.06).toFixed(2)}"
+            font-family="Georgia,serif"
+            font-size="${(logoSize * 0.38).toFixed(2)}"
+            fill="#1a2744"
+            text-anchor="middle"
+            dominant-baseline="middle"
+            font-weight="bold"
+          >R</text>`;
+      }
+
+      const svgContent = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${svgSize}" height="${totalH.toFixed(2)}" viewBox="0 0 ${svgSize} ${totalH.toFixed(2)}">
   <rect width="${svgSize}" height="${totalH.toFixed(2)}" fill="#ffffff"/>
+
+  <!-- Textos superiores -->
   <text x="${cx}" y="${(topMargin+labelFs).toFixed(2)}" font-family="Georgia,serif" font-size="${labelFs.toFixed(2)}" fill="#9ca3af" text-anchor="middle">Em memória de</text>
   <text x="${cx}" y="${(topMargin+labelFs*1.4+nameFs).toFixed(2)}" font-family="Georgia,serif" font-size="${nameFs.toFixed(2)}" font-weight="bold" fill="#1a2744" text-anchor="middle">${nameSafe}</text>
+
+  <!-- Fundo branco da área do QR -->
+  <rect x="0" y="${qrOffY.toFixed(2)}" width="${svgSize}" height="${svgSize}" fill="#ffffff"/>
+
+  <!-- Módulos do QR (finder patterns excluídos, zona da logo excluída) -->
   ${rects}
+
+  <!-- Finder patterns coloridos -->
   ${fp(0, qrOffY, cell)}
   ${fp(svgSize - cell*7, qrOffY, cell)}
   ${fp(0, qrOffY + svgSize - cell*7, cell)}
-  ${logoCirc}
+
+  <!-- Logo centralizada (renderizada por último — fica por cima de tudo) -->
+  ${logoElement}
+
+  <!-- URL do memorial -->
   <text x="${cx}" y="${(qrOffY+svgSize+gap+urlFs).toFixed(2)}" font-family="monospace" font-size="${urlFs.toFixed(2)}" fill="#6b7280" text-anchor="middle">${urlSafe}</text>
 </svg>`;
 
-    const blob = new Blob([svgContent], { type: 'image/svg+xml' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.download = `placa-${slug}-vetorizado.svg`;
-    a.href     = url;
-    a.click();
-    URL.revokeObjectURL(url);
+      const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.download = `placa-${slug}-vetorizado.svg`;
+      a.href     = url;
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+
+    // Tenta converter a logo para base64 para embedar no SVG
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const tmpCanvas    = document.createElement('canvas');
+        tmpCanvas.width    = img.naturalWidth  || 200;
+        tmpCanvas.height   = img.naturalHeight || 200;
+        const tmpCtx       = tmpCanvas.getContext('2d');
+        tmpCtx.drawImage(img, 0, 0);
+        const b64 = tmpCanvas.toDataURL('image/png');
+        buildSvgAndSave(b64);
+      } catch {
+        // CORS bloqueou toDataURL — usa fallback
+        buildSvgAndSave(null);
+      }
+    };
+    img.onerror = () => buildSvgAndSave(null);
+    img.src = '/logo-transparent.png';
   };
 
   const handleCopy = () => {
