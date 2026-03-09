@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Link} from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import SecurityBadge from '../components/SecurityBadge';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
@@ -156,7 +156,6 @@ function TestimonialsSection({ reviews, loadingReviews, user, showReviewForm, se
     <section
       className="relative py-16 md:py-24 overflow-hidden"
       style={{
-        // FAQ termina em #b8e0f5 → desce suavemente para um mid-blue → sobe de volta para #b8e0f5 onde Why começa
         background: "linear-gradient(180deg, #b8e0f5 0%, #a8d8f0 18%, #8ecce8 40%, #a8d8f0 75%, #b8e0f5 100%)",
         marginTop: 0,
         borderTop: "none",
@@ -374,7 +373,7 @@ const STEPS = [
 
 // ── HowItWorksSection ───────────────────────────────────────────────────────
 function HowItWorksSection() {
-
+  const navigate = useNavigate();
   const [activeStep, setActiveStep] = useState(0);
   const [prevStep, setPrevStep] = useState(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -410,8 +409,8 @@ function HowItWorksSection() {
   }, [activeStep, transitioning]);
 
   const startTimer = useCallback(() => {
-  clearInterval(timerRef.current);
-  timerRef.current = setInterval(() => {
+    clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
       setActiveStep(prev => {
         const next = (prev + 1) % STEPS.length;
         setPrevStep(prev);
@@ -578,17 +577,58 @@ function HowItWorksSection() {
           opacity: 1;
           transform: translateY(0);
         }
+
+        /* ── MOBILE ajustes HowItWorks section ── */
         @media (max-width: 767px) {
           .howit-cloud-left  { width: 130px !important; left: -15px !important; top: -5px !important; }
           .howit-cloud-right { display: none !important; }
           .howit-cloud-base  { display: none !important; }
+
+          /* Tabs mais compactas */
           .howit-tabs        { gap: 0 !important; justify-content: space-between !important; }
-          .howit-tab-btn     { min-width: 0 !important; flex: 1; padding-bottom: 10px !important; }
-          .howit-panel       { position: absolute !important; }
-          .howit-panel-wrap  { min-height: clamp(480px, 120vw, 600px) !important; }
-          .howit-pill        { max-width: 100% !important; flex: 1 1 100% !important; }
-          .howit-img-wrap    { max-width: 100% !important; flex: 1 1 100% !important; height: clamp(160px, 50vw, 240px) !important; border-radius: 12px !important; }
-          .howit-footer-pill { font-size: 0.72rem !important; padding: 8px 14px !important; }
+          .howit-tab-btn     { min-width: 0 !important; flex: 1; padding-bottom: 8px !important; }
+
+          /* Painel menor em mobile */
+          .howit-panel       { position: absolute !important; gap: 10px !important; }
+          .howit-panel-wrap  { min-height: clamp(420px, 115vw, 560px) !important; }
+
+          /* Card de texto menor */
+          .howit-pill {
+            max-width: 100% !important;
+            flex: 1 1 100% !important;
+            padding: 16px !important;
+            border-radius: 16px !important;
+          }
+          .howit-pill .step-num-badge { width: 30px !important; height: 30px !important; font-size: 0.75rem !important; }
+          .howit-pill h3 { font-size: clamp(0.95rem, 4vw, 1.15rem) !important; margin-bottom: 4px !important; }
+          .howit-pill h4 { font-size: 0.78rem !important; margin-bottom: 8px !important; }
+          .howit-pill p  { font-size: 0.78rem !important; margin-bottom: 14px !important; }
+          .howit-cta-btn { padding: 7px 18px !important; font-size: 0.76rem !important; }
+
+          /* Imagem menor */
+          .howit-img-wrap {
+            max-width: 100% !important;
+            flex: 1 1 100% !important;
+            height: clamp(140px, 44vw, 200px) !important;
+            border-radius: 12px !important;
+          }
+
+          /* Footer pill */
+          .howit-footer-pill { font-size: 0.7rem !important; padding: 7px 14px !important; }
+
+          /* Título e subtítulo da section */
+          .howit-section-title { font-size: clamp(1.1rem, 4.5vw, 1.6rem) !important; margin-bottom: 8px !important; }
+          .howit-section-sub   { font-size: 0.78rem !important; }
+          .howit-section-head  { margin-bottom: 20px !important; }
+        }
+
+        /* ── Smartphones muito pequenos ── */
+        @media (max-width: 374px) {
+          .howit-panel-wrap  { min-height: clamp(380px, 125vw, 520px) !important; }
+          .howit-pill        { padding: 12px !important; }
+          .howit-pill h3     { font-size: 0.88rem !important; }
+          .howit-pill p      { font-size: 0.73rem !important; }
+          .howit-img-wrap    { height: 120px !important; }
         }
       `}</style>
 
@@ -612,15 +652,15 @@ function HowItWorksSection() {
           animation: isVisible ? "revealSection 0.8s cubic-bezier(.22,1,.36,1) both" : "none",
         }}
       >
-        <div className="text-center mb-8 md:mb-12">
+        <div className="howit-section-head text-center mb-8 md:mb-12">
           <p style={{ textTransform: "uppercase", letterSpacing: "0.22em", fontSize: "0.68rem", fontWeight: 700, color: "#2a3d5e", marginBottom: "12px" }}>
             Como Funciona
           </p>
-          <h2 style={{ fontFamily: '"Georgia", serif', fontSize: "clamp(1.3rem, 5vw, 2.6rem)", fontWeight: 700, color: "#1a2744", lineHeight: 1.2, marginBottom: "12px" }}>
+          <h2 className="howit-section-title" style={{ fontFamily: '"Georgia", serif', fontSize: "clamp(1.3rem, 5vw, 2.6rem)", fontWeight: 700, color: "#1a2744", lineHeight: 1.2, marginBottom: "12px" }}>
             Em apenas 3 passos simples,
             <br className="hidden md:block" /> crie uma homenagem eterna.
           </h2>
-          <p style={{ color: "#3a5070", fontSize: "clamp(0.85rem, 3vw, 1rem)", lineHeight: 1.65, maxWidth: "420px", margin: "0 auto" }}>
+          <p className="howit-section-sub" style={{ color: "#3a5070", fontSize: "clamp(0.85rem, 3vw, 1rem)", lineHeight: 1.65, maxWidth: "420px", margin: "0 auto" }}>
             Do início ao memorial publicado, tudo pensado para ser simples, bonito e significativo.
           </p>
         </div>
@@ -662,14 +702,14 @@ function HowItWorksSection() {
               <PanelContent step={previous} onScrollToPlans={() => {
                 const el = document.getElementById('plans');
                 if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }} />
+              }} navigate={navigate} />
             </div>
           )}
           <div className={`howit-panel ${transitioning ? "is-entering" : "is-idle"}`} data-testid={current.testId}>
             <PanelContent step={current} onScrollToPlans={() => {
               const el = document.getElementById('plans');
               if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }} />
+            }} navigate={navigate} />
           </div>
         </div>
 
@@ -689,7 +729,7 @@ function HowItWorksSection() {
   );
 }
 
-function PanelContent({ step, onScrollToPlans }) {
+function PanelContent({ step, onScrollToPlans, navigate }) {
   const [imgLoaded, setImgLoaded] = useState(false);
 
   return (
@@ -705,13 +745,15 @@ function PanelContent({ step, onScrollToPlans }) {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: "50%",
-            background: "#1a2744", color: "white",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontFamily: '"Georgia", serif', fontSize: "0.85rem", fontWeight: 700,
-            flexShrink: 0, animation: "pulseRing 2.5s ease-out infinite",
-          }}>
+          <div
+            className="step-num-badge"
+            style={{
+              width: 36, height: 36, borderRadius: "50%",
+              background: "#1a2744", color: "white",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontFamily: '"Georgia", serif', fontSize: "0.85rem", fontWeight: 700,
+              flexShrink: 0, animation: "pulseRing 2.5s ease-out infinite",
+            }}>
             {parseInt(step.num)}
           </div>
           <span style={{ fontSize: "0.6rem", letterSpacing: "0.22em", color: "#5aa8e0", fontWeight: 700, textTransform: "uppercase" }}>
@@ -1001,12 +1043,8 @@ function ProductShowcaseSection() {
       className="relative overflow-hidden"
       style={{
         padding: 'clamp(64px, 10vw, 112px) 0',
-        // Planos termina em #b8e0f0 → desce suave → entrega #8ecce8 para Trust Badges
         background: 'linear-gradient(180deg, #b8e0f0 0%, #c8e8f5 25%, #ddeef8 50%, #c8e8f5 75%, #8ecce8 100%)',
-        margin: 0,
-        borderTop: 'none',
-        borderBottom: 'none',
-        display: 'block',
+        margin: 0, borderTop: 'none', borderBottom: 'none', display: 'block',
       }}
     >
       <style>{`
@@ -1077,11 +1115,55 @@ function ProductShowcaseSection() {
           color: white !important;
           box-shadow: 0 10px 32px rgba(26,39,68,0.22) !important;
         }
+
+        /* ── MOBILE ajustes ProductShowcase ── */
         @media (max-width: 767px) {
           .prod-cloud-left  { width: 120px !important; left: -15px !important; }
           .prod-cloud-right { display: none !important; }
-          .prod-secondary-grid { grid-template-columns: 1fr !important; }
-          .prod-benefits-row   { flex-direction: column !important; gap: 12px !important; }
+
+          /* Texto intro */
+          .prod-intro { margin-bottom: 24px !important; }
+          .prod-intro h2 { font-size: clamp(1.2rem, 5vw, 1.8rem) !important; margin-bottom: 10px !important; }
+          .prod-intro p  { font-size: 0.82rem !important; }
+
+          /* Imagem principal menor */
+          .prod-main-wrap { margin-bottom: 20px !important; }
+          .prod-main-img  { height: clamp(180px, 52vw, 280px) !important; border-radius: 20px !important; }
+
+          /* Grid secundário: 1 col em mobile */
+          .prod-secondary-grid {
+            grid-template-columns: 1fr !important;
+            gap: 10px !important;
+            margin-bottom: 24px !important;
+          }
+          .prod-secondary-card .prod-secondary-img {
+            height: clamp(100px, 28vw, 160px) !important;
+          }
+
+          /* Benefits: coluna única, compacta */
+          .prod-benefits-row {
+            flex-direction: column !important;
+            gap: 10px !important;
+            margin-bottom: 28px !important;
+          }
+          .prod-benefit-card {
+            max-width: 100% !important;
+            padding: 14px 16px !important;
+            border-radius: 14px !important;
+          }
+          .prod-benefit-icon {
+            width: 36px !important; height: 36px !important;
+          }
+          .prod-benefit-title { font-size: 0.82rem !important; }
+          .prod-benefit-desc  { font-size: 0.73rem !important; }
+
+          /* CTA */
+          .prod-cta-btn { padding: 11px 28px !important; font-size: 0.8rem !important; }
+        }
+
+        @media (max-width: 374px) {
+          .prod-main-img { height: 160px !important; }
+          .prod-benefit-card { padding: 12px 14px !important; }
         }
       `}</style>
 
@@ -1106,7 +1188,11 @@ function ProductShowcaseSection() {
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 md:px-12">
 
-        <div className="text-center mb-14 md:mb-20" style={{ opacity: visible ? 1 : 0, animation: visible ? 'prodFadeIn 0.75s cubic-bezier(.22,1,.36,1) both' : 'none' }}>
+        {/* Intro */}
+        <div
+          className="prod-intro text-center mb-14 md:mb-20"
+          style={{ opacity: visible ? 1 : 0, animation: visible ? 'prodFadeIn 0.75s cubic-bezier(.22,1,.36,1) both' : 'none' }}
+        >
           <p style={{ textTransform: 'uppercase', letterSpacing: '0.24em', fontSize: '0.66rem', fontWeight: 700, color: '#2a3d5e', marginBottom: '14px' }}>
             Produto físico
           </p>
@@ -1120,30 +1206,35 @@ function ProductShowcaseSection() {
           </p>
         </div>
 
-        <div style={{ opacity: visible ? 1 : 0, animation: visible ? 'prodScaleIn 0.9s cubic-bezier(.22,1,.36,1) 0.15s both' : 'none', marginBottom: 'clamp(32px, 5vw, 56px)', display: 'flex', justifyContent: 'center' }}>
+        {/* Imagem principal */}
+        <div
+          className="prod-main-wrap"
+          style={{ opacity: visible ? 1 : 0, animation: visible ? 'prodScaleIn 0.9s cubic-bezier(.22,1,.36,1) 0.15s both' : 'none', marginBottom: 'clamp(20px, 5vw, 56px)', display: 'flex', justifyContent: 'center' }}
+        >
           <div style={{ position: 'relative', borderRadius: '32px', padding: '10px', background: 'linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(168,216,240,0.5) 100%)', boxShadow: '0 0 0 1px rgba(255,255,255,0.9), 0 0 48px rgba(90,168,224,0.2)', width: '100%', maxWidth: '680px' }}>
             <PhotoPlaceholder
               label="Foto do produto final"
               size="large"
-              className="prod-placeholder-shimmer"
+              className="prod-main-img prod-placeholder-shimmer"
               style={{ width: '100%', height: 'clamp(260px, 38vw, 420px)', animation: visible ? 'gentlePulse 4s ease-in-out 1s infinite' : 'none' }}
             />
-            <div style={{ position: 'absolute', bottom: '24px', right: '24px', background: 'rgba(26,39,68,0.88)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', borderRadius: '14px', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 8px 24px rgba(26,39,68,0.25)' }}>
+            <div style={{ position: 'absolute', bottom: '16px', right: '16px', background: 'rgba(26,39,68,0.88)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', borderRadius: '12px', padding: '8px 14px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid rgba(255,255,255,0.12)' }}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#5aa8e0', boxShadow: '0 0 8px rgba(90,168,224,0.8)' }} />
-              <span style={{ fontFamily: '"Georgia", serif', fontSize: '0.72rem', fontWeight: 600, color: 'white', letterSpacing: '0.05em' }}>Aço inox gravado</span>
+              <span style={{ fontFamily: '"Georgia", serif', fontSize: '0.68rem', fontWeight: 600, color: 'white', letterSpacing: '0.05em' }}>Aço inox gravado</span>
             </div>
-            <div style={{ position: 'absolute', top: '24px', left: '24px', background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', borderRadius: '12px', padding: '8px 14px', display: 'flex', alignItems: 'center', gap: '7px', border: '1px solid rgba(255,255,255,0.9)', boxShadow: '0 4px 16px rgba(26,39,68,0.09)' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1a2744" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <div style={{ position: 'absolute', top: '16px', left: '16px', background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', borderRadius: '10px', padding: '7px 12px', display: 'flex', alignItems: 'center', gap: '7px', border: '1px solid rgba(255,255,255,0.9)' }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1a2744" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM17 14h3M17 17v3M20 17h-3v3"/>
               </svg>
-              <span style={{ fontFamily: '"Georgia", serif', fontSize: '0.7rem', fontWeight: 700, color: '#1a2744', letterSpacing: '0.06em' }}>QR Code</span>
+              <span style={{ fontFamily: '"Georgia", serif', fontSize: '0.68rem', fontWeight: 700, color: '#1a2744', letterSpacing: '0.06em' }}>QR Code</span>
             </div>
           </div>
         </div>
 
+        {/* Grid secundário */}
         <div
           className="prod-secondary-grid"
-          style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'clamp(12px, 2vw, 22px)', marginBottom: 'clamp(40px, 7vw, 72px)' }}
+          style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'clamp(12px, 2vw, 22px)', marginBottom: 'clamp(32px, 7vw, 72px)' }}
         >
           {secondaryCards.map((card, i) => (
             <div
@@ -1154,33 +1245,39 @@ function ProductShowcaseSection() {
               <PhotoPlaceholder
                 label={card.label}
                 icon={card.icon}
-                style={{ width: '100%', height: 'clamp(150px, 22vw, 210px)', boxShadow: '0 8px 28px rgba(26,39,68,0.09), inset 0 1px 0 rgba(255,255,255,0.7)' }}
+                className="prod-secondary-img"
+                style={{ width: '100%', height: 'clamp(120px, 22vw, 210px)', boxShadow: '0 8px 28px rgba(26,39,68,0.09)' }}
               />
             </div>
           ))}
         </div>
 
+        {/* Benefits */}
         <div
           className="prod-benefits-row"
-          style={{ display: 'flex', gap: 'clamp(10px, 2vw, 20px)', justifyContent: 'center', marginBottom: 'clamp(40px, 6vw, 64px)', flexWrap: 'wrap', opacity: visible ? 1 : 0, animation: visible ? 'prodFadeIn 0.7s cubic-bezier(.22,1,.36,1) 0.65s both' : 'none' }}
+          style={{ display: 'flex', gap: 'clamp(10px, 2vw, 20px)', justifyContent: 'center', marginBottom: 'clamp(32px, 6vw, 64px)', flexWrap: 'wrap', opacity: visible ? 1 : 0, animation: visible ? 'prodFadeIn 0.7s cubic-bezier(.22,1,.36,1) 0.65s both' : 'none' }}
         >
           {benefits.map((b) => (
             <div
               key={b.title}
               className="prod-benefit-card"
-              style={{ flex: '1 1 220px', maxWidth: '320px', borderRadius: '20px', padding: 'clamp(16px, 2.5vw, 24px) clamp(18px, 2.5vw, 28px)', background: 'rgba(255,255,255,0.52)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', border: '1px solid rgba(255,255,255,0.8)', boxShadow: '0 6px 22px rgba(26,39,68,0.07), inset 0 1px 0 rgba(255,255,255,0.85)', display: 'flex', alignItems: 'flex-start', gap: '14px' }}
+              style={{ flex: '1 1 220px', maxWidth: '320px', borderRadius: '20px', padding: 'clamp(16px, 2.5vw, 24px) clamp(18px, 2.5vw, 28px)', background: 'rgba(255,255,255,0.52)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', border: '1px solid rgba(255,255,255,0.8)', boxShadow: '0 6px 22px rgba(26,39,68,0.07)', display: 'flex', alignItems: 'flex-start', gap: '14px' }}
             >
-              <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'linear-gradient(135deg, rgba(90,168,224,0.18) 0%, rgba(123,189,232,0.12) 100%)', border: '1px solid rgba(90,168,224,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#3a7fb5' }}>
+              <div
+                className="prod-benefit-icon"
+                style={{ width: 42, height: 42, borderRadius: '50%', background: 'linear-gradient(135deg, rgba(90,168,224,0.18) 0%, rgba(123,189,232,0.12) 100%)', border: '1px solid rgba(90,168,224,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#3a7fb5' }}
+              >
                 {b.icon}
               </div>
               <div>
-                <p style={{ fontFamily: '"Georgia", serif', fontSize: 'clamp(0.82rem, 2.5vw, 0.9rem)', fontWeight: 700, color: '#1a2744', marginBottom: '4px', lineHeight: 1.3 }}>{b.title}</p>
-                <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.8rem)', color: '#3a5070', lineHeight: 1.65, fontFamily: '"Georgia", serif' }}>{b.desc}</p>
+                <p className="prod-benefit-title" style={{ fontFamily: '"Georgia", serif', fontSize: 'clamp(0.82rem, 2.5vw, 0.9rem)', fontWeight: 700, color: '#1a2744', marginBottom: '4px', lineHeight: 1.3 }}>{b.title}</p>
+                <p className="prod-benefit-desc" style={{ fontSize: 'clamp(0.75rem, 2vw, 0.8rem)', color: '#3a5070', lineHeight: 1.65, fontFamily: '"Georgia", serif' }}>{b.desc}</p>
               </div>
             </div>
           ))}
         </div>
 
+        {/* CTA */}
         <div style={{ textAlign: 'center', opacity: visible ? 1 : 0, animation: visible ? 'prodFadeIn 0.7s cubic-bezier(.22,1,.36,1) 0.8s both' : 'none' }}>
           <div style={{ width: 1, height: 40, background: 'linear-gradient(to bottom, transparent, rgba(90,168,224,0.5), transparent)', margin: '0 auto 24px' }} />
           <Link to="/create-memorial">
@@ -1211,10 +1308,8 @@ const TrustBadgesSection = () => (
   <section
     className="trust-section relative py-8 md:py-10 overflow-hidden"
     style={{
-      // Recebe #8ecce8 do ProductShowcase e entrega #7bbde8 para o FAQ
       background: "linear-gradient(180deg, #8ecce8 0%, #7bbde8 100%)",
-      marginTop: 0,
-      borderTop: "none",
+      marginTop: 0, borderTop: "none",
     }}
   >
     <div className="relative z-10 max-w-3xl mx-auto px-4 text-center">
@@ -1314,9 +1409,25 @@ const Home = () => {
           .hero-cloud-2-wrap { width: 110px !important; right: -15px !important; top: 0 !important; }
           .hero-cloud-3-wrap { display: none !important; }
           .hero-cloud-4-wrap { display: none !important; }
+
+          /* Plans section — cards compactos */
           .plans-cloud-left  { width: 110px !important; left: -10px !important; }
           .plans-cloud-right { display: none !important; }
-          .plans-grid        { gap: 12px !important; }
+          .plans-section     { padding-top: 40px !important; padding-bottom: 40px !important; }
+          .plans-head        { margin-bottom: 20px !important; }
+          .plans-head h2     { font-size: clamp(1.2rem, 5vw, 1.8rem) !important; margin-bottom: 6px !important; }
+          .plans-head p      { font-size: 0.78rem !important; }
+          .plans-grid        { gap: 12px !important; max-width: 100% !important; }
+          .plan-card         { border-radius: 16px !important; padding: 18px !important; }
+          .plan-price        { font-size: clamp(1.5rem, 6vw, 2rem) !important; margin-bottom: 4px !important; }
+          .plan-name         { font-size: clamp(0.9rem, 3.5vw, 1.1rem) !important; margin-bottom: 6px !important; }
+          .plan-subtitle     { font-size: 0.75rem !important; margin-bottom: 14px !important; }
+          .plan-list         { gap: 6px !important; margin-bottom: 16px !important; }
+          .plan-list li      { font-size: 0.75rem !important; }
+          .plan-btn          { padding: 9px 0 !important; font-size: 0.74rem !important; }
+          .plan-security     { margin-top: 10px !important; }
+          .plans-bar-wrap    { margin-top: 20px !important; }
+
           .trust-section { padding-top: 20px !important; padding-bottom: 20px !important; }
           .trust-badges  { gap: 8px !important; }
           .why-section       { padding-top: 40px !important; padding-bottom: 40px !important; }
@@ -1378,7 +1489,6 @@ const Home = () => {
               Mantenha as histórias de quem você ama vivas, acessível a qualquer momento, de qualquer lugar.
             </p>
 
-            {/* ── Hero CTA + SecurityBadge minimal ── */}
             <div className="anim-fade-up-3" style={{ display: 'flex', flexDirection: 'column', alignItems: 'inherit' }}>
               <Link to="/create-memorial">
                 <Button
@@ -1390,7 +1500,6 @@ const Home = () => {
                   Criar memorial gratuito
                 </Button>
               </Link>
-              {/* Badge com margem top menor e alinhada ao botão */}
               <div style={{ marginTop: 14 }}>
                 <SecurityBadge variant="minimal" />
               </div>
@@ -1407,7 +1516,7 @@ const Home = () => {
 
       {/* ── 3. Planos ── */}
       <section
-        className="relative py-16 md:py-24 overflow-hidden"
+        className="plans-section relative py-16 md:py-24 overflow-hidden"
         id='plans'
         style={{ background: "linear-gradient(180deg, #eef8fb 0%, #ddf0f7 25%, #c8e8f5 60%, #b8e0f0 100%)", marginTop: 0, borderTop: "none" }}
       >
@@ -1429,7 +1538,7 @@ const Home = () => {
         </div>
 
         <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 md:px-12" style={{ animation: "revealPlans 0.8s cubic-bezier(.22,1,.36,1) both" }}>
-          <div className="text-center mb-10 md:mb-14">
+          <div className="plans-head text-center mb-10 md:mb-14">
             <p style={{ textTransform: "uppercase", letterSpacing: "0.22em", fontSize: "0.68rem", fontWeight: 700, color: "#2a3d5e", marginBottom: "12px" }}>Planos</p>
             <h2 style={{ fontFamily: '"Georgia", serif', fontSize: "clamp(1.3rem, 5vw, 2.6rem)", fontWeight: 700, color: "#1a2744", lineHeight: 1.2, marginBottom: "12px" }}>Escolha seu Plano</h2>
             <p style={{ color: "#3a5070", fontSize: "clamp(0.85rem, 3vw, 1rem)", lineHeight: 1.65, maxWidth: "380px", margin: "0 auto" }}>Duas opções para eternizar a memória de quem você ama</p>
@@ -1438,10 +1547,10 @@ const Home = () => {
           <div className="plans-grid grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8 max-w-3xl mx-auto">
             {/* Plano Digital */}
             <div className="plan-card" style={{ borderRadius: "22px", padding: "clamp(22px, 3vw, 32px)", background: "rgba(255,255,255,0.55)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)", border: "1px solid rgba(255,255,255,0.8)", boxShadow: "0 10px 36px rgba(26,39,68,0.09), inset 0 1px 0 rgba(255,255,255,0.9)" }}>
-              <h3 style={{ fontFamily: '"Georgia", serif', fontSize: "clamp(1rem, 4vw, 1.35rem)", fontWeight: 700, color: "#1a2744", marginBottom: "10px" }}>Plano Digital</h3>
-              <div style={{ fontFamily: '"Georgia", serif', fontSize: "clamp(1.8rem, 7vw, 2.8rem)", fontWeight: 700, color: "#5aa8e0", lineHeight: 1, marginBottom: "6px" }}>R$ 29,90</div>
-              <p style={{ color: "#3a5070", fontSize: "clamp(0.8rem, 3vw, 0.82rem)", marginBottom: "18px", lineHeight: 1.5 }}>Memorial digital publicado na plataforma</p>
-              <ul style={{ marginBottom: "22px", display: "flex", flexDirection: "column", gap: "8px" }}>
+              <h3 className="plan-name" style={{ fontFamily: '"Georgia", serif', fontSize: "clamp(1rem, 4vw, 1.35rem)", fontWeight: 700, color: "#1a2744", marginBottom: "10px" }}>Plano Digital</h3>
+              <div className="plan-price" style={{ fontFamily: '"Georgia", serif', fontSize: "clamp(1.8rem, 7vw, 2.8rem)", fontWeight: 700, color: "#5aa8e0", lineHeight: 1, marginBottom: "6px" }}>R$ 29,90</div>
+              <p className="plan-subtitle" style={{ color: "#3a5070", fontSize: "clamp(0.8rem, 3vw, 0.82rem)", marginBottom: "18px", lineHeight: 1.5 }}>Memorial digital publicado na plataforma</p>
+              <ul className="plan-list" style={{ marginBottom: "22px", display: "flex", flexDirection: "column", gap: "8px" }}>
                 {["Memorial digital completo","Galeria de até 10 fotos","Áudio de homenagem","QR Code digital"].map((item) => (
                   <li key={item} style={{ display: "flex", alignItems: "flex-start", color: "#3a5070", fontSize: "clamp(0.8rem, 3vw, 0.85rem)", lineHeight: 1.5 }}>
                     <span className="plan-check-dot" />{item}
@@ -1450,13 +1559,13 @@ const Home = () => {
               </ul>
               <Link to="/create-memorial">
                 <button
+                  className="plan-btn"
                   style={{ width: "100%", borderRadius: "999px", padding: "11px 0", background: "transparent", border: "1.5px solid #1a2744", color: "#1a2744", fontFamily: '"Georgia", serif', fontSize: "clamp(0.78rem, 3vw, 0.82rem)", fontWeight: 700, cursor: "pointer", letterSpacing: "0.06em", transition: "all 0.28s ease" }}
                   onMouseEnter={e => { e.currentTarget.style.background = "#1a2744"; e.currentTarget.style.color = "white"; }}
                   onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#1a2744"; }}
                 >ESCOLHER PLANO</button>
               </Link>
-              {/* Badge minimal sob o botão do plano digital */}
-              <div style={{ marginTop: 14, display: 'flex', justifyContent: 'center' }}>
+              <div className="plan-security" style={{ marginTop: 14, display: 'flex', justifyContent: 'center' }}>
                 <SecurityBadge variant="minimal" />
               </div>
             </div>
@@ -1464,10 +1573,10 @@ const Home = () => {
             {/* Plano Placa */}
             <div className="plan-card plan-card-popular" style={{ borderRadius: "22px", padding: "clamp(22px, 3vw, 32px)", background: "rgba(26,39,68,0.88)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)", border: "1px solid rgba(90,168,224,0.35)", boxShadow: "0 16px 48px rgba(26,39,68,0.22), inset 0 1px 0 rgba(255,255,255,0.08)", position: "relative", overflow: "hidden" }}>
               <div style={{ position: "absolute", top: "16px", right: "16px", background: "linear-gradient(135deg, #f5c842, #f0a800)", color: "#1a2744", fontSize: "0.62rem", fontWeight: 800, letterSpacing: "0.1em", padding: "4px 12px", borderRadius: "999px", textTransform: "uppercase", boxShadow: "0 2px 8px rgba(245,200,66,0.4)" }}>Mais Popular</div>
-              <h3 style={{ fontFamily: '"Georgia", serif', fontSize: "clamp(1rem, 4vw, 1.35rem)", fontWeight: 700, color: "white", marginBottom: "10px" }}>Plano Placa QR Code</h3>
-              <div style={{ fontFamily: '"Georgia", serif', fontSize: "clamp(1.8rem, 7vw, 2.8rem)", fontWeight: 700, color: "#7bbde8", lineHeight: 1, marginBottom: "6px" }}>R$ 149,90</div>
-              <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "clamp(0.8rem, 3vw, 0.82rem)", marginBottom: "18px", lineHeight: 1.5 }}>Memorial + Placa física de aço inox</p>
-              <ul style={{ marginBottom: "22px", display: "flex", flexDirection: "column", gap: "8px" }}>
+              <h3 className="plan-name" style={{ fontFamily: '"Georgia", serif', fontSize: "clamp(1rem, 4vw, 1.35rem)", fontWeight: 700, color: "white", marginBottom: "10px" }}>Plano Placa QR Code</h3>
+              <div className="plan-price" style={{ fontFamily: '"Georgia", serif', fontSize: "clamp(1.8rem, 7vw, 2.8rem)", fontWeight: 700, color: "#7bbde8", lineHeight: 1, marginBottom: "6px" }}>R$ 149,90</div>
+              <p className="plan-subtitle" style={{ color: "rgba(255,255,255,0.6)", fontSize: "clamp(0.8rem, 3vw, 0.82rem)", marginBottom: "18px", lineHeight: 1.5 }}>Memorial + Placa física de aço inox</p>
+              <ul className="plan-list" style={{ marginBottom: "22px", display: "flex", flexDirection: "column", gap: "8px" }}>
                 {["Tudo do Plano Digital","Placa física em aço inox","QR Code gravado permanente","Envio para todo Brasil"].map((item) => (
                   <li key={item} style={{ display: "flex", alignItems: "flex-start", color: "rgba(255,255,255,0.8)", fontSize: "clamp(0.8rem, 3vw, 0.85rem)", lineHeight: 1.5 }}>
                     <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#7bbde8", flexShrink: 0, marginRight: 10, marginTop: 5 }} />{item}
@@ -1476,13 +1585,13 @@ const Home = () => {
               </ul>
               <Link to="/create-memorial">
                 <button
+                  className="plan-btn"
                   style={{ width: "100%", borderRadius: "999px", padding: "11px 0", background: "#5aa8e0", border: "none", color: "white", fontFamily: '"Georgia", serif', fontSize: "clamp(0.78rem, 3vw, 0.82rem)", fontWeight: 700, cursor: "pointer", letterSpacing: "0.06em", transition: "all 0.28s ease", boxShadow: "0 4px 16px rgba(90,168,224,0.4)" }}
                   onMouseEnter={e => { e.currentTarget.style.background = "#7bbde8"; e.currentTarget.style.boxShadow = "0 6px 20px rgba(90,168,224,0.5)"; }}
                   onMouseLeave={e => { e.currentTarget.style.background = "#5aa8e0"; e.currentTarget.style.boxShadow = "0 4px 16px rgba(90,168,224,0.4)"; }}
                 >ESCOLHER PLANO</button>
               </Link>
-              {/* Badge minimal com cores adaptadas para fundo escuro */}
-              <div style={{ marginTop: 14, display: 'flex', justifyContent: 'center' }}>
+              <div className="plan-security" style={{ marginTop: 14, display: 'flex', justifyContent: 'center' }}>
                 <div style={{
                   display: 'inline-flex', alignItems: 'center', gap: 7,
                   padding: '6px 14px', borderRadius: 999,
@@ -1514,12 +1623,11 @@ const Home = () => {
           </div>
         </div>
 
-        {/* SecurityBadge bar abaixo dos dois cards — com mais espaçamento */}
-        <div style={{ maxWidth: 820, margin: '32px auto 0', padding: '0 20px' }}>
+        {/* SecurityBadge bar */}
+        <div className="plans-bar-wrap" style={{ maxWidth: 820, margin: '32px auto 0', padding: '0 20px' }}>
           <SecurityBadge variant="bar" />
         </div>
       </section>
-
 
       {/* ── 4. Product Showcase ── */}
       <ProductShowcaseSection />
@@ -1568,7 +1676,8 @@ const Home = () => {
           <p style={{ color: "#3a5070", fontSize: "clamp(0.88rem, 3.5vw, 1.1rem)", lineHeight: 1.72, maxWidth: "520px", margin: "0 auto 36px", fontFamily: '"Georgia", serif' }}>
             Escolha quem entende a importância de preservar memórias. Oferecemos uma tecnologia única de QR Codes personalizados, que conecta o presente ao passado de forma significativa.
           </p>
-          <Link to="/how-it-works">
+          {/* ── CORRIGIDO: navega para /por-que-preservar-memorias ── */}
+          <Link to="/por-que-preservar-memorias">
             <button className="why-btn" style={{ borderRadius: "999px", padding: "13px 34px", background: "rgba(255,255,255,0.55)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", border: "1.5px solid rgba(26,39,68,0.2)", color: "#1a2744", fontFamily: '"Georgia", serif', fontSize: "clamp(0.82rem, 3.5vw, 0.95rem)", fontWeight: 700, letterSpacing: "0.05em", cursor: "pointer", boxShadow: "0 4px 18px rgba(26,39,68,0.08)" }}>
               Saiba mais
             </button>
