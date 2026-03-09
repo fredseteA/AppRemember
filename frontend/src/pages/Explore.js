@@ -292,6 +292,56 @@ const Explore = () => {
 
       {/* ── CONTEÚDO ── */}
       <section className="relative z-10 pb-28 md:pb-36">
+        <style>{`
+          /* ── MOBILE: grid 2 colunas, cards compactos ── */
+          @media (max-width: 767px) {
+            .explore-grid {
+              grid-template-columns: repeat(2, 1fr) !important;
+              gap: 10px !important;
+            }
+            /* Card menor */
+            .memorial-card-root {
+              border-radius: 14px !important;
+            }
+            /* Imagem menor */
+            .memorial-card-img {
+              height: 110px !important;
+            }
+            /* Padding interno menor */
+            .memorial-card-body {
+              padding: 10px 10px 12px !important;
+            }
+            /* Nome menor */
+            .memorial-card-name {
+              font-size: 0.82rem !important;
+              margin-bottom: 3px !important;
+            }
+            /* Datas menores */
+            .memorial-card-dates {
+              font-size: 0.68rem !important;
+              margin-bottom: 6px !important;
+            }
+            /* Descrição oculta — libera muito espaço */
+            .memorial-card-desc {
+              display: none !important;
+            }
+            /* Footer do card compacto */
+            .memorial-card-footer {
+              padding: 8px 10px !important;
+              gap: 4px !important;
+            }
+            .memorial-card-footer span,
+            .memorial-card-footer p {
+              font-size: 0.66rem !important;
+            }
+            /* Avatar/ícone menor */
+            .memorial-card-avatar {
+              width: 28px !important;
+              height: 28px !important;
+            }
+          }
+        `}</style>
+
         <div className="max-w-6xl mx-auto px-6 sm:px-10 md:px-16">
 
           {allMemorials.length === 0 ? (
@@ -327,7 +377,7 @@ const Explore = () => {
           ) : (
             <>
               <div
-                className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-7"
+                className="explore-grid grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-7"
                 data-testid="memorials-grid"
               >
                 {memorials.map((memorial, index) => (

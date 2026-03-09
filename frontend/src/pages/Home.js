@@ -336,45 +336,128 @@ function TestimonialsSection({ reviews, loadingReviews, user, showReviewForm, se
   );
 }
 
+// ── STEPS ───────────────────────────────────────────────────────
 const STEPS = [
-    {
-      num: "01",
-      label: "Crie o memorial",
-      title: "Crie o memorial",
-      subtitle: "Como preencher?",
-      description: "Preencha as informações da homenagem: dados pessoais, uma frase especial, biografia, fotos e até um áudio. Tudo de forma simples e carinhosa.",
-      cta: "Começar agora",
-      ctaLink: "/create-memorial",
-      testId: "step-1",
-      image: "/step1.png"
-    },
-    {
-      num: "02",
-      label: "Veja o resultado",
-      title: "Veja o resultado",
-      subtitle: "Como fica o memorial?",
-      description: "O memorial é exibido pronto na tela para você ver como ficou. Ele fica salvo no seu perfil, pronto para ser publicado quando você decidir.",
-      cta: "Ver exemplo",
-      ctaLink: "/explore",
-      testId: "step-2",
-      image: "/step2.png"
-    },
-    {
-      num: "03",
-      label: "Escolha um plano",
-      title: "Escolha um plano",
-      subtitle: "Como publicar?",
-      description: "Se gostar do resultado, escolha um plano para publicar o memorial online e/ou receber a placa física com QR Code para o túmulo.",
-      cta: "Ver planos",
-      ctaLink: "/#plans",
-      testId: "step-3",
-      image: "/step3.png"
-    },
+  {
+    num: "01",
+    label: "Crie o memorial",
+    title: "Crie o memorial",
+    subtitle: "Como preencher?",
+    description: "Preencha as informações da homenagem: dados pessoais, uma frase especial, biografia, fotos e até um áudio. Tudo de forma simples e carinhosa.",
+    cta: "Começar agora",
+    ctaLink: "/create-memorial",
+    testId: "step-1",
+    image: "/step1.png"
+  },
+  {
+    num: "02",
+    label: "Veja o resultado",
+    title: "Veja o resultado",
+    subtitle: "Como fica o memorial?",
+    description: "O memorial é exibido pronto na tela para você ver como ficou. Ele fica salvo no seu perfil, pronto para ser publicado quando você decidir.",
+    cta: "Ver exemplo",
+    ctaLink: "/explore",
+    testId: "step-2",
+    image: "/step2.png"
+  },
+  {
+    num: "03",
+    label: "Escolha um plano",
+    title: "Escolha um plano",
+    subtitle: "Como publicar?",
+    description: "Se gostar do resultado, escolha um plano para publicar o memorial online e/ou receber a placa física com QR Code para o túmulo.",
+    cta: "Ver planos",
+    ctaLink: "/#plans",
+    testId: "step-3",
+    image: "/step3.png"
+  },
 ];
 
-// ── HowItWorksSection ───────────────────────────────────────────────────────
-function HowItWorksSection() {
+// ── PanelContent ─────────────────────────────────────────────────────────────
+function PanelContent({ step, onScrollToPlans }) {
+  const [imgLoaded, setImgLoaded] = useState(false);
 
+  const handleCta = () => {
+    if (step.ctaLink.startsWith('/#')) {
+      onScrollToPlans();
+    } else {
+      navigate(step.ctaLink);
+    }
+  };
+
+  return (
+    <>
+      {/* ── Card de texto ── */}
+      <div
+        className="howit-pill"
+        style={{
+          flex: "1 1 260px", maxWidth: "380px", borderRadius: "22px",
+          padding: "clamp(18px, 3vw, 32px) clamp(16px, 2.5vw, 28px)",
+          background: "rgba(255,255,255,0.58)", backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)", border: "1px solid rgba(255,255,255,0.82)",
+          boxShadow: "0 12px 36px rgba(26,39,68,0.1), 0 2px 6px rgba(26,39,68,0.05), inset 0 1px 0 rgba(255,255,255,0.9)",
+        }}
+      >
+        {/* Número + label */}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: "50%",
+            background: "#1a2744", color: "white",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontFamily: '"Georgia", serif', fontSize: "0.8rem", fontWeight: 700,
+            flexShrink: 0, animation: "pulseRing 2.5s ease-out infinite",
+          }}>
+            {parseInt(step.num)}
+          </div>
+          <span style={{ fontSize: "0.58rem", letterSpacing: "0.22em", color: "#5aa8e0", fontWeight: 700, textTransform: "uppercase" }}>
+            Passo {step.num}
+          </span>
+        </div>
+
+        {/* Título */}
+        <h3 style={{ fontFamily: '"Georgia", serif', fontSize: "clamp(1rem, 4vw, 1.5rem)", fontWeight: 700, color: "#1a2744", lineHeight: 1.22, marginBottom: "3px" }}>
+          {step.title}
+        </h3>
+
+        {/* Subtítulo — oculto no mobile para economizar espaço */}
+        <h4 className="howit-subtitle" style={{ fontFamily: '"Georgia", serif', fontSize: "clamp(0.78rem, 3vw, 0.9rem)", fontWeight: 400, color: "#5aa8e0", marginBottom: "10px" }}>
+          {step.subtitle}
+        </h4>
+
+        {/* Descrição */}
+        <p style={{ color: "#3a5070", fontSize: "clamp(0.8rem, 3vw, 0.88rem)", lineHeight: 1.65, marginBottom: "18px" }}>
+          {step.description}
+        </p>
+
+        {/* CTA */}
+        <button className="howit-cta-btn" onClick={handleCta}>
+          {step.cta}
+        </button>
+      </div>
+
+      {/* ── Imagem — oculta no mobile, visível a partir de md ── */}
+      <div
+        className={`howit-img-wrap${!imgLoaded ? " howit-img-shimmer" : ""}`}
+        style={{
+          flex: "1 1 260px", maxWidth: "420px",
+          height: "clamp(200px, 28vw, 300px)", borderRadius: "18px",
+          border: "1.5px dashed rgba(26,39,68,0.2)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          overflow: "hidden", boxShadow: "0 6px 24px rgba(26,39,68,0.07)",
+        }}
+      >
+        <img
+          src={step.image} alt={step.title}
+          onLoad={() => setImgLoaded(true)}
+          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "opacity 0.4s ease", opacity: imgLoaded ? 1 : 0 }}
+        />
+      </div>
+    </>
+  );
+}
+
+// ── HowItWorksSection ────────────────────────────────────────────────────────
+function HowItWorksSection() {
   const [activeStep, setActiveStep] = useState(0);
   const [prevStep, setPrevStep] = useState(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -392,10 +475,7 @@ function HowItWorksSection() {
   }, []);
 
   useEffect(() => {
-    STEPS.forEach(s => {
-      const img = new Image();
-      img.src = s.image;
-    });
+    STEPS.forEach(s => { const img = new Image(); img.src = s.image; });
   }, []);
 
   const goToStep = useCallback((idx) => {
@@ -403,23 +483,17 @@ function HowItWorksSection() {
     setTransitioning(true);
     setPrevStep(activeStep);
     setActiveStep(idx);
-    setTimeout(() => {
-      setPrevStep(null);
-      setTransitioning(false);
-    }, 420);
+    setTimeout(() => { setPrevStep(null); setTransitioning(false); }, 420);
   }, [activeStep, transitioning]);
 
   const startTimer = useCallback(() => {
-  clearInterval(timerRef.current);
-  timerRef.current = setInterval(() => {
+    clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
       setActiveStep(prev => {
         const next = (prev + 1) % STEPS.length;
         setPrevStep(prev);
         setTransitioning(true);
-        setTimeout(() => {
-          setPrevStep(null);
-          setTransitioning(false);
-        }, 420);
+        setTimeout(() => { setPrevStep(null); setTransitioning(false); }, 420);
         return next;
       });
     }, 4000);
@@ -439,12 +513,18 @@ function HowItWorksSection() {
   const current = STEPS[activeStep];
   const previous = prevStep !== null ? STEPS[prevStep] : null;
 
+  const scrollToPlans = () => {
+    const el = document.getElementById('plans');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   return (
     <section
       ref={sectionRef}
-      className="relative py-14 md:py-20 overflow-hidden"
+      className="relative overflow-hidden"
       style={{
         background: "linear-gradient(180deg, #5aa8e0 0%, #7bbde8 15%, #a8d8f0 38%, #c8e8f5 60%, #ddf0f7 80%, #eef8fb 100%)",
+        padding: "clamp(48px, 8vw, 80px) 0 clamp(40px, 7vw, 72px)",
         marginTop: 0,
         borderTop: "none",
       }}
@@ -488,6 +568,7 @@ function HowItWorksSection() {
           70%  { box-shadow: 0 0 0 10px rgba(90,168,224,0);    }
           100% { box-shadow: 0 0 0 0    rgba(90,168,224,0);    }
         }
+
         .howit-pill {
           transition: transform 0.35s cubic-bezier(.22,1,.36,1), box-shadow 0.35s ease;
         }
@@ -507,8 +588,7 @@ function HowItWorksSection() {
           content: '';
           position: absolute;
           bottom: 0; left: 0; right: 0;
-          height: 2px;
-          border-radius: 2px;
+          height: 2px; border-radius: 2px;
           background: #1a2744;
           transform: scaleX(0);
           transform-origin: left;
@@ -520,41 +600,29 @@ function HowItWorksSection() {
           position: absolute;
           bottom: 0; left: 0;
           height: 2px; width: 100%;
-          background: #1a2744;
-          border-radius: 2px;
-          transform-origin: left;
-          transform: scaleX(0);
+          background: #1a2744; border-radius: 2px;
+          transform-origin: left; transform: scaleX(0);
         }
         .howit-progress-bar.howit-running {
           animation: progressFill 4s linear forwards;
         }
         .howit-img-shimmer {
-          background: linear-gradient(
-            90deg,
-            rgba(255,255,255,0.18) 25%,
-            rgba(255,255,255,0.42) 50%,
-            rgba(255,255,255,0.18) 75%
-          );
+          background: linear-gradient(90deg, rgba(255,255,255,0.18) 25%, rgba(255,255,255,0.42) 50%, rgba(255,255,255,0.18) 75%);
           background-size: 400px 100%;
           animation: shimmer 2.2s ease-in-out infinite;
         }
         .howit-cta-btn {
-          border-radius: 999px;
-          padding: 9px 24px;
-          background: transparent;
-          border: 1.5px solid #1a2744;
-          color: #1a2744;
-          font-family: "Georgia", serif;
-          font-size: 0.82rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.28s ease;
+          border-radius: 999px; padding: 9px 24px;
+          background: transparent; border: 1.5px solid #1a2744;
+          color: #1a2744; font-family: "Georgia", serif;
+          font-size: 0.82rem; font-weight: 600;
+          cursor: pointer; transition: all 0.28s ease;
         }
         .howit-cta-btn:hover { background: #1a2744; color: white; }
         .howit-panel-wrap {
           position: relative;
-          min-height: clamp(320px, 40vw, 380px);
-          will-change: contents;
+          /* Desktop: altura fixa para o absolute funcionar */
+          min-height: clamp(280px, 35vw, 340px);
         }
         .howit-panel {
           position: absolute;
@@ -574,24 +642,42 @@ function HowItWorksSection() {
           animation: panelLeave 0.35s cubic-bezier(.22,1,.36,1) both;
           pointer-events: none;
         }
-        .howit-panel.is-idle {
-          opacity: 1;
-          transform: translateY(0);
-        }
+        .howit-panel.is-idle { opacity: 1; transform: translateY(0); }
+
+        /* ── MOBILE ── */
         @media (max-width: 767px) {
-          .howit-cloud-left  { width: 130px !important; left: -15px !important; top: -5px !important; }
+          /* Nuvens */
+          .howit-cloud-left  { width: 110px !important; left: -10px !important; top: -5px !important; opacity: 0.65 !important; }
           .howit-cloud-right { display: none !important; }
           .howit-cloud-base  { display: none !important; }
+
+          /* Tabs mais compactas */
           .howit-tabs        { gap: 0 !important; justify-content: space-between !important; }
           .howit-tab-btn     { min-width: 0 !important; flex: 1; padding-bottom: 10px !important; }
-          .howit-panel       { position: absolute !important; }
-          .howit-panel-wrap  { min-height: clamp(480px, 120vw, 600px) !important; }
+
+          /* Imagem escondida — só card de texto no mobile */
+          .howit-img-wrap    { display: none !important; }
+
+          /* Subtitle escondida no mobile */
+          .howit-subtitle    { display: none !important; }
+
+          /* Panel em flow normal (não absolute) no mobile */
+          .howit-panel-wrap  { min-height: 0 !important; }
+          .howit-panel       {
+            position: relative !important;
+            top: auto !important; left: auto !important; right: auto !important;
+          }
+          .howit-panel.is-leaving { display: none !important; }
+
+          /* Card ocupa largura total, sem maxWidth */
           .howit-pill        { max-width: 100% !important; flex: 1 1 100% !important; }
-          .howit-img-wrap    { max-width: 100% !important; flex: 1 1 100% !important; height: clamp(160px, 50vw, 240px) !important; border-radius: 12px !important; }
+
+          /* Footer pill menor */
           .howit-footer-pill { font-size: 0.72rem !important; padding: 8px 14px !important; }
         }
       `}</style>
 
+      {/* Nuvens */}
       <div className="howit-cloud-left absolute top-[-20px] left-[-60px] w-56 md:w-72 opacity-90 pointer-events-none select-none"
         style={{ animation: "floatS1 9s ease-in-out infinite" }}>
         <img src="/clouds/cloud1.png" alt="" draggable={false} style={{ width: '100%', height: 'auto', display: 'block' }} />
@@ -612,6 +698,7 @@ function HowItWorksSection() {
           animation: isVisible ? "revealSection 0.8s cubic-bezier(.22,1,.36,1) both" : "none",
         }}
       >
+        {/* Cabeçalho */}
         <div className="text-center mb-8 md:mb-12">
           <p style={{ textTransform: "uppercase", letterSpacing: "0.22em", fontSize: "0.68rem", fontWeight: 700, color: "#2a3d5e", marginBottom: "12px" }}>
             Como Funciona
@@ -625,8 +712,9 @@ function HowItWorksSection() {
           </p>
         </div>
 
+        {/* Tabs */}
         <div
-          className="howit-tabs flex items-center justify-center gap-6 md:gap-12 mb-10"
+          className="howit-tabs flex items-center justify-center gap-6 md:gap-12 mb-8 md:mb-10"
           style={{ borderBottom: "1px solid rgba(26,39,68,0.12)" }}
         >
           {STEPS.map((s, i) => (
@@ -656,24 +744,20 @@ function HowItWorksSection() {
           ))}
         </div>
 
+        {/* Painel */}
         <div className="howit-panel-wrap">
           {previous && transitioning && (
             <div className="howit-panel is-leaving" data-testid={previous.testId} aria-hidden="true">
-              <PanelContent step={previous} onScrollToPlans={() => {
-                const el = document.getElementById('plans');
-                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }} />
+              <PanelContent step={previous} onScrollToPlans={scrollToPlans} />
             </div>
           )}
           <div className={`howit-panel ${transitioning ? "is-entering" : "is-idle"}`} data-testid={current.testId}>
-            <PanelContent step={current} onScrollToPlans={() => {
-              const el = document.getElementById('plans');
-              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }} />
+            <PanelContent step={current} onScrollToPlans={scrollToPlans} />
           </div>
         </div>
 
-        <div className="text-center mt-10">
+        {/* Footer */}
+        <div className="text-center mt-8 md:mt-10">
           <p className="howit-footer-pill" style={{
             display: "inline-block", padding: "10px 24px", borderRadius: "999px",
             background: "rgba(255,255,255,0.55)", backdropFilter: "blur(14px)",
@@ -686,78 +770,6 @@ function HowItWorksSection() {
         </div>
       </div>
     </section>
-  );
-}
-
-function PanelContent({ step, onScrollToPlans }) {
-  const [imgLoaded, setImgLoaded] = useState(false);
-
-  return (
-    <>
-      <div
-        className="howit-pill"
-        style={{
-          flex: "1 1 260px", maxWidth: "380px", borderRadius: "22px",
-          padding: "clamp(20px, 3vw, 32px) clamp(18px, 2.5vw, 28px)",
-          background: "rgba(255,255,255,0.58)", backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)", border: "1px solid rgba(255,255,255,0.82)",
-          boxShadow: "0 12px 36px rgba(26,39,68,0.1), 0 2px 6px rgba(26,39,68,0.05), inset 0 1px 0 rgba(255,255,255,0.9)",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: "50%",
-            background: "#1a2744", color: "white",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontFamily: '"Georgia", serif', fontSize: "0.85rem", fontWeight: 700,
-            flexShrink: 0, animation: "pulseRing 2.5s ease-out infinite",
-          }}>
-            {parseInt(step.num)}
-          </div>
-          <span style={{ fontSize: "0.6rem", letterSpacing: "0.22em", color: "#5aa8e0", fontWeight: 700, textTransform: "uppercase" }}>
-            Passo {step.num}
-          </span>
-        </div>
-        <h3 style={{ fontFamily: '"Georgia", serif', fontSize: "clamp(1.1rem, 4vw, 1.5rem)", fontWeight: 700, color: "#1a2744", lineHeight: 1.22, marginBottom: "4px" }}>
-          {step.title}
-        </h3>
-        <h4 style={{ fontFamily: '"Georgia", serif', fontSize: "clamp(0.82rem, 3vw, 0.9rem)", fontWeight: 400, color: "#5aa8e0", marginBottom: "12px" }}>
-          {step.subtitle}
-        </h4>
-        <p style={{ color: "#3a5070", fontSize: "clamp(0.82rem, 3vw, 0.88rem)", lineHeight: 1.68, marginBottom: "22px" }}>
-          {step.description}
-        </p>
-        <button
-          className="howit-cta-btn"
-          onClick={() => {
-            if (step.ctaLink.startsWith('/#')) {
-              onScrollToPlans();
-            } else {
-              navigate(step.ctaLink);
-            }
-          }}
-        >
-          {step.cta}
-        </button>
-      </div>
-
-      <div
-        className={`howit-img-wrap${!imgLoaded ? " howit-img-shimmer" : ""}`}
-        style={{
-          flex: "1 1 260px", maxWidth: "420px",
-          height: "clamp(220px, 28vw, 300px)", borderRadius: "18px",
-          border: "1.5px dashed rgba(26,39,68,0.2)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          overflow: "hidden", boxShadow: "0 6px 24px rgba(26,39,68,0.07)",
-        }}
-      >
-        <img
-          src={step.image} alt={step.title}
-          onLoad={() => setImgLoaded(true)}
-          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "opacity 0.4s ease", opacity: imgLoaded ? 1 : 0 }}
-        />
-      </div>
-    </>
   );
 }
 
@@ -1001,7 +1013,6 @@ function ProductShowcaseSection() {
       className="relative overflow-hidden"
       style={{
         padding: 'clamp(64px, 10vw, 112px) 0',
-        // Planos termina em #b8e0f0 → desce suave → entrega #8ecce8 para Trust Badges
         background: 'linear-gradient(180deg, #b8e0f0 0%, #c8e8f5 25%, #ddeef8 50%, #c8e8f5 75%, #8ecce8 100%)',
         margin: 0,
         borderTop: 'none',
@@ -1077,36 +1088,63 @@ function ProductShowcaseSection() {
           color: white !important;
           box-shadow: 0 10px 32px rgba(26,39,68,0.22) !important;
         }
+
+        /* ── MOBILE ── */
         @media (max-width: 767px) {
-          .prod-cloud-left  { width: 120px !important; left: -15px !important; }
+          .prod-cloud-left  { width: 110px !important; left: -12px !important; opacity: 0.6 !important; }
           .prod-cloud-right { display: none !important; }
-          .prod-secondary-grid { grid-template-columns: 1fr !important; }
-          .prod-benefits-row   { flex-direction: column !important; gap: 12px !important; }
+
+          /* Imagem principal menor */
+          .prod-main-img    { height: clamp(180px, 52vw, 260px) !important; }
+
+          /* Grid secundário: 3 colunas compactas lado a lado */
+          .prod-secondary-grid {
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 8px !important;
+            margin-bottom: 24px !important;
+          }
+          /* Altura dos cards secundários menor */
+          .prod-secondary-img {
+            height: clamp(80px, 24vw, 120px) !important;
+          }
+
+          /* Benefits: grid 1 col em vez de flex wrap */
+          .prod-benefits-row {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 10px !important;
+            margin-bottom: 28px !important;
+          }
+          .prod-benefit-card {
+            max-width: 100% !important;
+            flex: none !important;
+            padding: 12px 14px !important;
+          }
+          /* Ícone menor */
+          .prod-benefit-icon {
+            width: 34px !important; height: 34px !important;
+          }
         }
       `}</style>
 
-      <div
-        className="prod-cloud-left absolute pointer-events-none select-none"
-        style={{ top: '-20px', left: '-55px', width: 'clamp(130px, 15vw, 220px)', opacity: 0.85, animation: 'floatProd1 10s ease-in-out infinite' }}
-      >
+      {/* Nuvens */}
+      <div className="prod-cloud-left absolute pointer-events-none select-none"
+        style={{ top: '-20px', left: '-55px', width: 'clamp(130px, 15vw, 220px)', opacity: 0.85, animation: 'floatProd1 10s ease-in-out infinite' }}>
         <img src="/clouds/cloud1.png" alt="" draggable={false} style={{ width: '100%', height: 'auto', display: 'block' }} />
       </div>
-      <div
-        className="prod-cloud-right absolute pointer-events-none select-none hidden md:block"
-        style={{ top: '8%', right: '-45px', width: 'clamp(130px, 12vw, 200px)', opacity: 0.75, animation: 'floatProd2 13s ease-in-out infinite' }}
-      >
+      <div className="prod-cloud-right absolute pointer-events-none select-none hidden md:block"
+        style={{ top: '8%', right: '-45px', width: 'clamp(130px, 12vw, 200px)', opacity: 0.75, animation: 'floatProd2 13s ease-in-out infinite' }}>
         <img src="/clouds/cloud2.png" alt="" draggable={false} style={{ width: '100%', height: 'auto', display: 'block' }} />
       </div>
-      <div
-        className="absolute pointer-events-none select-none hidden lg:block"
-        style={{ bottom: '12%', left: '5%', width: 'clamp(80px, 7vw, 120px)', opacity: 0.55, animation: 'floatProd3 8s ease-in-out infinite' }}
-      >
+      <div className="absolute pointer-events-none select-none hidden lg:block"
+        style={{ bottom: '12%', left: '5%', width: 'clamp(80px, 7vw, 120px)', opacity: 0.55, animation: 'floatProd3 8s ease-in-out infinite' }}>
         <img src="/clouds/cloud3.png" alt="" draggable={false} style={{ width: '100%', height: 'auto', display: 'block' }} />
       </div>
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 md:px-12">
 
-        <div className="text-center mb-14 md:mb-20" style={{ opacity: visible ? 1 : 0, animation: visible ? 'prodFadeIn 0.75s cubic-bezier(.22,1,.36,1) both' : 'none' }}>
+        {/* Cabeçalho */}
+        <div className="text-center mb-10 md:mb-20" style={{ opacity: visible ? 1 : 0, animation: visible ? 'prodFadeIn 0.75s cubic-bezier(.22,1,.36,1) both' : 'none' }}>
           <p style={{ textTransform: 'uppercase', letterSpacing: '0.24em', fontSize: '0.66rem', fontWeight: 700, color: '#2a3d5e', marginBottom: '14px' }}>
             Produto físico
           </p>
@@ -1120,12 +1158,13 @@ function ProductShowcaseSection() {
           </p>
         </div>
 
-        <div style={{ opacity: visible ? 1 : 0, animation: visible ? 'prodScaleIn 0.9s cubic-bezier(.22,1,.36,1) 0.15s both' : 'none', marginBottom: 'clamp(32px, 5vw, 56px)', display: 'flex', justifyContent: 'center' }}>
+        {/* Imagem principal */}
+        <div style={{ opacity: visible ? 1 : 0, animation: visible ? 'prodScaleIn 0.9s cubic-bezier(.22,1,.36,1) 0.15s both' : 'none', marginBottom: 'clamp(20px, 4vw, 48px)', display: 'flex', justifyContent: 'center' }}>
           <div style={{ position: 'relative', borderRadius: '32px', padding: '10px', background: 'linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(168,216,240,0.5) 100%)', boxShadow: '0 0 0 1px rgba(255,255,255,0.9), 0 0 48px rgba(90,168,224,0.2)', width: '100%', maxWidth: '680px' }}>
             <PhotoPlaceholder
               label="Foto do produto final"
               size="large"
-              className="prod-placeholder-shimmer"
+              className="prod-placeholder-shimmer prod-main-img"
               style={{ width: '100%', height: 'clamp(260px, 38vw, 420px)', animation: visible ? 'gentlePulse 4s ease-in-out 1s infinite' : 'none' }}
             />
             <div style={{ position: 'absolute', bottom: '24px', right: '24px', background: 'rgba(26,39,68,0.88)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', borderRadius: '14px', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 8px 24px rgba(26,39,68,0.25)' }}>
@@ -1141,9 +1180,10 @@ function ProductShowcaseSection() {
           </div>
         </div>
 
+        {/* Cards secundários — 3 colunas em mobile e desktop */}
         <div
           className="prod-secondary-grid"
-          style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'clamp(12px, 2vw, 22px)', marginBottom: 'clamp(40px, 7vw, 72px)' }}
+          style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'clamp(12px, 2vw, 22px)', marginBottom: 'clamp(28px, 5vw, 56px)' }}
         >
           {secondaryCards.map((card, i) => (
             <div
@@ -1154,15 +1194,17 @@ function ProductShowcaseSection() {
               <PhotoPlaceholder
                 label={card.label}
                 icon={card.icon}
+                className="prod-secondary-img"
                 style={{ width: '100%', height: 'clamp(150px, 22vw, 210px)', boxShadow: '0 8px 28px rgba(26,39,68,0.09), inset 0 1px 0 rgba(255,255,255,0.7)' }}
               />
             </div>
           ))}
         </div>
 
+        {/* Benefits — grid 1 col no mobile, flex no desktop */}
         <div
           className="prod-benefits-row"
-          style={{ display: 'flex', gap: 'clamp(10px, 2vw, 20px)', justifyContent: 'center', marginBottom: 'clamp(40px, 6vw, 64px)', flexWrap: 'wrap', opacity: visible ? 1 : 0, animation: visible ? 'prodFadeIn 0.7s cubic-bezier(.22,1,.36,1) 0.65s both' : 'none' }}
+          style={{ display: 'flex', gap: 'clamp(10px, 2vw, 20px)', justifyContent: 'center', marginBottom: 'clamp(32px, 6vw, 64px)', flexWrap: 'wrap', opacity: visible ? 1 : 0, animation: visible ? 'prodFadeIn 0.7s cubic-bezier(.22,1,.36,1) 0.65s both' : 'none' }}
         >
           {benefits.map((b) => (
             <div
@@ -1170,7 +1212,7 @@ function ProductShowcaseSection() {
               className="prod-benefit-card"
               style={{ flex: '1 1 220px', maxWidth: '320px', borderRadius: '20px', padding: 'clamp(16px, 2.5vw, 24px) clamp(18px, 2.5vw, 28px)', background: 'rgba(255,255,255,0.52)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', border: '1px solid rgba(255,255,255,0.8)', boxShadow: '0 6px 22px rgba(26,39,68,0.07), inset 0 1px 0 rgba(255,255,255,0.85)', display: 'flex', alignItems: 'flex-start', gap: '14px' }}
             >
-              <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'linear-gradient(135deg, rgba(90,168,224,0.18) 0%, rgba(123,189,232,0.12) 100%)', border: '1px solid rgba(90,168,224,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#3a7fb5' }}>
+              <div className="prod-benefit-icon" style={{ width: 42, height: 42, borderRadius: '50%', background: 'linear-gradient(135deg, rgba(90,168,224,0.18) 0%, rgba(123,189,232,0.12) 100%)', border: '1px solid rgba(90,168,224,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#3a7fb5' }}>
                 {b.icon}
               </div>
               <div>
@@ -1179,27 +1221,6 @@ function ProductShowcaseSection() {
               </div>
             </div>
           ))}
-        </div>
-
-        <div style={{ textAlign: 'center', opacity: visible ? 1 : 0, animation: visible ? 'prodFadeIn 0.7s cubic-bezier(.22,1,.36,1) 0.8s both' : 'none' }}>
-          <div style={{ width: 1, height: 40, background: 'linear-gradient(to bottom, transparent, rgba(90,168,224,0.5), transparent)', margin: '0 auto 24px' }} />
-          <Link to="/create-memorial">
-            <button
-              className="prod-cta-btn"
-              style={{ borderRadius: '999px', padding: 'clamp(12px, 2vw, 15px) clamp(28px, 5vw, 44px)', background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1.5px solid rgba(26,39,68,0.22)', color: '#1a2744', fontFamily: '"Georgia", serif', fontSize: 'clamp(0.82rem, 3vw, 0.95rem)', fontWeight: 700, letterSpacing: '0.06em', cursor: 'pointer', boxShadow: '0 6px 22px rgba(26,39,68,0.1)', display: 'inline-flex', alignItems: 'center', gap: '10px' }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 5v14M5 12l7 7 7-7"/>
-              </svg>
-              Começar minha homenagem
-            </button>
-          </Link>
-          <div style={{ marginTop: 16, display: 'flex', justifyContent: 'center' }}>
-            <SecurityBadge variant="minimal" />
-          </div>
-          <p style={{ marginTop: '12px', fontSize: '0.72rem', color: 'rgba(58,80,112,0.65)', fontFamily: '"Georgia", serif', letterSpacing: '0.05em' }}>
-            ✨ Criar é gratuito · Você só paga ao publicar
-          </p>
         </div>
       </div>
     </section>
@@ -1419,6 +1440,71 @@ const Home = () => {
           .plan-card:hover { transform: translateY(-6px) scale(1.015); }
           .plan-card-popular:hover { transform: translateY(-8px) scale(1.02); }
           .plan-check-dot { width: 6px; height: 6px; border-radius: 50%; background: #5aa8e0; flex-shrink: 0; margin-right: 10px; margin-top: 5px; }
+
+          /* ── MOBILE ── */
+          @media (max-width: 767px) {
+            /* Grid: badge externo + 2 cards */
+            .plans-grid {
+              grid-template-columns: 1fr 1fr !important;
+              grid-template-rows: auto 1fr !important;
+              gap: 0 10px !important;
+              align-items: start !important;
+            }
+            /* Card digital: linha 2, coluna 1 */
+            .plan-card-digital  { grid-column: 1; grid-row: 2; }
+            /* Badge externo: linha 1, coluna 2 */
+            .plan-badge-external {
+              display: flex !important;
+              grid-column: 2; grid-row: 1;
+              justify-content: center;
+              margin-bottom: 6px;
+            }
+            /* Card popular: linha 2, coluna 2 */
+            .plan-card-popular  { grid-column: 2; grid-row: 2; }
+
+            /* Padding interno menor */
+            .plan-card-inner {
+              padding: 13px 11px !important;
+            }
+            /* Título menor */
+            .plan-title {
+              font-size: 0.77rem !important;
+              font-weight: 700 !important;
+              margin-bottom: 6px !important;
+              line-height: 1.25 !important;
+            }
+            /* Preço menor */
+            .plan-price {
+              font-size: 1.15rem !important;
+              margin-bottom: 6px !important;
+            }
+            /* Subtítulo oculto */
+            .plan-subtitle { display: none !important; }
+            /* Lista mais compacta */
+            .plan-list {
+              gap: 5px !important;
+              margin-bottom: 12px !important;
+            }
+            .plan-list li { font-size: 0.7rem !important; }
+            .plan-check-dot {
+              width: 5px !important; height: 5px !important;
+              margin-right: 6px !important; margin-top: 4px !important;
+            }
+            /* Botão menor */
+            .plan-btn {
+              padding: 8px 0 !important;
+              font-size: 0.67rem !important;
+              letter-spacing: 0.03em !important;
+            }
+            /* Badge dentro dos cards: oculto */
+            .plan-badge-inner { display: none !important; }
+            /* Badge absoluto dentro do card: oculto (substituído pelo externo) */
+            .plan-popular-badge { display: none !important; }
+            /* Spacer: desnecessário agora */
+            .plan-popular-spacer { display: none !important; }
+            /* SecurityBadge bar abaixo */
+            .plan-security-bar { margin-top: 14px !important; }
+          }
         `}</style>
 
         <div className="plans-cloud-left absolute top-[-10px] left-[-50px] w-52 md:w-64 opacity-85 pointer-events-none select-none" style={{ animation: "floatP1 10s ease-in-out infinite" }}>
@@ -1436,90 +1522,104 @@ const Home = () => {
           </div>
 
           <div className="plans-grid grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8 max-w-3xl mx-auto">
-            {/* Plano Digital */}
-            <div className="plan-card" style={{ borderRadius: "22px", padding: "clamp(22px, 3vw, 32px)", background: "rgba(255,255,255,0.55)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)", border: "1px solid rgba(255,255,255,0.8)", boxShadow: "0 10px 36px rgba(26,39,68,0.09), inset 0 1px 0 rgba(255,255,255,0.9)" }}>
-              <h3 style={{ fontFamily: '"Georgia", serif', fontSize: "clamp(1rem, 4vw, 1.35rem)", fontWeight: 700, color: "#1a2744", marginBottom: "10px" }}>Plano Digital</h3>
-              <div style={{ fontFamily: '"Georgia", serif', fontSize: "clamp(1.8rem, 7vw, 2.8rem)", fontWeight: 700, color: "#5aa8e0", lineHeight: 1, marginBottom: "6px" }}>R$ 29,90</div>
-              <p style={{ color: "#3a5070", fontSize: "clamp(0.8rem, 3vw, 0.82rem)", marginBottom: "18px", lineHeight: 1.5 }}>Memorial digital publicado na plataforma</p>
-              <ul style={{ marginBottom: "22px", display: "flex", flexDirection: "column", gap: "8px" }}>
-                {["Memorial digital completo","Galeria de até 10 fotos","Áudio de homenagem","QR Code digital"].map((item) => (
-                  <li key={item} style={{ display: "flex", alignItems: "flex-start", color: "#3a5070", fontSize: "clamp(0.8rem, 3vw, 0.85rem)", lineHeight: 1.5 }}>
-                    <span className="plan-check-dot" />{item}
-                  </li>
-                ))}
-              </ul>
-              <Link to="/create-memorial">
-                <button
-                  style={{ width: "100%", borderRadius: "999px", padding: "11px 0", background: "transparent", border: "1.5px solid #1a2744", color: "#1a2744", fontFamily: '"Georgia", serif', fontSize: "clamp(0.78rem, 3vw, 0.82rem)", fontWeight: 700, cursor: "pointer", letterSpacing: "0.06em", transition: "all 0.28s ease" }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "#1a2744"; e.currentTarget.style.color = "white"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#1a2744"; }}
-                >ESCOLHER PLANO</button>
-              </Link>
-              {/* Badge minimal sob o botão do plano digital */}
-              <div style={{ marginTop: 14, display: 'flex', justifyContent: 'center' }}>
-                <SecurityBadge variant="minimal" />
-              </div>
-            </div>
 
-            {/* Plano Placa */}
-            <div className="plan-card plan-card-popular" style={{ borderRadius: "22px", padding: "clamp(22px, 3vw, 32px)", background: "rgba(26,39,68,0.88)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)", border: "1px solid rgba(90,168,224,0.35)", boxShadow: "0 16px 48px rgba(26,39,68,0.22), inset 0 1px 0 rgba(255,255,255,0.08)", position: "relative", overflow: "hidden" }}>
-              <div style={{ position: "absolute", top: "16px", right: "16px", background: "linear-gradient(135deg, #f5c842, #f0a800)", color: "#1a2744", fontSize: "0.62rem", fontWeight: 800, letterSpacing: "0.1em", padding: "4px 12px", borderRadius: "999px", textTransform: "uppercase", boxShadow: "0 2px 8px rgba(245,200,66,0.4)" }}>Mais Popular</div>
-              <h3 style={{ fontFamily: '"Georgia", serif', fontSize: "clamp(1rem, 4vw, 1.35rem)", fontWeight: 700, color: "white", marginBottom: "10px" }}>Plano Placa QR Code</h3>
-              <div style={{ fontFamily: '"Georgia", serif', fontSize: "clamp(1.8rem, 7vw, 2.8rem)", fontWeight: 700, color: "#7bbde8", lineHeight: 1, marginBottom: "6px" }}>R$ 149,90</div>
-              <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "clamp(0.8rem, 3vw, 0.82rem)", marginBottom: "18px", lineHeight: 1.5 }}>Memorial + Placa física de aço inox</p>
-              <ul style={{ marginBottom: "22px", display: "flex", flexDirection: "column", gap: "8px" }}>
-                {["Tudo do Plano Digital","Placa física em aço inox","QR Code gravado permanente","Envio para todo Brasil"].map((item) => (
-                  <li key={item} style={{ display: "flex", alignItems: "flex-start", color: "rgba(255,255,255,0.8)", fontSize: "clamp(0.8rem, 3vw, 0.85rem)", lineHeight: 1.5 }}>
-                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#7bbde8", flexShrink: 0, marginRight: 10, marginTop: 5 }} />{item}
-                  </li>
-                ))}
-              </ul>
-              <Link to="/create-memorial">
-                <button
-                  style={{ width: "100%", borderRadius: "999px", padding: "11px 0", background: "#5aa8e0", border: "none", color: "white", fontFamily: '"Georgia", serif', fontSize: "clamp(0.78rem, 3vw, 0.82rem)", fontWeight: 700, cursor: "pointer", letterSpacing: "0.06em", transition: "all 0.28s ease", boxShadow: "0 4px 16px rgba(90,168,224,0.4)" }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "#7bbde8"; e.currentTarget.style.boxShadow = "0 6px 20px rgba(90,168,224,0.5)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "#5aa8e0"; e.currentTarget.style.boxShadow = "0 4px 16px rgba(90,168,224,0.4)"; }}
-                >ESCOLHER PLANO</button>
-              </Link>
-              {/* Badge minimal com cores adaptadas para fundo escuro */}
-              <div style={{ marginTop: 14, display: 'flex', justifyContent: 'center' }}>
-                <div style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 7,
-                  padding: '6px 14px', borderRadius: 999,
-                  background: 'rgba(255,255,255,0.08)',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                }}>
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(123,189,232,0.8)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                  </svg>
-                  <span style={{ fontFamily: '"Georgia", serif', fontSize: '0.67rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.03em', whiteSpace: 'nowrap' }}>
-                    Pagamento seguro via
-                  </span>
-                  <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(123,189,232,0.4)', flexShrink: 0 }} />
-                  <img
-                    src="/mercadopago-logo.webp"
-                    alt="Mercado Pago"
-                    style={{ height: 13, width: 'auto', opacity: 0.55, display: 'block', flexShrink: 0, filter: 'brightness(0) invert(1)' }}
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'inline';
-                    }}
-                  />
-                  <span style={{ display: 'none', fontFamily: '"Georgia", serif', fontSize: '0.67rem', fontWeight: 700, color: 'rgba(255,255,255,0.5)' }}>
-                    Mercado Pago
-                  </span>
+            {/* Plano Digital */}
+            <div className="plan-card plan-card-digital" style={{ borderRadius: "22px", background: "rgba(255,255,255,0.55)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)", border: "1px solid rgba(255,255,255,0.8)", boxShadow: "0 10px 36px rgba(26,39,68,0.09), inset 0 1px 0 rgba(255,255,255,0.9)" }}>
+              <div className="plan-card-inner" style={{ padding: "clamp(22px, 3vw, 32px)" }}>
+                <h3 className="plan-title" style={{ fontFamily: '"Georgia", serif', fontSize: "clamp(1rem, 4vw, 1.35rem)", fontWeight: 700, color: "#1a2744", marginBottom: "10px" }}>Plano Digital</h3>
+                <div className="plan-price" style={{ fontFamily: '"Georgia", serif', fontSize: "clamp(1.8rem, 7vw, 2.8rem)", fontWeight: 700, color: "#5aa8e0", lineHeight: 1, marginBottom: "6px" }}>R$ 29,90</div>
+                <p className="plan-subtitle" style={{ color: "#3a5070", fontSize: "clamp(0.8rem, 3vw, 0.82rem)", marginBottom: "18px", lineHeight: 1.5 }}>Memorial digital publicado na plataforma</p>
+                <ul className="plan-list" style={{ marginBottom: "22px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {["Memorial digital completo","Galeria de até 10 fotos","Áudio de homenagem","QR Code digital"].map((item) => (
+                    <li key={item} style={{ display: "flex", alignItems: "flex-start", color: "#3a5070", fontSize: "clamp(0.8rem, 3vw, 0.85rem)", lineHeight: 1.5 }}>
+                      <span className="plan-check-dot" />{item}
+                    </li>
+                  ))}
+                </ul>
+                <Link to="/create-memorial">
+                  <button
+                    className="plan-btn"
+                    style={{ width: "100%", borderRadius: "999px", padding: "11px 0", background: "transparent", border: "1.5px solid #1a2744", color: "#1a2744", fontFamily: '"Georgia", serif', fontSize: "clamp(0.78rem, 3vw, 0.82rem)", fontWeight: 700, cursor: "pointer", letterSpacing: "0.06em", transition: "all 0.28s ease" }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "#1a2744"; e.currentTarget.style.color = "white"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#1a2744"; }}
+                  >ESCOLHER PLANO</button>
+                </Link>
+                <div className="plan-badge-inner" style={{ marginTop: 14, display: 'flex', justifyContent: 'center' }}>
+                  <SecurityBadge variant="minimal" />
                 </div>
               </div>
             </div>
+
+            {/* Badge externo — visível só no mobile via CSS, fica na row 1 col 2 da grid */}
+            <div className="plan-badge-external" style={{ display: 'none' }}>
+              <span style={{ background: "linear-gradient(135deg, #f5c842, #f0a800)", color: "#1a2744", fontSize: "0.58rem", fontWeight: 800, letterSpacing: "0.1em", padding: "4px 10px", borderRadius: "999px", textTransform: "uppercase", boxShadow: "0 2px 8px rgba(245,200,66,0.35)", whiteSpace: 'nowrap' }}>
+                Mais Popular
+              </span>
+            </div>
+
+            {/* Plano Placa */}
+            <div className="plan-card plan-card-popular" style={{ borderRadius: "22px", background: "rgba(26,39,68,0.88)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)", border: "1px solid rgba(90,168,224,0.35)", boxShadow: "0 16px 48px rgba(26,39,68,0.22), inset 0 1px 0 rgba(255,255,255,0.08)", position: "relative", overflow: "hidden" }}>
+              <div className="plan-card-inner" style={{ padding: "clamp(22px, 3vw, 32px)" }}>
+                {/* Badge absoluto no desktop, espaçador no mobile via CSS */}
+                <div className="plan-popular-badge" style={{ position: "absolute", top: "16px", right: "16px", background: "linear-gradient(135deg, #f5c842, #f0a800)", color: "#1a2744", fontSize: "0.62rem", fontWeight: 800, letterSpacing: "0.1em", padding: "4px 12px", borderRadius: "999px", textTransform: "uppercase", boxShadow: "0 2px 8px rgba(245,200,66,0.4)" }}>Mais Popular</div>
+                <div className="plan-popular-spacer" />
+                <h3 className="plan-title" style={{ fontFamily: '"Georgia", serif', fontSize: "clamp(1rem, 4vw, 1.35rem)", fontWeight: 700, color: "white", marginBottom: "10px" }}>Plano Placa QR Code</h3>
+                <div className="plan-price" style={{ fontFamily: '"Georgia", serif', fontSize: "clamp(1.8rem, 7vw, 2.8rem)", fontWeight: 700, color: "#7bbde8", lineHeight: 1, marginBottom: "6px" }}>R$ 149,90</div>
+                <p className="plan-subtitle" style={{ color: "rgba(255,255,255,0.6)", fontSize: "clamp(0.8rem, 3vw, 0.82rem)", marginBottom: "18px", lineHeight: 1.5 }}>Memorial + Placa física de aço inox</p>
+                <ul className="plan-list" style={{ marginBottom: "22px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {["Tudo do Plano Digital","Placa física em aço inox","QR Code gravado permanente","Envio para todo Brasil"].map((item) => (
+                    <li key={item} style={{ display: "flex", alignItems: "flex-start", color: "rgba(255,255,255,0.8)", fontSize: "clamp(0.8rem, 3vw, 0.85rem)", lineHeight: 1.5 }}>
+                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#7bbde8", flexShrink: 0, marginRight: 10, marginTop: 5 }} />{item}
+                    </li>
+                  ))}
+                </ul>
+                <Link to="/create-memorial">
+                  <button
+                    className="plan-btn"
+                    style={{ width: "100%", borderRadius: "999px", padding: "11px 0", background: "#5aa8e0", border: "none", color: "white", fontFamily: '"Georgia", serif', fontSize: "clamp(0.78rem, 3vw, 0.82rem)", fontWeight: 700, cursor: "pointer", letterSpacing: "0.06em", transition: "all 0.28s ease", boxShadow: "0 4px 16px rgba(90,168,224,0.4)" }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "#7bbde8"; e.currentTarget.style.boxShadow = "0 6px 20px rgba(90,168,224,0.5)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "#5aa8e0"; e.currentTarget.style.boxShadow = "0 4px 16px rgba(90,168,224,0.4)"; }}
+                  >ESCOLHER PLANO</button>
+                </Link>
+                <div className="plan-badge-inner" style={{ marginTop: 14, display: 'flex', justifyContent: 'center' }}>
+                  <div style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 7,
+                    padding: '6px 14px', borderRadius: 999,
+                    background: 'rgba(255,255,255,0.08)',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                  }}>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(123,189,232,0.8)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    <span style={{ fontFamily: '"Georgia", serif', fontSize: '0.67rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.03em', whiteSpace: 'nowrap' }}>
+                      Pagamento seguro via
+                    </span>
+                    <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(123,189,232,0.4)', flexShrink: 0 }} />
+                    <img
+                      src="/mercadopago-logo.webp"
+                      alt="Mercado Pago"
+                      style={{ height: 13, width: 'auto', opacity: 0.55, display: 'block', flexShrink: 0, filter: 'brightness(0) invert(1)' }}
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'inline';
+                      }}
+                    />
+                    <span style={{ display: 'none', fontFamily: '"Georgia", serif', fontSize: '0.67rem', fontWeight: 700, color: 'rgba(255,255,255,0.5)' }}>
+                      Mercado Pago
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
 
-        {/* SecurityBadge bar abaixo dos dois cards — com mais espaçamento */}
-        <div style={{ maxWidth: 820, margin: '32px auto 0', padding: '0 20px' }}>
+        {/* SecurityBadge bar abaixo dos dois cards */}
+        <div className="plan-security-bar" style={{ maxWidth: 820, margin: '32px auto 0', padding: '0 20px' }}>
           <SecurityBadge variant="bar" />
         </div>
       </section>
-
 
       {/* ── 4. Product Showcase ── */}
       <ProductShowcaseSection />
@@ -1568,9 +1668,9 @@ const Home = () => {
           <p style={{ color: "#3a5070", fontSize: "clamp(0.88rem, 3.5vw, 1.1rem)", lineHeight: 1.72, maxWidth: "520px", margin: "0 auto 36px", fontFamily: '"Georgia", serif' }}>
             Escolha quem entende a importância de preservar memórias. Oferecemos uma tecnologia única de QR Codes personalizados, que conecta o presente ao passado de forma significativa.
           </p>
-          <Link to="/how-it-works">
+          <Link to="/sobre">
             <button className="why-btn" style={{ borderRadius: "999px", padding: "13px 34px", background: "rgba(255,255,255,0.55)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", border: "1.5px solid rgba(26,39,68,0.2)", color: "#1a2744", fontFamily: '"Georgia", serif', fontSize: "clamp(0.82rem, 3.5vw, 0.95rem)", fontWeight: 700, letterSpacing: "0.05em", cursor: "pointer", boxShadow: "0 4px 18px rgba(26,39,68,0.08)" }}>
-              Saiba mais
+              Sobre a Remember QRCode
             </button>
           </Link>
         </div>

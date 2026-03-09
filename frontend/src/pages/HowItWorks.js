@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Button } from '../components/ui/button';
 import { CheckCircle2, FileText, Eye, CreditCard, ArrowRight } from 'lucide-react';
 
+
+// ── StepsSection ────────────────────────────────────────────────────────
 function StepsSection({ steps }) {
   const [visibleSteps, setVisibleSteps] = useState([]);
   const stepRefs = useRef([]);
@@ -32,7 +33,6 @@ function StepsSection({ steps }) {
   const stepColors = ['#f5a623', '#4a90d9', '#7dc242'];
 
   const stepIcons = [
-    // Ícone estilo "app mobile" — passo 1
     (color) => (
       <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
         <rect x="8" y="4" width="34" height="44" rx="6" fill={color} />
@@ -41,29 +41,24 @@ function StepsSection({ steps }) {
         <rect x="16" y="14" width="14" height="2.5" rx="1.25" fill="white" opacity="0.7" />
         <rect x="16" y="19" width="10" height="2" rx="1" fill="white" opacity="0.5" />
         <rect x="8" y="4" width="34" height="44" rx="6" stroke="white" strokeWidth="1" strokeOpacity="0.3" />
-        {/* Bolinha azul no canto */}
         <circle cx="38" cy="10" r="6" fill="#4a90d9" />
         <circle cx="38" cy="10" r="3" fill="white" />
       </svg>
     ),
-    // Ícone estilo "documento médico" — passo 2
     (color) => (
       <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
         <rect x="6" y="6" width="34" height="42" rx="6" fill={color} />
         <rect x="10" y="10" width="26" height="34" rx="3" fill="white" opacity="0.2" />
-        {/* Cruz */}
         <rect x="19" y="20" width="14" height="4" rx="2" fill="white" opacity="0.95" />
         <rect x="21" y="16" width="4" height="12" rx="2" fill="white" opacity="0.95" />
         <rect x="10" y="36" width="16" height="2.5" rx="1.25" fill="white" opacity="0.5" />
         <rect x="10" y="40" width="11" height="2" rx="1" fill="white" opacity="0.4" />
-        {/* Segunda folha atrás */}
         <rect x="14" y="2" width="34" height="42" rx="6" fill={color} opacity="0.5" />
         <rect x="6" y="6" width="34" height="42" rx="6" fill={color} />
         <rect x="19" y="20" width="14" height="4" rx="2" fill="white" opacity="0.95" />
         <rect x="21" y="16" width="4" height="12" rx="2" fill="white" opacity="0.95" />
       </svg>
     ),
-    // Ícone estilo "fones de ouvido" — passo 3
     (color) => (
       <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
         <path d="M14 28 C14 18 42 18 42 28" stroke={color} strokeWidth="5" fill="none" strokeLinecap="round" />
@@ -96,10 +91,6 @@ function StepsSection({ steps }) {
         @keyframes stepReveal {
           from { opacity: 0; transform: translateY(36px) scale(0.97); filter: blur(5px); }
           to   { opacity: 1; transform: translateY(0)    scale(1);    filter: blur(0);   }
-        }
-        @keyframes lineGrow {
-          from { height: 0; }
-          to   { height: 56px; }
         }
         @keyframes dotPop {
           from { transform: scale(0); opacity: 0; }
@@ -134,71 +125,111 @@ function StepsSection({ steps }) {
           color: white;
           border-color: #1a2744;
         }
+
+        /* ── MOBILE ── */
+        @media (max-width: 767px) {
+          /* Sidebar oculta — título aparece no header mobile acima */
+          .steps-sidebar       { display: none !important; }
+          .steps-header-mobile { display: block !important; }
+
+          /* Timeline ocupa tudo centralizada */
+          .steps-timeline { width: 100% !important; }
+          .step-card-wrap { max-width: 100% !important; }
+
+          /* Card compacto */
+          .step-card-inner {
+            padding: 16px 14px 14px !important;
+            border-radius: 16px !important;
+          }
+
+          /* Ícone menor */
+          .step-icon-box {
+            width: 56px !important;
+            height: 56px !important;
+            border-radius: 14px !important;
+            margin-bottom: 10px !important;
+          }
+          .step-icon-box svg {
+            width: 34px !important;
+            height: 34px !important;
+          }
+
+          /* Título menor — anula o clamp */
+          .step-title {
+            font-size: 1rem !important;
+            margin-bottom: 6px !important;
+          }
+
+          /* Descrição menor */
+          .step-desc {
+            font-size: 0.77rem !important;
+            margin-bottom: 12px !important;
+            max-width: 100% !important;
+          }
+
+          /* Highlight oculto */
+          .step-highlight { display: none !important; }
+
+          /* Botão menor */
+          .step-cta-btn {
+            padding: 7px 16px !important;
+            font-size: 0.71rem !important;
+          }
+
+          /* Conectores menores */
+          .step-dot-line  { height: 22px !important; }
+          .step-connector { height: 24px !important; }
+        }
       `}</style>
 
-      {/* Nuvem esquerda */}
-      <div
-        className="absolute top-[5%] left-[-50px] w-52 md:w-72 opacity-85 pointer-events-none select-none"
-        style={{ animation: 'floatSt1 10s ease-in-out infinite' }}
-      >
-        <img src="/clouds/cloud1.png" alt="" draggable={false}
-          style={{ width: '100%', height: 'auto', display: 'block' }} />
+      {/* Nuvens */}
+      <div className="absolute top-[5%] left-[-50px] w-52 md:w-72 opacity-85 pointer-events-none select-none"
+        style={{ animation: 'floatSt1 10s ease-in-out infinite' }}>
+        <img src="/clouds/cloud1.png" alt="" draggable={false} style={{ width: '100%', height: 'auto', display: 'block' }} />
       </div>
-
-      {/* Nuvem direita */}
-      <div
-        className="absolute top-[35%] right-[-40px] w-44 md:w-64 opacity-75 pointer-events-none select-none hidden md:block"
-        style={{ animation: 'floatSt2 12s ease-in-out infinite' }}
-      >
-        <img src="/clouds/cloud2.png" alt="" draggable={false}
-          style={{ width: '100%', height: 'auto', display: 'block' }} />
+      <div className="absolute top-[35%] right-[-40px] w-44 md:w-64 opacity-75 pointer-events-none select-none hidden md:block"
+        style={{ animation: 'floatSt2 12s ease-in-out infinite' }}>
+        <img src="/clouds/cloud2.png" alt="" draggable={false} style={{ width: '100%', height: 'auto', display: 'block' }} />
       </div>
-
-      {/* Nuvem esquerda baixo */}
-      <div
-        className="absolute bottom-[5%] left-[2%] w-36 opacity-65 pointer-events-none select-none hidden lg:block"
-        style={{ animation: 'floatSt1 8s ease-in-out infinite 1.5s' }}
-      >
-        <img src="/clouds/cloud1.png" alt="" draggable={false}
-          style={{ width: '100%', height: 'auto', display: 'block' }} />
+      <div className="absolute bottom-[5%] left-[2%] w-36 opacity-65 pointer-events-none select-none hidden lg:block"
+        style={{ animation: 'floatSt1 8s ease-in-out infinite 1.5s' }}>
+        <img src="/clouds/cloud1.png" alt="" draggable={false} style={{ width: '100%', height: 'auto', display: 'block' }} />
       </div>
 
       <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 md:px-12">
 
-        {/* Cabeçalho — lado esquerdo + cards lado direito */}
+        {/* Cabeçalho apenas mobile */}
+        <div className="steps-header-mobile" style={{ display: 'none', textAlign: 'center', marginBottom: 24 }}>
+          <p style={{ textTransform: 'uppercase', letterSpacing: '0.22em', fontSize: '0.63rem', fontWeight: 700, color: '#2a3d5e', marginBottom: 10 }}>
+            O Processo
+          </p>
+          <h2 style={{ fontFamily: '"Georgia", serif', fontSize: '1.4rem', fontWeight: 700, color: '#1a2744', lineHeight: 1.2, marginBottom: 8 }}>
+            Criar, visualizar e publicar.
+          </h2>
+          <p style={{ color: '#3a5070', fontSize: '0.78rem', lineHeight: 1.6, fontFamily: '"Georgia", serif', maxWidth: 260, margin: '0 auto' }}>
+            Preencha, veja o resultado e escolha um plano.
+          </p>
+        </div>
+
+        {/* Layout */}
         <div className="flex flex-col md:flex-row gap-12 md:gap-16 items-start">
 
-          {/* Coluna esquerda — título fixo */}
-          <div className="md:w-64 lg:w-80 flex-shrink-0 md:sticky md:top-32">
-            <p style={{
-              textTransform: 'uppercase', letterSpacing: '0.22em',
-              fontSize: '0.65rem', fontWeight: 700,
-              color: '#2a3d5e', marginBottom: '14px',
-            }}>
+          {/* Sidebar — só desktop */}
+          <div className="steps-sidebar md:w-64 lg:w-80 flex-shrink-0 md:sticky md:top-32">
+            <p style={{ textTransform: 'uppercase', letterSpacing: '0.22em', fontSize: '0.65rem', fontWeight: 700, color: '#2a3d5e', marginBottom: '14px' }}>
               O Processo
             </p>
-            <h2 style={{
-              fontFamily: '"Georgia", serif',
-              fontSize: 'clamp(1.6rem, 3.5vw, 2.4rem)',
-              fontWeight: 700, color: '#1a2744',
-              lineHeight: 1.18, marginBottom: '14px',
-            }}>
+            <h2 style={{ fontFamily: '"Georgia", serif', fontSize: 'clamp(1.6rem, 3.5vw, 2.4rem)', fontWeight: 700, color: '#1a2744', lineHeight: 1.18, marginBottom: '14px' }}>
               Criar, visualizar e publicar.
             </h2>
-            <p style={{
-              color: '#3a5070',
-              fontSize: '0.88rem',
-              lineHeight: 1.68,
-              fontFamily: '"Georgia", serif',
-            }}>
+            <p style={{ color: '#3a5070', fontSize: '0.88rem', lineHeight: 1.68, fontFamily: '"Georgia", serif' }}>
               Preencha, veja o resultado e escolha um plano.
               Simples, rápido e feito com respeito.
             </p>
           </div>
 
-          {/* Coluna direita — timeline */}
-          <div className="flex-1" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-
+          {/* Timeline */}
+          <div className="steps-timeline flex-1" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             {steps.map((step, index) => {
               const isVisible = visibleSteps.includes(index);
               const isLast = index === steps.length - 1;
@@ -207,12 +238,12 @@ function StepsSection({ steps }) {
               return (
                 <div
                   key={index}
+                  className="step-card-wrap"
                   style={{ width: '100%', maxWidth: 340, display: 'flex', flexDirection: 'column', alignItems: 'center' }}
                 >
-                  {/* Dot numerado no topo da linha */}
+                  {/* Dot */}
                   <div style={{
-                    width: 32, height: 32,
-                    borderRadius: '50%',
+                    width: 32, height: 32, borderRadius: '50%',
                     background: 'rgba(255,255,255,0.85)',
                     border: '1.5px solid rgba(26,39,68,0.15)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -221,14 +252,13 @@ function StepsSection({ steps }) {
                     fontSize: '0.72rem', fontWeight: 700, color: '#1a2744',
                     opacity: isVisible ? 1 : 0,
                     animation: isVisible ? 'dotPop 0.4s cubic-bezier(.22,1,.36,1) both' : 'none',
-                    zIndex: 2,
-                    flexShrink: 0,
+                    zIndex: 2, flexShrink: 0,
                   }}>
                     {index + 1}
                   </div>
 
-                  {/* Linha entre dot e card */}
-                  <div style={{
+                  {/* Linha dot → card */}
+                  <div className="step-dot-line" style={{
                     width: 1,
                     height: isVisible ? 40 : 0,
                     background: 'rgba(255,255,255,0.6)',
@@ -239,7 +269,6 @@ function StepsSection({ steps }) {
                   {/* Card */}
                   <div
                     ref={el => { stepRefs.current[index] = el; }}
-                    data-testid={'step-' + index}
                     className="step-card-inner"
                     style={{
                       width: '100%',
@@ -253,66 +282,45 @@ function StepsSection({ steps }) {
                       textAlign: 'center',
                       opacity: isVisible ? 1 : 0,
                       animation: isVisible
-                        ? 'stepReveal 0.65s cubic-bezier(.22,1,.36,1) ' + (index * 0.18) + 's both'
+                        ? `stepReveal 0.65s cubic-bezier(.22,1,.36,1) ${index * 0.18}s both`
                         : 'none',
                     }}
                   >
-                    {/* Ícone animado */}
-                    <div style={{
-                      display: 'inline-flex',
-                      alignItems: 'center', justifyContent: 'center',
-                      width: 88, height: 88,
-                      borderRadius: '22px',
-                      background: color + '18',
-                      marginBottom: 16,
-                      animation: isVisible ? 'iconFloat 3s ease-in-out infinite ' + (index * 0.5) + 's' : 'none',
-                    }}>
+                    {/* Ícone */}
+                    <div
+                      className="step-icon-box"
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                        width: 88, height: 88, borderRadius: '22px',
+                        background: color + '18',
+                        marginBottom: 16,
+                        animation: isVisible ? `iconFloat 3s ease-in-out infinite ${index * 0.5}s` : 'none',
+                      }}
+                    >
                       {stepIcons[index](color)}
                     </div>
 
                     {/* Label */}
-                    <p style={{
-                      fontSize: '0.6rem',
-                      letterSpacing: '0.2em',
-                      color: color,
-                      fontWeight: 700,
-                      textTransform: 'uppercase',
-                      fontFamily: '"Georgia", serif',
-                      marginBottom: 6,
-                    }}>
+                    <p style={{ fontSize: '0.6rem', letterSpacing: '0.2em', color, fontWeight: 700, textTransform: 'uppercase', fontFamily: '"Georgia", serif', marginBottom: 6 }}>
                       {'STEP ' + step.number}
                     </p>
 
                     {/* Título */}
-                    <h3 style={{
-                      fontFamily: '"Georgia", serif',
-                      fontSize: 'clamp(1.3rem, 2.5vw, 1.65rem)',
-                      fontWeight: 700, color: '#1a2744',
-                      lineHeight: 1.2, marginBottom: 10,
-                    }}>
+                    <h3 className="step-title" style={{ fontFamily: '"Georgia", serif', fontSize: 'clamp(1.3rem, 2.5vw, 1.65rem)', fontWeight: 700, color: '#1a2744', lineHeight: 1.2, marginBottom: 10 }}>
                       {step.title}
                     </h3>
 
                     {/* Descrição */}
-                    <p style={{
-                      color: '#3a5070',
-                      fontSize: '0.84rem',
-                      lineHeight: 1.7,
-                      fontFamily: '"Georgia", serif',
-                      marginBottom: 18,
-                      maxWidth: 260,
-                      margin: '0 auto 18px',
-                    }}>
+                    <p className="step-desc" style={{ color: '#3a5070', fontSize: '0.84rem', lineHeight: 1.7, fontFamily: '"Georgia", serif', maxWidth: 260, margin: '0 auto 18px' }}>
                       {step.description}
                     </p>
 
-                    {/* Badge highlight */}
+                    {/* Highlight */}
                     {step.highlight && (
-                      <div style={{ marginBottom: 16 }}>
+                      <div className="step-highlight" style={{ marginBottom: 16 }}>
                         <span style={{
                           padding: '4px 14px', borderRadius: '999px',
-                          background: color + '18',
-                          border: '1px solid ' + color + '40',
+                          background: color + '18', border: '1px solid ' + color + '40',
                           color: '#3a5070', fontSize: '0.68rem', fontWeight: 700,
                           letterSpacing: '0.1em', textTransform: 'uppercase',
                           fontFamily: '"Georgia", serif',
@@ -330,9 +338,9 @@ function StepsSection({ steps }) {
                     </Link>
                   </div>
 
-                  {/* Linha entre cards */}
+                  {/* Conector entre cards */}
                   {!isLast && (
-                    <div style={{
+                    <div className="step-connector" style={{
                       width: 1,
                       height: isVisible ? 56 : 0,
                       background: 'rgba(255,255,255,0.6)',
@@ -349,7 +357,6 @@ function StepsSection({ steps }) {
     </section>
   );
 }
-// ── Fim StepsSection ────────────────────────────────────────────────────────
 
 // ── IncludedSection ─────────────────────────────────────────────────────────
 function IncludedSection() {
@@ -580,7 +587,7 @@ function IncludedSection() {
     </section>
   );
 }
-// ── Fim IncludedSection ─────────────────────────────────────────────────────
+
 
 const HowItWorks = () => {
   const { t } = useTranslation();
