@@ -2,7 +2,7 @@ import { PageHero, ContentSection, H2, P, Li, Ul, Divider, sharedStyles } from '
 
 export default function PoliticaTrocaDevolucaoPage() {
   return (
-    <div style={{ background: 'linear-gradient(180deg, #c8e8f5 0%, #eef8fb 100%)', minHeight: '100vh', fontFamily: '"Georgia", serif' }}>
+    <div style={{ background: 'linear-gradient(180deg, #c8e8f5 0%, #a8d8f0 18%, #7bbde8 32%, #b8e0f5 55%, #eef8fb 100%)', minHeight: '100vh', fontFamily: '"Georgia", serif' }}>
       <style>{sharedStyles}</style>
 
       <PageHero

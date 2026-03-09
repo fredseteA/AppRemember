@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom';
 
+// O hero interno termina em #7bbde8
+// O fundo da página continua a partir daí: #7bbde8 → #b8e0f5 → #eef8fb
 const pageStyle = {
-  background: 'linear-gradient(180deg, #c8e8f5 0%, #eef8fb 100%)',
+  background: 'linear-gradient(180deg, #c8e8f5 0%, #a8d8f0 18%, #7bbde8 32%, #b8e0f5 55%, #eef8fb 100%)',
   minHeight: '100vh',
   fontFamily: '"Georgia", serif',
 };
@@ -100,9 +102,9 @@ export default function SobrePage() {
         }
       `}</style>
 
-      {/* Hero */}
+      {/* Hero — fundo transparente para herdar o gradiente da página */}
       <section style={{
-        background: 'linear-gradient(180deg, #c8e8f5 0%, #a8d8f0 50%, #7bbde8 100%)',
+        background: 'transparent',
         padding: 'clamp(80px, 12vw, 140px) clamp(20px, 5vw, 40px) clamp(48px, 8vw, 80px)',
         position: 'relative',
         overflow: 'hidden',
