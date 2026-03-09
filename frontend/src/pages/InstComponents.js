@@ -1,8 +1,14 @@
 // Shared layout helpers for institutional pages
 // Import these in each page to keep styling consistent
 
+// Cadeia de cores:
+//   PageHero:       #c8e8f5 → #a8d8f0 → #7bbde8   (termina em #7bbde8)
+//   ContentSection: #7bbde8 → #b8e0f5 → #eef8fb   (continua suavemente)
+//   Wrapper da página: transparente — o fundo real vem do gradiente abaixo
+
 export const pageStyle = {
-  background: 'linear-gradient(180deg, #c8e8f5 0%, #eef8fb 100%)',
+  // Gradiente completo da página: cobre hero + conteúdo sem quebra
+  background: 'linear-gradient(180deg, #c8e8f5 0%, #a8d8f0 18%, #7bbde8 32%, #b8e0f5 55%, #eef8fb 100%)',
   minHeight: '100vh',
   fontFamily: '"Georgia", serif',
 };
@@ -30,12 +36,13 @@ export const H2 = ({ children }) => (
   }}>{children}</h2>
 );
 
-export const P = ({ children }) => (
+export const P = ({ children, style }) => (
   <p style={{
     color: '#3a5070',
     fontSize: 'clamp(0.88rem, 2.5vw, 0.98rem)',
     lineHeight: 1.78,
     marginBottom: '14px',
+    ...style,
   }}>{children}</p>
 );
 
@@ -81,6 +88,8 @@ export const Divider = () => (
 
 export const PageHero = ({ tag, title, subtitle, cloudLeft = '/clouds/cloud1.png', cloudRight = '/clouds/cloud2.png' }) => (
   <section style={{
+    // Fundo transparente — a cor vem do wrapper da página (pageStyle)
+    // mas mantemos o gradiente próprio para quando PageHero é usado isolado
     background: 'linear-gradient(180deg, #c8e8f5 0%, #a8d8f0 50%, #7bbde8 100%)',
     padding: 'clamp(80px, 12vw, 140px) clamp(20px, 5vw, 40px) clamp(48px, 8vw, 80px)',
     position: 'relative',
@@ -121,6 +130,7 @@ export const ContentSection = ({ children }) => (
     maxWidth: 780,
     margin: '0 auto',
     padding: 'clamp(32px, 6vw, 64px) clamp(20px, 5vw, 40px)',
+    // Sem background próprio — herda o gradiente do wrapper da página
   }}>
     {children}
   </section>
