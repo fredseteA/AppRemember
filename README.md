@@ -1,10 +1,12 @@
-# 🕊️ Digital Memorials Platform
+# 🕊️ Remember QRCode - Digital Memorials Platform
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/status-in%20development-yellow.svg)]()
-[![Node Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)]()
+[![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-green.svg)](https://fastapi.tiangolo.com/)
+[![Firebase](https://img.shields.io/badge/Firebase-Firestore-orange.svg)](https://firebase.google.com/)
+[![Status](https://img.shields.io/badge/status-production-brightgreen.svg)]()
 
-> A comprehensive web platform for creating, managing, and publishing personalized digital memorials, connecting physical and digital memories through QR Code technology.
+> Complete B2B2C SaaS platform for creating, managing, and publishing personalized digital memorials, connecting physical and digital memories through QR Code technology with an affiliate system for funeral homes and cemeteries.
 
 **English** | [Versão em Português](README.pt-BR.md)
 
@@ -22,7 +24,9 @@
 - [Configuration](#-configuration)
 - [Usage](#-usage)
 - [API](#-api)
+- [Business Flows](#-business-flows)
 - [Cancellation Policy](#-cancellation-policy)
+- [Security](#-security)
 - [Roadmap](#-roadmap)
 - [Contributing](#-contributing)
 - [License](#-license)
@@ -32,16 +36,30 @@
 
 ## 🌟 About the Project
 
-The **Digital Memorials Platform** is an innovative solution that enables the creation and preservation of memories through personalized digital memorials. Combining modern web technology with physical products, the platform offers a complete experience to honor and remember loved ones.
+**Remember QRCode** is a complete SaaS platform that revolutionizes memory preservation by combining:
 
-### ✨ Key Features
+- **B2C** → End customers creating memorials for loved ones
+- **B2B** → Strategic partnerships with funeral homes and cemeteries through affiliate system
+- **Admin** → Complete management panel for production and analytics
 
-- 🆓 **Free Creation**: Create memorials at no initial cost
-- 🔗 **Permanent Link**: Unique and permanent URLs for each memorial
-- 📱 **Personalized QR Code**: Quick access through unique QR code
-- 🏛️ **Physical Plaque**: Optional stainless steel plaque for physical locations
-- 📧 **Complete Tracking**: Email notifications at each step
-- 🤝 **Partnership Program**: Supporter system for funeral homes and cemeteries
+### 💡 How It Works
+
+1. **Free Creation**: Anyone can create a digital memorial for free
+2. **Draft System**: Memorial stays saved as draft, allowing unlimited edits
+3. **Paid Publication**: After content approval, choose a plan for official publication
+4. **Unique QR Code**: Each published memorial receives an exclusive, permanent QR Code
+5. **Physical Plaque (Optional)**: Stainless steel plaques with engraved QR Code for installation on graves
+
+### ✨ Technical Differentiators
+
+- 🔐 **Firebase Authentication**: Robust system with custom claims (user/supporter/admin)
+- 💳 **Automated Payments**: Mercado Pago integration + idempotent webhooks
+- 📊 **Complete Analytics**: Real-time dashboard with financial and operational metrics
+- 🤝 **Affiliate System**: Automatic commissions for partners with 3 tiers (10%/15%/20%)
+- 📧 **Transactional Emails**: HTML templates personalized for each order stage
+- 🔄 **Idempotent Processing**: Webhooks can be received multiple times without duplicating data
+- 📝 **Complete Auditing**: Detailed logs of all administrative actions
+- 🎯 **Prioritized Notifications**: Alert system with urgency levels (critical/high/normal/low)
 
 ---
 
