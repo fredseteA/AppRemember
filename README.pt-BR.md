@@ -1,10 +1,12 @@
-# 🕊️ Plataforma de Memoriais Digitais
+# 🕊️ Remember QRCode - Plataforma de Memoriais Digitais
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow.svg)]()
-[![Node Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)]()
+[![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-green.svg)](https://fastapi.tiangolo.com/)
+[![Firebase](https://img.shields.io/badge/Firebase-Firestore-orange.svg)](https://firebase.google.com/)
+[![Status](https://img.shields.io/badge/status-em%20produção-brightgreen.svg)]()
 
-> Uma plataforma web completa para criação, gestão e publicação de memoriais digitais personalizados, conectando memórias físicas e digitais através de tecnologia QR Code.
+> Plataforma SaaS B2B2C completa para criação, gestão e publicação de memoriais digitais personalizados, conectando memórias físicas e digitais através de tecnologia QR Code com sistema de afiliados para funerárias e cemitérios.
 
 [English Version](README.md) | **Português**
 
@@ -22,7 +24,9 @@
 - [Configuração](#-configuração)
 - [Uso](#-uso)
 - [API](#-api)
+- [Fluxos de Negócio](#-fluxos-de-negócio)
 - [Política de Cancelamento](#-política-de-cancelamento)
+- [Segurança](#-segurança)
 - [Roadmap](#-roadmap)
 - [Contribuindo](#-contribuindo)
 - [Licença](#-licença)
@@ -32,62 +36,136 @@
 
 ## 🌟 Sobre o Projeto
 
-A **Plataforma de Memoriais Digitais** é uma solução inovadora que permite a criação e preservação de memórias através de memoriais digitais personalizados. Combinando tecnologia web moderna com produtos físicos, a plataforma oferece uma experiência completa para homenagear e lembrar entes queridos.
+**Remember QRCode** é uma plataforma SaaS completa que revoluciona a forma de preservar memórias, combinando:
 
-### ✨ Diferenciais
+- **B2C** → Clientes finais criando memoriais de entes queridos
+- **B2B** → Parcerias estratégicas com funerárias e cemitérios através de sistema de afiliados
+- **Admin** → Painel completo de gestão, produção e analytics
 
-- 🆓 **Criação Gratuita**: Crie memoriais sem custo inicial
-- 🔗 **Link Permanente**: URLs exclusivas e permanentes para cada memorial
-- 📱 **QR Code Personalizado**: Acesso rápido através de código QR único
-- 🏛️ **Placa Física**: Opção de placa em aço inoxidável para locais físicos
-- 📧 **Acompanhamento Completo**: Notificações por e-mail em cada etapa
-- 🤝 **Programa de Parcerias**: Sistema de apoiadores para funerárias e cemitérios
+### 💡 Como Funciona
+
+1. **Criação Gratuita**: Qualquer pessoa pode criar um memorial digital gratuitamente
+2. **Sistema Draft**: O memorial fica salvo como rascunho, permitindo edições ilimitadas
+3. **Publicação Paga**: Após aprovação do conteúdo, escolhe-se um plano para publicação oficial
+4. **QR Code Único**: Cada memorial publicado recebe um QR Code exclusivo e permanente
+5. **Placa Física (Opcional)**: Placas em aço inoxidável com QR Code gravado para instalação em túmulos
+
+### ✨ Diferenciais Técnicos
+
+- 🔐 **Autenticação Firebase**: Sistema robusto com custom claims (user/apoiador/admin)
+- 💳 **Pagamento Automatizado**: Integração com Mercado Pago + webhooks idempotentes
+- 📊 **Analytics Completo**: Dashboard em tempo real com métricas financeiras e operacionais
+- 🤝 **Sistema de Afiliados**: Comissões automáticas para parceiros com 3 níveis (10%/15%/20%)
+- 📧 **E-mails Transacionais**: Templates HTML personalizados para cada etapa do pedido
+- 🔄 **Processamento Idempotente**: Webhooks podem ser recebidos múltiplas vezes sem duplicar dados
+- 📝 **Auditoria Completa**: Logs detalhados de todas as ações administrativas
+- 🎯 **Notificações Priorizadas**: Sistema de alertas com níveis de urgência (crítico/alto/normal/baixo)
 
 ---
 
 ## 🚀 Funcionalidades
 
-### Para Usuários
+### Para Usuários (Clientes)
 
 - ✅ **Criação de Memoriais**
-  - Interface intuitiva para criação de memoriais
-  - Sistema de rascunhos (draft) para edição antes da publicação
-  - Personalização completa do conteúdo
-  - Upload de fotos e vídeos
-  - Linha do tempo da vida
+  - Criação 100% gratuita de memoriais em formato draft
+  - Edições ilimitadas antes da publicação
+  - Upload de múltiplas fotos e vídeos
+  - Biografia completa com editor de texto
+  - Arquivo de áudio (mensagem do falecido ou familiar)
+  - Datas de nascimento e falecimento
+  - Informações de cidade/estado
+  - Slug único gerado automaticamente (URL amigável)
   
 - ✅ **Gestão de Memoriais**
   - Visualização prévia antes da publicação
-  - Edição de memoriais em rascunho
-  - Controle de privacidade
+  - Edição permitida apenas pelo dono do memorial
+  - Controle de privacidade (memorial público/privado)
+  - Sistema de condolências públicas
+  - Gerenciamento de endereço de entrega
   
-- ✅ **Notificações por E-mail**
-  - Memorial criado
-  - Pedido confirmado
-  - Pedido em produção
-  - Produto finalizado
-  - Pedido despachado (com rastreamento)
-  - Pedido entregue
+- ✅ **Notificações Automáticas por E-mail**
+  - ✉️ **Pagamento Aprovado** - Confirmação da compra
+  - 🔧 **Produção Iniciada** - Placa entrando em fabricação
+  - 📦 **Produto Finalizado** - Placa pronta para envio
+  - 🚚 **Pedido Enviado** - Código de rastreio dos Correios ou entrega local
+  - ✅ **Pedido Entregue** - Confirmação de recebimento
+  - ❌ **Pedido Cancelado** - Informações sobre reembolso
 
 ### Para Administradores
 
-- 🎛️ **Painel Administrativo Completo**
-  - Gerenciamento de memoriais
-  - Controle de pedidos e status
-  - Acompanhamento de produção
-  - Gestão de envios e logística
-  - Administração de usuários
-  - Controle de planos e pagamentos
-  - Relatórios e analytics
-  - Gestão do programa de apoiadores
+- 🎛️ **Dashboard Analytics Avançado**
+  - 📊 Receita total vs. receita do mês
+  - 🎫 Ticket médio (geral e mensal)
+  - 📈 Gráfico de vendas dos últimos 6 meses
+  - 📉 Taxa de cancelamento de pedidos
+  - 💰 Comissões pendentes/disponíveis/pagas
+  - 🏷️ Vendas por tipo de plano (Digital/Placa/Completo)
+  - ⚠️ Alertas de solicitações de cancelamento
+  
+- 🏭 **Fila de Produção**
+  - Lista de pedidos físicos aguardando produção (FIFO)
+  - Preview do memorial (nome, foto, datas)
+  - Controle de status: Aprovado → Em Produção → Produzido → Enviado
+  - Botões de ação rápida para cada etapa
+  
+- 📦 **Gestão Completa de Pedidos**
+  - Atualização de status com histórico (audit trail)
+  - Adição de código de rastreio (Correios ou entrega local)
+  - Cancelamento de pedidos com estorno automático de comissão
+  - Arquivamento de pedidos finalizados
+  - Sistema de notas internas (não visível ao cliente)
+  - Reenvio de e-mails de confirmação
+  - Exclusão permanente de pedidos (com log de auditoria)
+  
+- 🤝 **Gestão de Parceiros (Apoiadores)**
+  - Criação de parceiro + conta Firebase Auth automática
+  - Edição de taxa de comissão individualizada
+  - Relatórios de vendas por parceiro
+  - Pagamento em lote de comissões (por período)
+  - Histórico de vendas e performance
+  
+- 🔔 **Sistema de Notificações Priorizadas**
+  - 🔴 **Crítico** (prioridade 1): Solicitações de cancelamento
+  - 🟠 **Alto** (prioridade 2): Pagamentos aprovados, novos pedidos
+  - 🟡 **Normal** (prioridade 3): Mudanças de status, reviews
+  - ⚪ **Baixo** (prioridade 4): Avisos de sistema
+  - Badge com contador de não lidas
+  - Ordenação automática por prioridade + data
+  
+- 📝 **Logs de Auditoria**
+  - Registro de TODAS as ações administrativas
+  - Informações: quem fez, quando, qual entidade, detalhes
+  - Filtros por tipo de entidade (order/memorial/partner/review)
+  
+- 💵 **Relatórios Financeiros**
+  - Receita total e por período customizado
+  - Vendas por tipo de plano
+  - Evolução mensal de receitas
+  - Total de comissões (pending/available/paid)
+  - Lucro estimado (receita - comissões)
+  - % de vendas com código de apoiador
+  - Exportação de dados em JSON
 
-### Para Apoiadores (Parceiros)
+### Para Apoiadores (Funerárias/Cemitérios)
 
-- 🤝 **Sistema de Parcerias**
-  - Código exclusivo de apoio
-  - Painel de acompanhamento de vendas
-  - Gestão de comissões
-  - Relatórios de performance
+- 🤝 **Painel do Parceiro**
+  - Código exclusivo de apoio (gerado automaticamente)
+  - Visualização de vendas realizadas com seu código
+  - Proteção de dados: apoiador vê APENAS suas próprias vendas
+  - E-mails mascarados dos clientes (privacidade LGPD)
+  
+- 💰 **Gestão de Comissões**
+  - Listagem completa de comissões (pending/available/paid)
+  - Totalizadores por status
+  - Histórico de pagamentos recebidos
+  - Transparência total sobre cálculo de comissões
+  
+- 📊 **Relatórios de Performance**
+  - Total de vendas no mês
+  - Total de vendas all-time
+  - Receita gerada (bruta)
+  - Meta mensal de vendas (se configurado)
 
 ---
 
@@ -96,152 +174,571 @@ A **Plataforma de Memoriais Digitais** é uma solução inovadora que permite a 
 ### 📱 Plano Digital
 
 **Benefícios:**
-- Publicação oficial do memorial na plataforma
-- Link exclusivo e permanente
-- QR Code personalizado
-- Acesso ilimitado ao memorial
-- Atualizações e edições posteriores
+- ✅ Publicação oficial do memorial na plataforma
+- ✅ Link exclusivo e permanente (slug personalizado)
+- ✅ QR Code personalizado gerado automaticamente
+- ✅ Acesso ilimitado ao memorial
+- ✅ Sistema de condolências públicas
+- ✅ Galeria de fotos e vídeos
+- ✅ Áudio memorial (mensagem gravada)
+- ✅ Biografia completa
 
 **Ideal para:**
 - Memoriais exclusivamente digitais
 - Compartilhamento em redes sociais
 - Famílias distribuídas geograficamente
+- Homenagens virtuais
+
+**Preço:** A partir de R$ 49,90 (valores podem variar)
 
 ---
 
-### 🏛️ Plano Físico
+### 🏛️ Plano Placa QR Code
 
 **Todos os benefícios do Plano Digital +**
-- Placa física em aço inoxidável de alta qualidade
-- QR Code gravado permanentemente
-- Fixação em local escolhido (túmulo, memorial, jazigo, etc.)
-- Material resistente às intempéries
-- Design elegante e discreto
+- ✅ Placa física em **aço inoxidável 304** de alta qualidade
+- ✅ QR Code gravado a laser permanentemente
+- ✅ Resistente a intempéries (chuva, sol, umidade)
+- ✅ Fixação inclusa (parafusos em aço inox)
+- ✅ Dimensões: 10cm x 15cm (padrão)
+- ✅ Design elegante e discreto
+- ✅ Garantia de 2 anos contra defeitos de fabricação
+- ✅ Frete incluso para todo o Brasil
 
 **Ideal para:**
-- Túmulos e jazigos
-- Memoriais físicos
-- Cemitérios e jardins memoriais
-- Locais de homenagem permanentes
+- Túmulos e jazigos em cemitérios
+- Memoriais físicos em jardins
+- Placas em locais de homenagem
+- Cemitérios verticais e parques memoriais
+
+**Instalação:**
+- Cliente escolhe o local (túmulo, memorial, etc.)
+- Placa entregue em endereço informado
+- Instalação por conta do cliente ou cemitério parceiro
+
+**Preço:** A partir de R$ 149,90 (valores podem variar)
+
+---
+
+### 🌟 Plano Completo (Futuro)
+
+**Todos os benefícios do Plano Placa +**
+- ✅ Placa Premium com acabamento diferenciado
+- ✅ Instalação profissional inclusa (regiões parceiras)
+- ✅ Suporte prioritário
+- ✅ Atualizações de conteúdo facilitadas
+- ✅ Certificado digital de autenticidade
+
+**Status:** 🚧 Em desenvolvimento
+
+---
+
+### 💳 Formas de Pagamento
+
+- **PIX** - Aprovação instantânea
+- **Cartão de Crédito** - Parcelamento em até 12x
+- **Boleto Bancário** - Aprovação em até 2 dias úteis
+
+**Gateway de Pagamento:** Mercado Pago (integração oficial)
 
 ---
 
 ## 🤝 Programa de Apoiadores
 
-Sistema de parceria estratégica voltado para **funerárias, cemitérios e prestadores de serviços funerários**.
+Sistema de **parceria estratégica B2B** voltado para funerárias, cemitérios e prestadores de serviços funerários.
 
-### Como Funciona
+### 💡 Como Funciona
 
-1. **Cadastro como Apoiador**
-   - Registro na plataforma como parceiro
-   - Recebimento de código exclusivo de apoio
+#### 1. **Cadastro como Apoiador**
+   - Admin cria conta do parceiro no painel
+   - Sistema gera código exclusivo automaticamente (ex: `FUNERAL1234`)
+   - Parceiro recebe acesso ao painel de apoiadores
+   - Código pode ser impresso em cartões, folders, etc.
 
-2. **Benefícios para Clientes**
-   - Cliente utiliza o código do apoiador
-   - Recebe **5% de desconto** na compra
+#### 2. **Cliente Utiliza o Código**
+   - Cliente informa código no checkout
+   - Sistema valida código (ativo/inativo)
+   - Desconto aplicado automaticamente
+   - Cliente vê economia no resumo do pedido
 
-3. **Sistema de Comissões Escalonado**
+#### 3. **Cálculo de Valores** (Exemplo Real)
 
-| Volume Mensal | Comissão |
-|---------------|----------|
-| Padrão inicial | 10% |
-| Alto volume | 15% |
-| Volume premium | 20% |
+```
+Valor Original do Plano:     R$ 149,90
+Desconto (5% fixo):          - R$   7,49
+─────────────────────────────────────
+Valor Final Pago pelo Cliente:  R$ 142,41
 
-### Vantagens do Programa
+Comissão do Apoiador (10%):    R$  14,24
+```
+
+**Importante:** A comissão é calculada sobre o **valor final** (após desconto), não sobre o valor original.
+
+#### 4. **Estados da Comissão**
+
+| Status | Descrição | Ação Necessária |
+|--------|-----------|-----------------|
+| **pending** | Pedido pago, aguardando entrega | Aguardar conclusão |
+| **available** | Pedido entregue, pode ser paga | Admin deve pagar |
+| **paid** | Comissão paga ao parceiro | Finalizado ✅ |
+| **canceled** | Pedido cancelado | Comissão estornada |
+
+### 📊 Sistema de Comissões Escalonado
+
+As comissões aumentam conforme o volume mensal de vendas:
+
+| Vendas no Mês | Taxa de Comissão | Exemplo (venda de R$ 142,41) |
+|---------------|------------------|------------------------------|
+| 0-9 vendas | 10% | R$ 14,24 por venda |
+| 10-29 vendas | 15% | R$ 21,36 por venda |
+| 30+ vendas | 20% | R$ 28,48 por venda |
+
+**Observação:** A taxa é revisada automaticamente todo mês com base no desempenho.
+
+### 💰 Pagamento de Comissões
+
+**Quando a comissão fica disponível:**
+- ✅ Pedido foi **entregue ao cliente** (status: `entregue`)
+- ✅ Prazo de cancelamento (7 dias) expirou
+- ✅ Nenhuma solicitação de cancelamento pendente
+
+**Como receber:**
+1. Admin acessa painel de comissões
+2. Filtra por parceiro e período (ex: Janeiro/2025)
+3. Clica em "Marcar como pago"
+4. Comissões mudam de `available` → `paid`
+5. Registro fica no histórico permanentemente
+
+**Formas de pagamento:**
+- PIX (preferencial)
+- Transferência bancária
+- Outros acordos comerciais
+
+### 🎯 Vantagens do Programa
 
 **Para Apoiadores:**
-- 💰 Fonte adicional de receita
-- 🎯 Agregação de valor aos serviços oferecidos
-- 📊 Painel de controle e relatórios
-- 🏆 Comissões progressivas
+- 💰 Fonte adicional de receita recorrente
+- 📈 Comissões crescentes com volume
+- 🎯 Agrega valor aos serviços oferecidos
+- 📊 Painel exclusivo com relatórios em tempo real
+- 🏆 Sem meta mínima obrigatória
+- 🔒 Dados seguros e privacidade garantida (LGPD)
 
 **Para a Plataforma:**
-- 🌐 Ampliação do alcance
-- 🤝 Parcerias estratégicas
-- 📈 Crescimento sustentável
+- 🌐 Expansão orgânica via parceiros
+- 🤝 Relacionamento de longo prazo
+- 📈 Crescimento sustentável e previsível
 - 🎓 Ecossistema colaborativo
+
+**Para os Clientes:**
+- 💵 Desconto imediato de 5%
+- 🤝 Indicação de confiança (código de funerária conhecida)
+- ✅ Segurança na compra
+
+### 📧 Comunicação Automática
+
+**E-mail ao apoiador quando há uma venda:**
+- 🎉 Notificação em tempo real
+- 📊 Detalhes da venda (valor, desconto, comissão)
+- ⏳ Status da comissão (pending/available)
+- 🔗 Link para painel de vendas
+
+**Exemplo de e-mail:**
+```
+Nova venda com seu código! 🎉
+
+Pedido: #ABC12345
+Valor Original: R$ 149,90
+Desconto Aplicado: -R$ 7,49 (5%)
+Valor Final: R$ 142,41
+Sua Comissão: R$ 14,24
+
+Status: Pendente — liberação após entrega do pedido
+```
+
+### 🔒 Segurança e Privacidade
+
+- ✅ Apoiador vê **apenas** vendas com seu código
+- ✅ Dados do cliente são mascarados (ex: `joa***@gmail.com`)
+- ✅ Endereços de entrega NÃO são exibidos
+- ✅ Filtros por `firebase_uid` impedem vazamento de dados
+- ✅ Conformidade com LGPD
+
+### 📈 Relatórios Disponíveis
+
+**No Painel do Apoiador:**
+- Total de vendas no mês
+- Total de vendas all-time
+- Comissões pendentes/disponíveis/pagas
+- Histórico completo de transações
+
+**No Painel Admin:**
+- Performance de todos os parceiros
+- Vendas por parceiro (exportável)
+- Comissões a pagar (relatório mensal)
+- Taxa de uso de códigos apoiadores
 
 ---
 
 ## 🛠️ Tecnologias
 
-### Frontend
+### Backend (FastAPI + Python 3.11+)
+
+```python
+Core Framework:
+├── FastAPI 0.110.1          # Framework web assíncrono de alta performance
+├── Uvicorn 0.25.0           # Servidor ASGI para produção
+├── Starlette 0.37.2         # Base do FastAPI (middleware, roteamento)
+└── Pydantic 2.12.5          # Validação de dados e serialização
+
+Banco de Dados:
+├── Firebase Admin SDK 7.1.0 # Firestore NoSQL + Authentication
+├── google-cloud-firestore   # Cliente Firestore oficial
+├── Motor 3.3.1              # Driver assíncrono MongoDB (backup/cache)
+└── PyMongo 4.5.0            # Driver síncrono MongoDB
+
+Autenticação e Segurança:
+├── Firebase Auth            # Sistema de autenticação principal
+├── PyJWT 2.11.0            # Manipulação de tokens JWT
+├── python-jose 3.5.0       # Criptografia e validação
+├── BCrypt 4.1.3            # Hash de senhas
+└── Cryptography 46.0.4     # Primitivas criptográficas
+
+Pagamentos:
+├── Mercado Pago SDK 2.3.0  # Gateway principal (PIX, cartão, boleto)
+└── Stripe 14.3.0           # Gateway alternativo (pagamentos internacionais)
+
+E-mails:
+└── Resend ≥2.0.0           # Serviço de e-mail transacional moderno
+
+Storage e Mídia:
+├── Boto3 1.42.39           # AWS SDK (S3 para fotos/vídeos)
+├── google-cloud-storage    # Google Cloud Storage (backup)
+└── Pillow 12.1.0           # Processamento de imagens
+
+QR Code:
+├── qrcode 8.2              # Geração de QR Codes
+└── Base64                  # Encoding para storage inline
+
+Inteligência Artificial (Preparado para futuro):
+├── OpenAI 1.99.9           # GPT-4 para biografias automáticas
+├── google-generativeai     # Google Gemini AI
+├── LiteLLM 1.80.0          # Wrapper unificado multi-LLM
+└── huggingface_hub 1.3.7   # Modelos de ML open-source
+
+Analytics e Dados:
+├── Pandas 3.0.0            # Manipulação de dados tabulares
+├── NumPy 2.4.2             # Computação numérica
+└── python-dateutil         # Manipulação avançada de datas
+
+Desenvolvimento e Qualidade:
+├── Black 26.1.0            # Formatação automática de código
+├── Flake8 7.3.0            # Linting e análise estática
+├── MyPy 1.19.1             # Type checking estático
+├── isort 7.0.0             # Organização de imports
+└── Pytest 9.0.2            # Framework de testes
+```
+
+### Frontend (React + Next.js)
+
+```typescript
+Core:
+├── Next.js 14+             # Framework React com SSR/SSG
+├── React 18+               # Biblioteca UI
+├── TypeScript 5+           # Superset tipado do JavaScript
+└── Tailwind CSS 3+         # Framework CSS utility-first
+
+State Management:
+├── Zustand                 # Gerenciamento de estado global
+├── React Query             # Cache e sincronização de dados servidor
+└── React Hook Form         # Formulários performáticos
+
+Validação:
+└── Zod                     # Schema validation TypeScript-first
+
+UI Components:
+├── Radix UI                # Componentes acessíveis headless
+├── Lucide Icons            # Biblioteca de ícones
+└── shadcn/ui               # Componentes reutilizáveis
+
+Autenticação:
+└── Firebase SDK            # Auth client-side
+```
+
+### Infraestrutura e DevOps
+
+```yaml
+Cloud Services:
+├── Firebase (Google Cloud)
+│   ├── Authentication      # Login social (Google, Email/Password)
+│   ├── Firestore          # Banco de dados NoSQL
+│   └── Storage            # Armazenamento de mídia
+│
+├── AWS
+│   ├── S3                 # Storage principal de mídia
+│   ├── CloudFront         # CDN para distribuição global
+│   └── SES                # Envio de e-mails (alternativa)
+│
+└── Vercel / Railway       # Deploy do frontend e backend
+
+Monitoramento:
+├── Firebase Analytics      # Eventos e comportamento de usuário
+└── Sentry (futuro)        # Error tracking e performance
+
+CI/CD:
+├── GitHub Actions          # Automação de testes e deploy
+└── Docker                 # Containerização
+```
+
+### Integrações Externas
 
 ```
-- React.js / Next.js
-- TypeScript
-- Tailwind CSS
-- React Query
-- Zustand (State Management)
-- React Hook Form
-- Zod (Validação)
-```
+Pagamentos:
+└── Mercado Pago API v2    # PIX, cartão, boleto, webhooks
 
-### Backend
+E-mail:
+└── Resend API             # Envio transacional com templates HTML
 
-```
-- Node.js
-- Express.js / Nest.js
-- TypeScript
-- Prisma ORM
-- PostgreSQL
-- Redis (Cache)
-- JWT (Autenticação)
-```
+Logística:
+└── Correios API (planejado) # Rastreamento de encomendas
 
-### Infraestrutura
-
-```
-- Docker
-- AWS S3 (Armazenamento de mídia)
-- AWS SES (E-mails)
-- AWS CloudFront (CDN)
-- GitHub Actions (CI/CD)
-```
-
-### Serviços Externos
-
-```
-- Stripe / MercadoPago (Pagamentos)
-- Correios API (Rastreamento)
-- QR Code Generator
-- Sistema de envio de e-mails
+IA/ML (futuro):
+├── OpenAI API             # Geração de biografias
+└── Google Gemini API      # Análise de sentimentos em condolências
 ```
 
 ---
 
 ## 🏗️ Arquitetura
 
+### Arquitetura de Alto Nível
+
 ```
-┌─────────────────────────────────────────────────────────┐
-│                      FRONTEND (Next.js)                  │
-│  ┌─────────────┐  ┌──────────────┐  ┌───────────────┐  │
-│  │   Público   │  │   Usuário    │  │     Admin     │  │
-│  │  (Landing)  │  │  (Dashboard) │  │    (Panel)    │  │
-│  └─────────────┘  └──────────────┘  └───────────────┘  │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                  FRONTEND (Next.js + React)                  │
+│  ┌───────────────┐  ┌────────────────┐  ┌────────────────┐ │
+│  │   Landing     │  │ User Dashboard │  │ Admin Panel    │ │
+│  │   Público     │  │ (Memoriais)    │  │ (Gestão Total) │ │
+│  └───────────────┘  └────────────────┘  └────────────────┘ │
+│  ┌───────────────┐  ┌────────────────┐                      │
+│  │   Memorial    │  │ Apoiador Panel │                      │
+│  │   Público     │  │ (Vendas/$$)    │                      │
+│  └───────────────┘  └────────────────┘                      │
+└─────────────────────────────────────────────────────────────┘
                             │
-                            ▼
-┌─────────────────────────────────────────────────────────┐
-│                    API REST / GraphQL                    │
-└─────────────────────────────────────────────────────────┘
-                            │
-                ┌───────────┴───────────┐
-                ▼                       ▼
-┌──────────────────────┐    ┌──────────────────────┐
-│   Business Logic     │    │   Authentication     │
-│   - Memoriais        │    │   - JWT              │
-│   - Pedidos          │    │   - OAuth            │
-│   - Apoiadores       │    │   - Permissions      │
-└──────────────────────┘    └──────────────────────┘
-                │
-    ┌───────────┼───────────┬───────────┐
-    ▼           ▼           ▼           ▼
-┌────────┐ ┌────────┐ ┌─────────┐ ┌──────────┐
-│PostgreSQL Redis  │ │   AWS   │ │ Payment  │
-│  (DB)  │ (Cache)│ │   S3    │ │ Gateway  │
-└────────┘ └────────┘ └─────────┘ └──────────┘
+                            ▼ HTTPS/REST
+┌─────────────────────────────────────────────────────────────┐
+│               BACKEND API (FastAPI + Python)                 │
+│  ┌─────────────────────────────────────────────────────────┐│
+│  │  API Router (/api/*)                                    ││
+│  │  ├── /auth/*          - Autenticação Firebase          ││
+│  │  ├── /memorials/*     - CRUD de memoriais              ││
+│  │  ├── /payments/*      - Checkout e webhooks            ││
+│  │  ├── /admin/*         - Painel administrativo          ││
+│  │  ├── /apoiador/*      - Painel de parceiros            ││
+│  │  └── /webhooks/*      - Mercado Pago, integrações      ││
+│  └─────────────────────────────────────────────────────────┘│
+│  ┌──────────────────┐  ┌──────────────────┐                 │
+│  │ Business Logic   │  │ Authentication   │                 │
+│  │ - Pagamentos     │  │ - Firebase Auth  │                 │
+│  │ - Comissões      │  │ - JWT Verify     │                 │
+│  │ - E-mails        │  │ - Custom Claims  │                 │
+│  │ - QR Codes       │  │ - Role-based     │                 │
+│  └──────────────────┘  └──────────────────┘                 │
+└─────────────────────────────────────────────────────────────┘
+            │                  │                │
+            ▼                  ▼                ▼
+┌──────────────────┐ ┌─────────────────┐ ┌──────────────────┐
+│ Firebase         │ │ Mercado Pago    │ │ AWS S3 + Resend  │
+│ - Firestore      │ │ - Checkout      │ │ - Mídia Storage  │
+│ - Authentication │ │ - Webhooks      │ │ - E-mail Sending │
+│ - Storage        │ │ - PIX/Cartão    │ │ - QR Codes       │
+└──────────────────┘ └─────────────────┘ └──────────────────┘
+```
+
+### Estrutura de Dados (Firestore Collections)
+
+```javascript
+📁 Firestore Database
+├── 👤 users (firebase_uid)
+│   ├── firebase_uid: string
+│   ├── email: string
+│   ├── name: string
+│   ├── role: "user" | "admin" | "apoiador"
+│   ├── phone?: string
+│   ├── delivery_address?: DeliveryAddress
+│   └── created_at: timestamp
+│
+├── 🕊️ memorials (id)
+│   ├── id: uuid
+│   ├── user_id: string (ref → users)
+│   ├── slug: string (unique, URL-friendly)
+│   ├── display_name: string (busca no console)
+│   ├── status: "draft" | "published" | "cancelled"
+│   ├── plan_type?: "digital" | "plaque" | "complete"
+│   ├── person_data: PersonData
+│   ├── content: MemorialContent
+│   ├── responsible: ResponsibleData
+│   ├── qr_code_url?: string (base64)
+│   └── created_at/updated_at: timestamp
+│
+├── 💳 payments (id)
+│   ├── id: uuid
+│   ├── user_id: string (ref → users)
+│   ├── memorial_id: string (ref → memorials)
+│   ├── user_email: string
+│   ├── plan_type: string
+│   ├── status: ORDER_STATUS_VALUES
+│   ├── amount: float (valor final)
+│   ├── original_amount: float
+│   ├── discount_amount: float
+│   ├── supporter_id?: string (ref → partners)
+│   ├── supporter_code?: string
+│   ├── commission_amount: float
+│   ├── commission_status?: "pending" | "available" | "paid"
+│   ├── mercadopago_payment_id?: string
+│   ├── tracking_code?: string
+│   ├── delivery_type?: "correios" | "local"
+│   ├── delivery_address_snapshot?: DeliveryAddress (imutável)
+│   ├── status_history: Array<StatusChange>
+│   ├── admin_notes?: string
+│   ├── archived: boolean
+│   └── created_at/updated_at: timestamp
+│
+├── 🤝 partners (id)
+│   ├── id: uuid
+│   ├── name: string
+│   ├── email: string
+│   ├── supporter_code: string (unique, uppercase)
+│   ├── code: string (alias de supporter_code)
+│   ├── firebase_uid?: string (ref → users)
+│   ├── commission_rate: float (0.10/0.15/0.20)
+│   ├── monthly_goal?: int
+│   ├── status: "active" | "inactive"
+│   ├── total_sales_month: int
+│   ├── total_revenue_month: float
+│   └── created_at/updated_at: timestamp
+│
+├── 💰 supporter_commissions (id)
+│   ├── id: uuid
+│   ├── order_id: string (ref → payments)
+│   ├── partner_id: string (ref → partners)
+│   ├── partner_name: string
+│   ├── supporter_code: string
+│   ├── commission_amount: float
+│   ├── commission_status: "pending" | "available" | "paid" | "canceled"
+│   ├── paid_at?: timestamp
+│   ├── payment_method?: string
+│   └── created_at: timestamp
+│
+├── 🔔 admin_notifications (id)
+│   ├── id: uuid
+│   ├── type: string (cancellation_request, payment_approved, etc.)
+│   ├── title: string
+│   ├── message: string
+│   ├── priority: 1 | 2 | 3 | 4 (crítico → baixo)
+│   ├── entity_type?: string
+│   ├── entity_id?: string
+│   ├── read: boolean
+│   ├── details?: object
+│   └── created_at: timestamp
+│
+├── 📝 admin_logs (id)
+│   ├── id: uuid
+│   ├── admin_uid: string (ref → users)
+│   ├── admin_email: string
+│   ├── action: string (update_status, cancel_order, etc.)
+│   ├── entity_type: string (order, memorial, partner, etc.)
+│   ├── entity_id: string
+│   ├── details: object
+│   └── created_at: timestamp
+│
+├── ⭐ reviews (id)
+│   ├── id: uuid
+│   ├── user_id: string (ref → users)
+│   ├── user_name: string
+│   ├── user_email: string
+│   ├── rating: int (1-5)
+│   ├── title?: string
+│   ├── comment?: string
+│   ├── approved: boolean
+│   ├── admin_response?: string
+│   └── created_at: timestamp
+│
+└── 💬 condolences (id)
+    ├── id: uuid
+    ├── memorial_id: string (ref → memorials)
+    ├── message: string
+    ├── sender_name?: string
+    ├── relation?: string
+    ├── anonymous: boolean
+    └── created_at: timestamp
+```
+
+### Fluxo de Autenticação
+
+```
+┌─────────────┐
+│   Cliente   │
+└──────┬──────┘
+       │ 1. Login (email/password ou Google)
+       ▼
+┌─────────────────┐
+│ Firebase Auth   │ ← Retorna ID Token (JWT)
+└────────┬────────┘
+         │ 2. Inclui token em Authorization: Bearer {token}
+         ▼
+┌──────────────────────┐
+│ verify_firebase_token│ ← Middleware FastAPI
+└─────────┬────────────┘
+          │ 3. Decodifica JWT + verifica assinatura
+          │ 4. Busca custom claims (admin=true?)
+          │ 5. Busca role no Firestore users/{uid}
+          ▼
+┌────────────────────┐
+│ Endpoint Protegido │ ← Acesso liberado com user_data
+└────────────────────┘
+```
+
+### Fluxo de Pagamento (Idempotente)
+
+```
+Cliente                 Backend                 Mercado Pago        Firestore
+  │                        │                         │                 │
+  │ POST /payments/       │                         │                 │
+  │  create-checkout      │                         │                 │
+  ├────────────────────►  │                         │                 │
+  │                       │ POST /v1/preferences   │                 │
+  │                       ├─────────────────────►   │                 │
+  │                       │                         │                 │
+  │ ◄────init_point────── │◄─── preference_id ───  │                 │
+  │                       │                         │                 │
+  │                       │ Salva payment (pending) │                 │
+  │                       ├─────────────────────────┼────────────────►│
+  │                       │                         │                 │
+  │ [Paga no MP] ────────┼────────────────────────►│                 │
+  │                       │                         │                 │
+  │                       │ ◄────── WEBHOOK ─────── │                 │
+  │                       │  (pode vir múltiplas    │                 │
+  │                       │   vezes!)               │                 │
+  │                       │                         │                 │
+  │                       │ _process_approved_payment()               │
+  │                       │ ┌─────────────────────┐                   │
+  │                       │ │ if status in        │                   │
+  │                       │ │  PAID_STATUSES:     │                   │
+  │                       │ │   return False ◄────── IDEMPOTÊNCIA     │
+  │                       │ │ (já processado)     │                   │
+  │                       │ └─────────────────────┘                   │
+  │                       │                         │                 │
+  │                       │ 1. Publica memorial     │                 │
+  │                       ├─────────────────────────┼────────────────►│
+  │                       │ 2. Gera QR Code         │                 │
+  │                       │ 3. Atualiza status      │                 │
+  │                       ├─────────────────────────┼────────────────►│
+  │                       │ 4. Cria notificação     │                 │
+  │                       ├─────────────────────────┼────────────────►│
+  │                       │ 5. Envia e-mails        │                 │
+  │                       │                         │                 │
 ```
 
 ---
