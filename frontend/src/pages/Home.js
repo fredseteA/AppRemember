@@ -376,15 +376,9 @@ const STEPS = [
 // ── PanelContent ─────────────────────────────────────────────────────────────
 function PanelContent({ step, onScrollToPlans }) {
   const [imgLoaded, setImgLoaded] = useState(false);
-
-  const handleCta = () => {
-    if (step.ctaLink.startsWith('/#')) {
-      onScrollToPlans();
-    } else {
-      navigate(step.ctaLink);
-    }
-  };
-
+ 
+  const isScrollLink = step.ctaLink.startsWith('/#');
+ 
   return (
     <>
       {/* ── Card de texto ── */}
@@ -413,29 +407,35 @@ function PanelContent({ step, onScrollToPlans }) {
             Passo {step.num}
           </span>
         </div>
-
+ 
         {/* Título */}
         <h3 style={{ fontFamily: '"Georgia", serif', fontSize: "clamp(1rem, 4vw, 1.5rem)", fontWeight: 700, color: "#1a2744", lineHeight: 1.22, marginBottom: "3px" }}>
           {step.title}
         </h3>
-
-        {/* Subtítulo — oculto no mobile para economizar espaço */}
+ 
+        {/* Subtítulo */}
         <h4 className="howit-subtitle" style={{ fontFamily: '"Georgia", serif', fontSize: "clamp(0.78rem, 3vw, 0.9rem)", fontWeight: 400, color: "#5aa8e0", marginBottom: "10px" }}>
           {step.subtitle}
         </h4>
-
+ 
         {/* Descrição */}
         <p style={{ color: "#3a5070", fontSize: "clamp(0.8rem, 3vw, 0.88rem)", lineHeight: 1.65, marginBottom: "18px" }}>
           {step.description}
         </p>
-
-        {/* CTA */}
-        <button className="howit-cta-btn" onClick={handleCta}>
-          {step.cta}
-        </button>
+ 
+        {/* CTA corrigido */}
+        {isScrollLink ? (
+          <button className="howit-cta-btn" onClick={onScrollToPlans}>
+            {step.cta}
+          </button>
+        ) : (
+          <Link to={step.ctaLink} className="howit-cta-btn" style={{ display: 'inline-block', textDecoration: 'none' }}>
+            {step.cta}
+          </Link>
+        )}
       </div>
-
-      {/* ── Imagem — oculta no mobile, visível a partir de md ── */}
+ 
+      {/* ── Imagem ── */}
       <div
         className={`howit-img-wrap${!imgLoaded ? " howit-img-shimmer" : ""}`}
         style={{
@@ -1368,6 +1368,53 @@ const Home = () => {
           .anim-fade-up-2  { animation: fadeInUp    0.7s ease 0.4s both; }
           .anim-fade-up-3  { animation: fadeInUp    0.7s ease 0.6s both; }
           .anim-fade-right { animation: fadeInRight 0.8s ease 0.5s both; }
+
+          .hero-btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            border-radius: 999px;
+            padding: 12px 28px;
+            font-family: "Georgia", serif;
+            font-size: clamp(0.82rem, 3.5vw, 1rem);
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            color: #1a2744;
+            background: rgba(255,255,255,0.28);
+            border: 1.5px solid rgba(26,39,68,0.3);
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.25s ease;
+            backdrop-filter: blur(8px);
+            white-space: nowrap;
+          }
+          .hero-btn-secondary:hover {
+            background: rgba(255,255,255,0.45);
+            border-color: rgba(26,39,68,0.5);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(26,39,68,0.12);
+          }
+ 
+          .hero-cta-group {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+          }
+ 
+          @media (max-width: 640px) {
+            .hero-cta-group {
+              flex-direction: column;
+              align-items: stretch;
+            }
+            .hero-cta-group a,
+            .hero-cta-group button {
+              width: 100%;
+              justify-content: center;
+            }
+          }
         `}</style>
 
         <div className="hero-cloud-1-wrap anim-fade-down absolute top-4 left-[-50px] w-64 md:w-80 opacity-95 pointer-events-none select-none">
