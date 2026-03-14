@@ -693,7 +693,7 @@ const MemorialLayout = ({ memorial, isPreview = false, onShare }) => {
         {/* Logo */}
         {!isPreview && (
           <div style={{ display:'flex', justifyContent:'center', marginBottom:28, animation:'revealML 0.6s cubic-bezier(.22,1,.36,1) both' }}>
-            <img src="/logo-transparent.png" alt="Remember QRCode" style={{ height:60, width:'auto' }}/>
+            <img src="/logo-transparent.svg" alt="Remember QRCode" style={{ height:60, width:'auto' }}/>
           </div>
         )}
 
@@ -861,7 +861,7 @@ const MemorialLayout = ({ memorial, isPreview = false, onShare }) => {
             </p>
             <div style={{ height:1,width:24,background:'rgba(42,61,94,0.2)' }}/>
           </div>
-          <img src="/logo-transparent.png" alt="Remember QRCode" style={{ height:36,width:'auto',opacity:0.4,margin:'0 auto' }}/>
+          <img src="/logo-transparent.svg" alt="Remember QRCode" style={{ height:36,width:'auto',opacity:0.4,margin:'0 auto' }}/>
         </div>
 
       </div>

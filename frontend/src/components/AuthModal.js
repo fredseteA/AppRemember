@@ -166,7 +166,7 @@ const AuthModal = ({ open, onClose }) => {
           <DialogHeader>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 24 }}>
               <img
-                src="/logo-transparent.png"
+                src="/logo-transparent.svg"
                 alt="Remember QRCode"
                 style={{ height: 72, width: 'auto', marginBottom: 14 }}
               />

@@ -239,7 +239,7 @@ const Footer = ({ startColor = '#eef8fb' }) => {
           {/* ── Col 1: Marca ── */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
             <img
-              src="/logo-transparent.png"
+              src="/logo-transparent.svg"
               alt="Remember QRCode"
               style={{ height: 52, width: 'auto', marginBottom: 14, objectFit: 'contain', objectPosition: 'left' }}
             />
@@ -370,7 +370,7 @@ const Footer = ({ startColor = '#eef8fb' }) => {
           {/* Copyright + logo mini */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <img
-              src="/logo-transparent.png"
+              src="/logo-transparent.svg"
               alt="Remember QRCode"
               style={{ height: 22, width: 'auto', opacity: 0.4 }}
             />

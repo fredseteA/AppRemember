@@ -187,7 +187,7 @@ const Header = () => {
             <div className="header-bar flex items-center justify-between h-16">
 
               <Link to="/" className="flex items-center" data-testid="logo-link" onClick={closeMobile}>
-                <img src="/logo-transparent.png" alt="Remember QRCode" className="header-logo h-11 w-auto" />
+                <img src="/logo-transparent.svg" alt="Remember QRCode" className="header-logo h-11 w-auto" />
               </Link>
 
               <nav className="hidden md:flex items-center space-x-7">
