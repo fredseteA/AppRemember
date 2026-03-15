@@ -566,6 +566,19 @@ const MemorialLayout = ({ memorial, isPreview = false, onShare }) => {
 
   const galleryImages = content.gallery_urls || [];
 
+  const wrapperStyle = isPreview ? {
+    fontFamily: '"Georgia", serif',
+    position: 'relative',
+    outline: 'none',
+  } : {
+    minHeight: '100vh',
+    background: 'linear-gradient(180deg, #c8e8f5 0%, #ddf0f7 30%, #eef8fb 65%, #eef8fb 100%)',
+    fontFamily: '"Georgia", serif',
+    position: 'relative',
+    overflow: 'hidden',
+    outline: 'none',
+  };
+
   // Tabs — a aba condolências é ocultada em modo preview
   const TABS = [
     { key: 'historia',      label: 'História',      icon: BookOpen },
@@ -578,14 +591,7 @@ const MemorialLayout = ({ memorial, isPreview = false, onShare }) => {
     <div
       onKeyDown={handleKeyDown}
       tabIndex={-1}
-      style={{
-        minHeight: '100vh',
-        background: 'linear-gradient(180deg, #c8e8f5 0%, #ddf0f7 30%, #eef8fb 65%, #eef8fb 100%)',
-        fontFamily: '"Georgia", serif',
-        position: 'relative',
-        overflow: 'hidden',
-        outline: 'none',
-      }}
+      style={wrapperStyle}
     >
       <style>{`
         @keyframes floatML1 { 0%,100%{transform:translateY(0) translateX(0);} 45%{transform:translateY(-16px) translateX(9px);} }
@@ -673,16 +679,20 @@ const MemorialLayout = ({ memorial, isPreview = false, onShare }) => {
         </div>
       )}
 
-      {/* ── Nuvens ── */}
-      <div className="absolute top-[-20px] left-[-60px] w-52 md:w-80 opacity-60 pointer-events-none select-none" style={{ animation:'floatML1 12s ease-in-out infinite' }}>
-        <img src="/clouds/cloud1.png" alt="" draggable={false} style={{ width:'100%',height:'auto',display:'block' }}/>
-      </div>
-      <div className="absolute top-[6%] right-[-50px] w-40 md:w-64 opacity-45 pointer-events-none select-none hidden md:block" style={{ animation:'floatML2 9s ease-in-out infinite' }}>
-        <img src="/clouds/cloud2.png" alt="" draggable={false} style={{ width:'100%',height:'auto',display:'block' }}/>
-      </div>
-      <div className="absolute top-[45%] left-[-30px] w-28 opacity-30 pointer-events-none select-none hidden lg:block" style={{ animation:'floatML3 14s ease-in-out infinite' }}>
-        <img src="/clouds/cloud3.png" alt="" draggable={false} style={{ width:'100%',height:'auto',display:'block' }}/>
-      </div>
+      {/* ── Nuvens — ocultas no preview ── */}
+      {!isPreview && (
+        <>
+          <div className="absolute top-[-20px] left-[-60px] w-52 md:w-80 opacity-60 pointer-events-none select-none" style={{ animation:'floatML1 12s ease-in-out infinite' }}>
+            <img src="/clouds/cloud1.png" alt="" draggable={false} style={{ width:'100%',height:'auto',display:'block' }}/>
+          </div>
+          <div className="absolute top-[6%] right-[-50px] w-40 md:w-64 opacity-45 pointer-events-none select-none hidden md:block" style={{ animation:'floatML2 9s ease-in-out infinite' }}>
+            <img src="/clouds/cloud2.png" alt="" draggable={false} style={{ width:'100%',height:'auto',display:'block' }}/>
+          </div>
+          <div className="absolute top-[45%] left-[-30px] w-28 opacity-30 pointer-events-none select-none hidden lg:block" style={{ animation:'floatML3 14s ease-in-out infinite' }}>
+            <img src="/clouds/cloud3.png" alt="" draggable={false} style={{ width:'100%',height:'auto',display:'block' }}/>
+          </div>
+        </>
+      )}
 
       <div className="relative z-10" style={{
         maxWidth: 600, margin: '0 auto', padding: '0 16px',

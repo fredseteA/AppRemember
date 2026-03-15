@@ -363,17 +363,19 @@ const SelectPlan = () => {
                   </div>
 
                   {/* Botão */}
-                  {plan.highlighted ? (
-                    <button className="sp-btn-primary" onClick={() => handleSelectPlan(plan)} disabled={loading} data-testid={`button-select-${plan.id}`}>
-                      {loading ? <><Loader2 size={16} style={{ animation: 'spin 0.8s linear infinite' }} /> Processando...</> : 'Selecionar Plano'}
-                    </button>
-                  ) : (
-                    <button className="sp-btn-outline" onClick={() => handleSelectPlan(plan)} disabled={loading} data-testid={`button-select-${plan.id}`}>
-                      {loading ? <><Loader2 size={16} style={{ animation: 'spin 0.8s linear infinite' }} /> Processando...</> : 'Selecionar Plano'}
-                    </button>
-                  )}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 20 }}>
+                    {plan.highlighted ? (
+                      <button className="sp-btn-primary" onClick={() => handleSelectPlan(plan)} disabled={loading} data-testid={`button-select-${plan.id}`}>
+                        {loading ? <><Loader2 size={16} style={{ animation: 'spin 0.8s linear infinite' }} /> Processando...</> : 'Selecionar Plano'}
+                      </button>
+                    ) : (
+                      <button className="sp-btn-outline" onClick={() => handleSelectPlan(plan)} disabled={loading} data-testid={`button-select-${plan.id}`}>
+                        {loading ? <><Loader2 size={16} style={{ animation: 'spin 0.8s linear infinite' }} /> Processando...</> : 'Selecionar Plano'}
+                      </button>
+                    )}
 
-                  <SecurityBadge variant="minimal" />
+                    <SecurityBadge variant="minimal" style={{ marginTop: 20 }} />
+                  </div>
                 </div>
               </div>
             );
