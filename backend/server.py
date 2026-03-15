@@ -551,7 +551,6 @@ def commission_service_calculate(original_amount: float, commission_rate: float)
         "discount_percentage": DISCOUNT_PERCENTAGE,
     }
 
-# Mapa de prioridades por tipo de notificação
 NOTIFICATION_PRIORITY = {
     "cancellation_request": 1,   # crítico — aparece primeiro
     "payment_approved":     2,   # alto
@@ -1143,8 +1142,8 @@ async def update_user_role(
     return {"message": f"Role atualizado para '{body.role}'", "uid": uid}
 
 
-
 # ========== MEMORIAL ENDPOINTS ==========
+
 @api_router.get("/memorials/my", response_model=List[Memorial])
 async def get_my_memorials(token_data: dict = Depends(verify_firebase_token)):
     memorials_ref = db.collection("memorials").where(
@@ -2576,6 +2575,7 @@ async def pay_commission(
     )
     return {"message": "Comissão marcada como paga", "amount": comm_data.get("commission_amount")}
 
+# ========== APOIADOR ENDPOINTS ==========
 
 @api_router.get("/apoiador/me")
 async def get_apoiador_me(token_data: dict = Depends(verify_apoiador)):

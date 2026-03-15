@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import { Checkbox } from '../components/ui/checkbox';
 import { toast } from 'sonner';
-import { ChevronLeft, ChevronRight, Upload, ZoomIn, ZoomOut, RotateCw, Check, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Upload, ZoomIn, ZoomOut, RotateCw, Check, X, WifiOff, RefreshCw, AlertTriangle, Clock } from 'lucide-react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../lib/firebase';
 import AuthModal from '../components/AuthModal';
@@ -14,9 +14,203 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PhotoCropModal — canvas nativo, sem dependências externas
-// Suporta arrastar, zoom (slider + scroll) e rotação
-// Gera PNG 400×400 recortado em círculo ao confirmar
+// Mapeador de erros — transforma qualquer erro em mensagem clara + ação
+// ─────────────────────────────────────────────────────────────────────────────
+function parseSubmitError(error) {
+  // Sem resposta do servidor = problema de rede ou timeout
+  if (!error.response) {
+    if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+      return {
+        icon: <Clock size={18} />,
+        title: 'O servidor demorou para responder',
+        detail: 'Sua conexão está lenta ou o servidor está sobrecarregado.',
+        action: 'Aguarde alguns segundos e tente novamente.',
+        canRetry: true,
+        type: 'timeout',
+      };
+    }
+    if (!navigator.onLine) {
+      return {
+        icon: <WifiOff size={18} />,
+        title: 'Sem conexão com a internet',
+        detail: 'Verifique sua conexão Wi-Fi ou dados móveis.',
+        action: 'Reconecte-se e tente novamente. Seus dados foram preservados.',
+        canRetry: true,
+        type: 'offline',
+      };
+    }
+    return {
+      icon: <WifiOff size={18} />,
+      title: 'Não foi possível conectar ao servidor',
+      detail: 'O servidor pode estar temporariamente fora do ar.',
+      action: 'Aguarde alguns minutos e tente novamente.',
+      canRetry: true,
+      type: 'network',
+    };
+  }
+
+  const status = error.response?.status;
+  const detail = error.response?.data?.detail;
+
+  // 401 — token expirado ou inválido
+  if (status === 401) {
+    return {
+      icon: <AlertTriangle size={18} />,
+      title: 'Sua sessão expirou',
+      detail: 'Você ficou muito tempo sem atividade e sua sessão foi encerrada.',
+      action: 'Faça login novamente. Seus dados do formulário foram preservados.',
+      canRetry: false,
+      type: 'auth',
+    };
+  }
+
+  // 403 — sem permissão
+  if (status === 403) {
+    return {
+      icon: <AlertTriangle size={18} />,
+      title: 'Acesso não autorizado',
+      detail: 'Você não tem permissão para realizar esta ação.',
+      action: 'Tente sair e entrar novamente na sua conta.',
+      canRetry: false,
+      type: 'forbidden',
+    };
+  }
+
+  // 422 — validação do Pydantic (dados inválidos enviados)
+  if (status === 422) {
+    // detail pode ser string ou lista de erros do Pydantic
+    let fieldErrors = '';
+    if (Array.isArray(detail)) {
+      fieldErrors = detail.map(e => {
+        const field = e.loc?.slice(-1)[0] || 'campo';
+        return `• ${field}: ${e.msg}`;
+      }).join('\n');
+    }
+    return {
+      icon: <AlertTriangle size={18} />,
+      title: 'Dados inválidos',
+      detail: fieldErrors || 'Alguns campos do formulário contêm informações inválidas.',
+      action: 'Revise os dados preenchidos e tente novamente.',
+      canRetry: false,
+      type: 'validation',
+    };
+  }
+
+  // 429 — rate limit
+  if (status === 429) {
+    return {
+      icon: <Clock size={18} />,
+      title: 'Muitas tentativas',
+      detail: 'Você fez muitas requisições em pouco tempo.',
+      action: 'Aguarde 1 minuto antes de tentar novamente.',
+      canRetry: true,
+      type: 'ratelimit',
+    };
+  }
+
+  // 500+ — erro interno do servidor
+  if (status >= 500) {
+    return {
+      icon: <AlertTriangle size={18} />,
+      title: 'Erro interno no servidor',
+      detail: 'Ocorreu um erro inesperado no nosso sistema.',
+      action: 'Aguarde alguns minutos e tente novamente. Se persistir, entre em contato com o suporte.',
+      canRetry: true,
+      type: 'server',
+    };
+  }
+
+  // Fallback genérico com detalhe do backend se disponível
+  return {
+    icon: <AlertTriangle size={18} />,
+    title: 'Erro ao criar memorial',
+    detail: typeof detail === 'string' ? detail : 'Ocorreu um erro inesperado.',
+    action: 'Tente novamente. Se o problema persistir, entre em contato com o suporte.',
+    canRetry: true,
+    type: 'unknown',
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ErrorToast — componente de erro rico para o Sonner
+// ─────────────────────────────────────────────────────────────────────────────
+function showErrorToast(error, onRetry) {
+  const parsed = parseSubmitError(error);
+
+  toast.custom((id) => (
+    <div style={{
+      background: 'white',
+      border: '1px solid rgba(239,68,68,0.2)',
+      borderLeft: '4px solid #ef4444',
+      borderRadius: 14,
+      padding: '14px 16px',
+      boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+      maxWidth: 400,
+      width: '100%',
+      fontFamily: '"Georgia", serif',
+    }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 8 }}>
+        <div style={{
+          width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
+          background: 'rgba(239,68,68,0.1)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: '#ef4444',
+        }}>
+          {parsed.icon}
+        </div>
+        <div style={{ flex: 1 }}>
+          <p style={{ fontWeight: 700, color: '#1a2744', fontSize: '0.88rem', margin: '0 0 3px', lineHeight: 1.3 }}>
+            {parsed.title}
+          </p>
+          {parsed.detail && (
+            <p style={{ color: '#6b7f99', fontSize: '0.75rem', margin: 0, lineHeight: 1.5, whiteSpace: 'pre-line' }}>
+              {parsed.detail}
+            </p>
+          )}
+        </div>
+        <button
+          onClick={() => toast.dismiss(id)}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', padding: 2, flexShrink: 0 }}
+        >
+          <X size={14} />
+        </button>
+      </div>
+
+      {/* Ação */}
+      <div style={{
+        background: 'rgba(239,68,68,0.05)',
+        borderRadius: 8,
+        padding: '8px 10px',
+        marginBottom: parsed.canRetry && onRetry ? 10 : 0,
+      }}>
+        <p style={{ color: '#374151', fontSize: '0.73rem', margin: 0, lineHeight: 1.55 }}>
+          <strong>O que fazer:</strong> {parsed.action}
+        </p>
+      </div>
+
+      {/* Botão de retry */}
+      {parsed.canRetry && onRetry && (
+        <button
+          onClick={() => { toast.dismiss(id); onRetry(); }}
+          style={{
+            width: '100%', marginTop: 4,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+            padding: '8px 0', borderRadius: 8,
+            background: '#1a2744', color: 'white', border: 'none',
+            fontFamily: '"Georgia", serif', fontSize: '0.75rem', fontWeight: 700,
+            letterSpacing: '0.05em', cursor: 'pointer',
+          }}
+        >
+          <RefreshCw size={12} /> Tentar novamente
+        </button>
+      )}
+    </div>
+  ), { duration: parsed.canRetry ? 8000 : 12000 });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PhotoCropModal
 // ─────────────────────────────────────────────────────────────────────────────
 function PhotoCropModal({ imageSrc, onConfirm, onCancel }) {
   const canvasRef    = useRef(null);
@@ -32,7 +226,6 @@ function PhotoCropModal({ imageSrc, onConfirm, onCancel }) {
   const CANVAS_SIZE = 360;
   const CENTER      = CANVAS_SIZE / 2;
 
-  // Carrega imagem e define escala inicial que cobre o círculo
   useEffect(() => {
     const img = new Image();
     img.onload = () => {
@@ -46,26 +239,19 @@ function PhotoCropModal({ imageSrc, onConfirm, onCancel }) {
     img.src = imageSrc;
   }, [imageSrc]);
 
-  // Redesenha canvas a cada mudança de estado
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !imgRef.current || imgSize.w === 0) return;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-
-    // Fundo escuro
     ctx.fillStyle = 'rgba(10, 18, 44, 0.92)';
     ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-
-    // Imagem com transformações
     ctx.save();
     ctx.translate(CENTER + offset.x, CENTER + offset.y);
     ctx.rotate((rotation * Math.PI) / 180);
     ctx.scale(scale, scale);
     ctx.drawImage(imgRef.current, -imgSize.w / 2, -imgSize.h / 2, imgSize.w, imgSize.h);
     ctx.restore();
-
-    // Overlay escuro fora do círculo
     ctx.save();
     ctx.fillStyle = 'rgba(8, 15, 40, 0.62)';
     ctx.beginPath();
@@ -73,8 +259,6 @@ function PhotoCropModal({ imageSrc, onConfirm, onCancel }) {
     ctx.arc(CENTER, CENTER, CROP_SIZE / 2, 0, Math.PI * 2, true);
     ctx.fill('evenodd');
     ctx.restore();
-
-    // Borda do círculo
     ctx.save();
     ctx.strokeStyle = 'rgba(255,255,255,0.88)';
     ctx.lineWidth = 2;
@@ -82,8 +266,6 @@ function PhotoCropModal({ imageSrc, onConfirm, onCancel }) {
     ctx.arc(CENTER, CENTER, CROP_SIZE / 2, 0, Math.PI * 2);
     ctx.stroke();
     ctx.restore();
-
-    // Grade de terços
     ctx.save();
     ctx.beginPath();
     ctx.arc(CENTER, CENTER, CROP_SIZE / 2, 0, Math.PI * 2);
@@ -101,20 +283,14 @@ function PhotoCropModal({ imageSrc, onConfirm, onCancel }) {
     ctx.restore();
   }, [scale, rotation, offset, imgSize]);
 
-  // Drag mouse
   const onMouseDown = (e) => { setDragging(true); setDragStart({ x: e.clientX - offset.x, y: e.clientY - offset.y }); };
   const onMouseMove = useCallback((e) => { if (!dragging) return; setOffset({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y }); }, [dragging, dragStart]);
   const onMouseUp   = () => setDragging(false);
-
-  // Drag touch
   const onTouchStart = (e) => { const t = e.touches[0]; setDragging(true); setDragStart({ x: t.clientX - offset.x, y: t.clientY - offset.y }); };
   const onTouchMove  = useCallback((e) => { if (!dragging) return; const t = e.touches[0]; setOffset({ x: t.clientX - dragStart.x, y: t.clientY - dragStart.y }); }, [dragging, dragStart]);
   const onTouchEnd   = () => setDragging(false);
-
-  // Wheel zoom
   const onWheel = (e) => { e.preventDefault(); setScale(s => Math.max(0.3, Math.min(5, s + (e.deltaY > 0 ? -0.08 : 0.08)))); };
 
-  // Gera PNG 400×400 recortado em círculo
   const handleConfirm = () => {
     const OUT = 400;
     const out = document.createElement('canvas');
@@ -134,109 +310,41 @@ function PhotoCropModal({ imageSrc, onConfirm, onCancel }) {
   const canvasDisplay = Math.min(CANVAS_SIZE, (typeof window !== 'undefined' ? window.innerWidth : 420) - 64);
 
   return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 9999,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: 'rgba(6, 12, 30, 0.88)',
-      backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)',
-      padding: '16px',
-      animation: 'cropIn 0.28s cubic-bezier(.22,1,.36,1) both',
-    }}>
+    <div style={{ position:'fixed', inset:0, zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(6, 12, 30, 0.88)', backdropFilter:'blur(22px)', WebkitBackdropFilter:'blur(22px)', padding:'16px', animation:'cropIn 0.28s cubic-bezier(.22,1,.36,1) both' }}>
       <style>{`
-        @keyframes cropIn { from { opacity:0; transform:scale(0.93); } to { opacity:1; transform:scale(1); } }
-        @keyframes cropBtnIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
-        .cc-ctrl {
-          width:40px; height:40px; border-radius:50%;
-          background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.18);
-          color:white; display:flex; align-items:center; justify-content:center;
-          cursor:pointer; flex-shrink:0; transition:background 0.18s ease;
-          -webkit-tap-highlight-color:transparent;
-        }
+        @keyframes cropIn { from{opacity:0;transform:scale(0.93);}to{opacity:1;transform:scale(1);} }
+        @keyframes cropBtnIn { from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);} }
+        .cc-ctrl { width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.18);color:white;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background 0.18s ease;-webkit-tap-highlight-color:transparent; }
         .cc-ctrl:active { background:rgba(255,255,255,0.22); }
-        .cc-range {
-          flex:1; -webkit-appearance:none; appearance:none;
-          height:3px; border-radius:99px; background:rgba(255,255,255,0.18); outline:none; cursor:pointer;
-        }
-        .cc-range::-webkit-slider-thumb {
-          -webkit-appearance:none; width:18px; height:18px; border-radius:50%;
-          background:white; box-shadow:0 2px 8px rgba(0,0,0,0.3); cursor:pointer;
-        }
-        .cc-range::-moz-range-thumb {
-          width:18px; height:18px; border:none; border-radius:50%;
-          background:white; box-shadow:0 2px 8px rgba(0,0,0,0.3);
-        }
-        .cc-confirm {
-          flex:1; display:flex; align-items:center; justify-content:center; gap:8px;
-          padding:14px 0; border-radius:999px; background:white; color:#1a2744;
-          font-family:"Georgia",serif; font-size:0.88rem; font-weight:700; letter-spacing:0.05em;
-          border:none; cursor:pointer; box-shadow:0 4px 20px rgba(255,255,255,0.15);
-          transition:transform 0.2s ease;
-          animation:cropBtnIn 0.4s cubic-bezier(.22,1,.36,1) 0.18s both;
-          -webkit-tap-highlight-color:transparent;
-        }
+        .cc-range { flex:1;-webkit-appearance:none;appearance:none;height:3px;border-radius:99px;background:rgba(255,255,255,0.18);outline:none;cursor:pointer; }
+        .cc-range::-webkit-slider-thumb { -webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:white;box-shadow:0 2px 8px rgba(0,0,0,0.3);cursor:pointer; }
+        .cc-confirm { flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 0;border-radius:999px;background:white;color:#1a2744;font-family:"Georgia",serif;font-size:0.88rem;font-weight:700;letter-spacing:0.05em;border:none;cursor:pointer;box-shadow:0 4px 20px rgba(255,255,255,0.15);transition:transform 0.2s ease;animation:cropBtnIn 0.4s cubic-bezier(.22,1,.36,1) 0.18s both;-webkit-tap-highlight-color:transparent; }
         .cc-confirm:active { transform:scale(0.97); }
-        .cc-cancel {
-          display:flex; align-items:center; justify-content:center; gap:6px;
-          padding:14px 18px; border-radius:999px; background:transparent; color:rgba(255,255,255,0.6);
-          font-family:"Georgia",serif; font-size:0.88rem; font-weight:600;
-          border:1px solid rgba(255,255,255,0.18); cursor:pointer;
-          transition:background 0.18s ease, color 0.18s ease;
-          animation:cropBtnIn 0.4s cubic-bezier(.22,1,.36,1) 0.22s both;
-          -webkit-tap-highlight-color:transparent;
-        }
-        .cc-cancel:active { background:rgba(255,255,255,0.1); color:white; }
+        .cc-cancel { display:flex;align-items:center;justify-content:center;gap:6px;padding:14px 18px;border-radius:999px;background:transparent;color:rgba(255,255,255,0.6);font-family:"Georgia",serif;font-size:0.88rem;font-weight:600;border:1px solid rgba(255,255,255,0.18);cursor:pointer;transition:background 0.18s ease,color 0.18s ease;animation:cropBtnIn 0.4s cubic-bezier(.22,1,.36,1) 0.22s both;-webkit-tap-highlight-color:transparent; }
+        .cc-cancel:active { background:rgba(255,255,255,0.1);color:white; }
       `}</style>
-
       <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:18, width:'100%', maxWidth:400 }}>
-
-        {/* Header */}
         <div style={{ textAlign:'center' }}>
-          <p style={{ fontSize:'0.58rem', fontWeight:700, letterSpacing:'0.22em', textTransform:'uppercase', color:'rgba(255,255,255,0.4)', marginBottom:6, fontFamily:'"Georgia",serif' }}>
-            Foto do memorial
-          </p>
-          <h3 style={{ fontFamily:'"Georgia",serif', fontSize:'clamp(1rem,4vw,1.2rem)', fontWeight:700, color:'white', lineHeight:1.2, margin:0 }}>
-            Ajuste a foto de perfil
-          </h3>
-          <p style={{ fontSize:'0.7rem', color:'rgba(255,255,255,0.35)', marginTop:5, fontFamily:'"Georgia",serif' }}>
-            Arraste · Scroll para zoom · Barra para rotacionar
-          </p>
+          <p style={{ fontSize:'0.58rem', fontWeight:700, letterSpacing:'0.22em', textTransform:'uppercase', color:'rgba(255,255,255,0.4)', marginBottom:6, fontFamily:'"Georgia",serif' }}>Foto do memorial</p>
+          <h3 style={{ fontFamily:'"Georgia",serif', fontSize:'clamp(1rem,4vw,1.2rem)', fontWeight:700, color:'white', lineHeight:1.2, margin:0 }}>Ajuste a foto de perfil</h3>
+          <p style={{ fontSize:'0.7rem', color:'rgba(255,255,255,0.35)', marginTop:5, fontFamily:'"Georgia",serif' }}>Arraste · Scroll para zoom · Barra para rotacionar</p>
         </div>
-
-        {/* Canvas circular */}
-        <div
-          style={{ borderRadius:'50%', overflow:'hidden', boxShadow:'0 0 0 3px rgba(255,255,255,0.12), 0 24px 64px rgba(0,0,0,0.55)', cursor:dragging?'grabbing':'grab', userSelect:'none', touchAction:'none', flexShrink:0 }}
+        <div style={{ borderRadius:'50%', overflow:'hidden', boxShadow:'0 0 0 3px rgba(255,255,255,0.12),0 24px 64px rgba(0,0,0,0.55)', cursor:dragging?'grabbing':'grab', userSelect:'none', touchAction:'none', flexShrink:0 }}
           onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={onMouseUp}
-          onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
-          onWheel={onWheel}
-        >
-          <canvas ref={canvasRef} width={CANVAS_SIZE} height={CANVAS_SIZE}
-            style={{ display:'block', width:canvasDisplay, height:canvasDisplay }} />
+          onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} onWheel={onWheel}>
+          <canvas ref={canvasRef} width={CANVAS_SIZE} height={CANVAS_SIZE} style={{ display:'block', width:canvasDisplay, height:canvasDisplay }}/>
         </div>
-
-        {/* Zoom */}
         <div style={{ display:'flex', alignItems:'center', gap:10, width:'100%' }}>
           <button className="cc-ctrl" onClick={() => setScale(s => Math.max(0.3, s - 0.12))}><ZoomOut size={15}/></button>
-          <input type="range" className="cc-range" min={0.3} max={5} step={0.02}
-            value={scale} onChange={e => setScale(parseFloat(e.target.value))} />
+          <input type="range" className="cc-range" min={0.3} max={5} step={0.02} value={scale} onChange={e => setScale(parseFloat(e.target.value))}/>
           <button className="cc-ctrl" onClick={() => setScale(s => Math.min(5, s + 0.12))}><ZoomIn size={15}/></button>
         </div>
-
-        {/* Rotação */}
         <div style={{ display:'flex', alignItems:'center', gap:8, width:'100%', background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:999, padding:'7px 14px' }}>
-          <button className="cc-ctrl" style={{ width:34,height:34 }} onClick={() => setRotation(r => r - 90)}>
-            <RotateCw size={13} style={{ transform:'scaleX(-1)' }}/>
-          </button>
-          <input type="range" className="cc-range" min={-180} max={180} step={1}
-            value={rotation} onChange={e => setRotation(parseFloat(e.target.value))} />
-          <button className="cc-ctrl" style={{ width:34,height:34 }} onClick={() => setRotation(r => r + 90)}>
-            <RotateCw size={13}/>
-          </button>
-          <span style={{ fontSize:'0.65rem', color:'rgba(255,255,255,0.32)', fontFamily:'"Georgia",serif', minWidth:32, textAlign:'right' }}>
-            {rotation}°
-          </span>
+          <button className="cc-ctrl" style={{ width:34,height:34 }} onClick={() => setRotation(r => r - 90)}><RotateCw size={13} style={{ transform:'scaleX(-1)' }}/></button>
+          <input type="range" className="cc-range" min={-180} max={180} step={1} value={rotation} onChange={e => setRotation(parseFloat(e.target.value))}/>
+          <button className="cc-ctrl" style={{ width:34,height:34 }} onClick={() => setRotation(r => r + 90)}><RotateCw size={13}/></button>
+          <span style={{ fontSize:'0.65rem', color:'rgba(255,255,255,0.32)', fontFamily:'"Georgia",serif', minWidth:32, textAlign:'right' }}>{rotation}°</span>
         </div>
-
-        {/* Botões */}
         <div style={{ display:'flex', gap:10, width:'100%' }}>
           <button className="cc-cancel" onClick={onCancel}><X size={13}/>Cancelar</button>
           <button className="cc-confirm" onClick={handleConfirm}><Check size={14}/>Usar esta foto</button>
@@ -256,22 +364,25 @@ const CreateMemorial = () => {
   const [step, setStep] = useState(1);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [submitAttempts, setSubmitAttempts] = useState(0);
 
-  // Crop state
   const [cropSrc,  setCropSrc]  = useState(null);
   const [showCrop, setShowCrop] = useState(false);
 
   const [personData, setPersonData] = useState({
     full_name: '', relationship: '', birth_date: '', death_date: '',
     birth_city: '', birth_state: '', death_city: '', death_state: '',
-    photo_url: null, public_memorial: false
+    photo_url: null, public_memorial: false,
   });
 
   const [content, setContent] = useState({
-    main_phrase: '', biography: '', gallery_urls: [], audio_url: null
+    main_phrase: '', biography: '', gallery_urls: [], audio_url: null,
   });
 
   const [responsible, setResponsible] = useState({ name: '', phone: '', email: '' });
+
+  // Guarda os dados do payload para retry
+  const lastPayloadRef = useRef(null);
 
   const handleFileUpload = async (file, path) => {
     try {
@@ -280,22 +391,20 @@ const CreateMemorial = () => {
       return await getDownloadURL(storageRef);
     } catch (error) {
       console.error('Upload error:', error);
-      toast.error('Erro ao fazer upload do arquivo');
+      toast.error('Erro ao fazer upload do arquivo. Verifique sua conexão e tente novamente.');
       return null;
     }
   };
 
-  // Seleciona foto → abre modal de crop (sem fazer upload ainda)
   const handlePhotoSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    e.target.value = ''; // permite re-selecionar o mesmo arquivo
+    e.target.value = '';
     const reader = new FileReader();
     reader.onload = (ev) => { setCropSrc(ev.target.result); setShowCrop(true); };
     reader.readAsDataURL(file);
   };
 
-  // Usuário confirmou crop → faz upload do blob resultante
   const handleCropConfirm = async (blob) => {
     setShowCrop(false); setCropSrc(null);
     setLoading(true);
@@ -328,135 +437,144 @@ const CreateMemorial = () => {
   };
 
   const handleNext = () => {
-    if (step === 1 && (!personData.full_name || !personData.relationship)) { toast.error('Preencha os campos obrigatórios'); return; }
-    if (step === 2 && (!content.main_phrase || !content.biography))        { toast.error('Preencha a frase principal e a biografia'); return; }
+    if (step === 1 && (!personData.full_name || !personData.relationship)) {
+      toast.error('Preencha o nome completo e o relacionamento para continuar.');
+      return;
+    }
+    if (step === 2 && (!content.main_phrase || !content.biography)) {
+      toast.error('Preencha a frase principal e a biografia para continuar.');
+      return;
+    }
     setStep(step + 1);
   };
 
-  const handleSubmit = async () => {
+  // ── Submit com tratamento de erros completo ───────────────────────────────
+  const handleSubmit = async (payloadOverride = null) => {
     if (!user) { setAuthModalOpen(true); return; }
-    if (!responsible.name || !responsible.phone || !responsible.email) { toast.error('Preencha todos os dados do responsável'); return; }
+
+    if (!responsible.name || !responsible.phone || !responsible.email) {
+      toast.error('Preencha todos os dados do responsável para finalizar.');
+      return;
+    }
+
+    // Validação básica de email
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(responsible.email)) {
+      toast.error('Informe um endereço de e-mail válido.');
+      return;
+    }
+
+    const payload = payloadOverride || {
+      person_data: personData,
+      content,
+      responsible,
+    };
+
+    // Salva para retry
+    lastPayloadRef.current = payload;
+
     setLoading(true);
+    setSubmitAttempts(prev => prev + 1);
+
     try {
-      const response = await axios.post(`${API}/memorials`, { person_data: personData, content, responsible }, { headers: { Authorization: `Bearer ${token}` } });
+      const response = await axios.post(`${API}/memorials`, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+        timeout: 20000, // 20s timeout
+      });
+
       toast.success('Memorial criado com sucesso!');
       navigate(`/preview/${response.data.id}`);
+
     } catch (error) {
       console.error('Error creating memorial:', error);
-      toast.error('Erro ao criar memorial');
-    } finally { setLoading(false); }
+
+      // Sessão expirada — abre modal de login
+      if (error.response?.status === 401) {
+        showErrorToast(error, null);
+        setAuthModalOpen(true);
+        setLoading(false);
+        return;
+      }
+
+      // Mostra erro rico com opção de retry quando aplicável
+      showErrorToast(error, () => handleSubmit(lastPayloadRef.current));
+
+    } finally {
+      setLoading(false);
+    }
   };
+
+  // Indicador de tentativas múltiplas — sugere suporte após 3 falhas
+  useEffect(() => {
+    if (submitAttempts >= 3) {
+      toast.custom(() => (
+        <div style={{ background: '#fff8e6', border: '1px solid #f59e0b', borderRadius: 12, padding: '12px 16px', fontFamily: '"Georgia", serif', maxWidth: 380 }}>
+          <p style={{ fontWeight: 700, color: '#92400e', fontSize: '0.85rem', margin: '0 0 4px' }}>
+            Está tendo dificuldades?
+          </p>
+          <p style={{ color: '#78350f', fontSize: '0.75rem', margin: 0, lineHeight: 1.5 }}>
+            Você fez várias tentativas sem sucesso. Entre em contato pelo WhatsApp:{' '}
+            <a href="https://wa.me/5522992080811" target="_blank" rel="noopener noreferrer"
+              style={{ color: '#d97706', fontWeight: 700 }}>
+              (22) 99208-0811
+            </a>
+          </p>
+        </div>
+      ), { duration: 15000 });
+    }
+  }, [submitAttempts]);
 
   return (
     <div className="overflow-x-hidden" data-testid="create-memorial-page"
       style={{ background:'linear-gradient(180deg,#c8e8f5 0%,#ddf0f7 30%,#eef8fb 70%,#eef8fb 100%)', fontFamily:'"Georgia",serif', minHeight:'100vh' }}>
 
-      {/* Crop Modal */}
-      {showCrop && cropSrc && <PhotoCropModal imageSrc={cropSrc} onConfirm={handleCropConfirm} onCancel={handleCropCancel} />}
+      {showCrop && cropSrc && <PhotoCropModal imageSrc={cropSrc} onConfirm={handleCropConfirm} onCancel={handleCropCancel}/>}
 
       <style>{`
-        @keyframes floatCM1 { 0%,100%{transform:translateY(0) translateX(0);} 45%{transform:translateY(-14px) translateX(8px);} }
-        @keyframes floatCM2 { 0%,100%{transform:translateY(0) translateX(0);} 55%{transform:translateY(-10px) translateX(-7px);} }
-        @keyframes revealCM { from{opacity:0;transform:translateY(28px);filter:blur(5px);} to{opacity:1;transform:translateY(0);filter:blur(0);} }
-        @keyframes slideCard { from{opacity:0;transform:translateY(20px) scale(0.99);} to{opacity:1;transform:translateY(0) scale(1);} }
+        @keyframes floatCM1 { 0%,100%{transform:translateY(0) translateX(0);}45%{transform:translateY(-14px) translateX(8px);} }
+        @keyframes floatCM2 { 0%,100%{transform:translateY(0) translateX(0);}55%{transform:translateY(-10px) translateX(-7px);} }
+        @keyframes revealCM { from{opacity:0;transform:translateY(28px);filter:blur(5px);}to{opacity:1;transform:translateY(0);filter:blur(0);} }
+        @keyframes slideCard { from{opacity:0;transform:translateY(20px) scale(0.99);}to{opacity:1;transform:translateY(0) scale(1);} }
         @keyframes spin { to{transform:rotate(360deg);} }
-        .cm-input {
-          width:100%; padding:13px 14px; border-radius:12px; border:1.5px solid rgba(26,39,68,0.12);
-          background:rgba(255,255,255,0.7); backdrop-filter:blur(8px);
-          font-family:"Georgia",serif; font-size:1rem; color:#1a2744; outline:none;
-          transition:border-color 0.25s ease,box-shadow 0.25s ease;
-          -webkit-appearance:none; appearance:none; box-sizing:border-box;
-        }
-        .cm-input:focus { border-color:#5aa8e0; box-shadow:0 0 0 3px rgba(90,168,224,0.15); }
+        .cm-input { width:100%;padding:13px 14px;border-radius:12px;border:1.5px solid rgba(26,39,68,0.12);background:rgba(255,255,255,0.7);backdrop-filter:blur(8px);font-family:"Georgia",serif;font-size:1rem;color:#1a2744;outline:none;transition:border-color 0.25s ease,box-shadow 0.25s ease;-webkit-appearance:none;appearance:none;box-sizing:border-box; }
+        .cm-input:focus { border-color:#5aa8e0;box-shadow:0 0 0 3px rgba(90,168,224,0.15); }
         .cm-input::placeholder { color:rgba(58,80,112,0.4); }
-        .cm-textarea {
-          width:100%; padding:13px 14px; border-radius:12px; border:1.5px solid rgba(26,39,68,0.12);
-          background:rgba(255,255,255,0.7); backdrop-filter:blur(8px);
-          font-family:"Georgia",serif; font-size:1rem; color:#1a2744; outline:none; resize:none;
-          transition:border-color 0.25s ease,box-shadow 0.25s ease;
-          -webkit-appearance:none; appearance:none; box-sizing:border-box;
-        }
-        .cm-textarea:focus { border-color:#5aa8e0; box-shadow:0 0 0 3px rgba(90,168,224,0.15); }
+        .cm-textarea { width:100%;padding:13px 14px;border-radius:12px;border:1.5px solid rgba(26,39,68,0.12);background:rgba(255,255,255,0.7);backdrop-filter:blur(8px);font-family:"Georgia",serif;font-size:1rem;color:#1a2744;outline:none;resize:none;transition:border-color 0.25s ease,box-shadow 0.25s ease;-webkit-appearance:none;appearance:none;box-sizing:border-box; }
+        .cm-textarea:focus { border-color:#5aa8e0;box-shadow:0 0 0 3px rgba(90,168,224,0.15); }
         .cm-textarea::placeholder { color:rgba(58,80,112,0.4); }
-        .cm-upload-zone {
-          border-radius:16px; border:1.5px dashed rgba(90,168,224,0.45);
-          background:rgba(255,255,255,0.45); transition:background 0.25s ease,border-color 0.25s ease;
-          cursor:pointer; display:block;
-        }
-        .cm-upload-zone:active { background:rgba(255,255,255,0.65); border-color:rgba(90,168,224,0.7); }
-        .cm-btn-primary {
-          display:inline-flex; align-items:center; justify-content:center; gap:8px;
-          padding:14px 28px; border-radius:999px; background:#1a2744; color:white;
-          font-family:"Georgia",serif; font-size:0.9rem; font-weight:700; letter-spacing:0.06em;
-          border:none; cursor:pointer; transition:background 0.25s ease,transform 0.25s ease,box-shadow 0.25s ease;
-          box-shadow:0 6px 20px rgba(26,39,68,0.18); min-height:48px; -webkit-tap-highlight-color:transparent;
-        }
-        .cm-btn-primary:active:not(:disabled) { background:#2a3d5e; transform:scale(0.97); }
-        .cm-btn-primary:disabled { opacity:0.6; cursor:not-allowed; }
-        .cm-btn-ghost {
-          display:inline-flex; align-items:center; justify-content:center; gap:6px;
-          padding:14px 20px; border-radius:999px; background:transparent; color:#3a5070;
-          font-family:"Georgia",serif; font-size:0.9rem; font-weight:700; letter-spacing:0.06em;
-          border:1.5px solid rgba(26,39,68,0.15); cursor:pointer;
-          transition:border-color 0.25s ease,color 0.25s ease,background 0.25s ease;
-          min-height:48px; -webkit-tap-highlight-color:transparent;
-        }
-        .cm-btn-ghost:active { background:rgba(255,255,255,0.5); color:#1a2744; }
-        .cm-label {
-          display:block; font-family:"Georgia",serif; font-size:0.68rem; font-weight:700;
-          letter-spacing:0.2em; text-transform:uppercase; color:#2a3d5e; margin-bottom:8px;
-        }
-        .cm-check-wrapper {
-          display:flex; align-items:center; gap:12px; padding:16px; border-radius:14px;
-          background:rgba(255,255,255,0.45); border:1.5px solid rgba(90,168,224,0.2);
-          cursor:pointer; -webkit-tap-highlight-color:transparent;
-        }
-        .cm-step-dot {
-          width:34px; height:34px; border-radius:50%; display:flex; align-items:center;
-          justify-content:center; font-family:"Georgia",serif; font-size:0.82rem; font-weight:700;
-          transition:all 0.5s ease; flex-shrink:0;
-        }
-        .cm-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-        .cm-nav {
-          display:flex; justify-content:space-between; align-items:center;
-          margin-top:28px; padding-top:22px; border-top:1px solid rgba(26,39,68,0.07); gap:12px;
-        }
-        /* Photo preview */
-        .cm-photo-ring {
-          position:relative; width:108px; height:108px; border-radius:50%; overflow:hidden;
-          flex-shrink:0; box-shadow:0 0 0 3px rgba(90,168,224,0.4),0 8px 28px rgba(26,39,68,0.14);
-        }
-        .cm-photo-ring img { width:100%; height:100%; object-fit:cover; display:block; }
-        .cm-photo-tag {
-          display:inline-flex; align-items:center; gap:5px; padding:6px 14px; border-radius:999px;
-          background:rgba(255,255,255,0.7); border:1.5px solid rgba(90,168,224,0.3); color:#1a2744;
-          font-family:"Georgia",serif; font-size:0.7rem; font-weight:700; letter-spacing:0.08em;
-          text-transform:uppercase; cursor:pointer;
-          transition:background 0.2s ease,box-shadow 0.2s ease; -webkit-tap-highlight-color:transparent;
-        }
-        .cm-photo-tag:hover { background:rgba(255,255,255,0.92); box-shadow:0 2px 10px rgba(26,39,68,0.09); }
-        .cm-photo-tag-danger { background:rgba(255,240,240,0.7); border-color:rgba(200,60,60,0.22); color:#b83232; }
+        .cm-upload-zone { border-radius:16px;border:1.5px dashed rgba(90,168,224,0.45);background:rgba(255,255,255,0.45);transition:background 0.25s ease,border-color 0.25s ease;cursor:pointer;display:block; }
+        .cm-upload-zone:active { background:rgba(255,255,255,0.65);border-color:rgba(90,168,224,0.7); }
+        .cm-btn-primary { display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 28px;border-radius:999px;background:#1a2744;color:white;font-family:"Georgia",serif;font-size:0.9rem;font-weight:700;letter-spacing:0.06em;border:none;cursor:pointer;transition:background 0.25s ease,transform 0.25s ease,box-shadow 0.25s ease;box-shadow:0 6px 20px rgba(26,39,68,0.18);min-height:48px;-webkit-tap-highlight-color:transparent; }
+        .cm-btn-primary:active:not(:disabled) { background:#2a3d5e;transform:scale(0.97); }
+        .cm-btn-primary:disabled { opacity:0.6;cursor:not-allowed; }
+        .cm-btn-ghost { display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:14px 20px;border-radius:999px;background:transparent;color:#3a5070;font-family:"Georgia",serif;font-size:0.9rem;font-weight:700;letter-spacing:0.06em;border:1.5px solid rgba(26,39,68,0.15);cursor:pointer;transition:border-color 0.25s ease,color 0.25s ease,background 0.25s ease;min-height:48px;-webkit-tap-highlight-color:transparent; }
+        .cm-btn-ghost:active { background:rgba(255,255,255,0.5);color:#1a2744; }
+        .cm-label { display:block;font-family:"Georgia",serif;font-size:0.68rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#2a3d5e;margin-bottom:8px; }
+        .cm-check-wrapper { display:flex;align-items:center;gap:12px;padding:16px;border-radius:14px;background:rgba(255,255,255,0.45);border:1.5px solid rgba(90,168,224,0.2);cursor:pointer;-webkit-tap-highlight-color:transparent; }
+        .cm-step-dot { width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:"Georgia",serif;font-size:0.82rem;font-weight:700;transition:all 0.5s ease;flex-shrink:0; }
+        .cm-grid-2 { display:grid;grid-template-columns:1fr 1fr;gap:12px; }
+        .cm-nav { display:flex;justify-content:space-between;align-items:center;margin-top:28px;padding-top:22px;border-top:1px solid rgba(26,39,68,0.07);gap:12px; }
+        .cm-photo-ring { position:relative;width:108px;height:108px;border-radius:50%;overflow:hidden;flex-shrink:0;box-shadow:0 0 0 3px rgba(90,168,224,0.4),0 8px 28px rgba(26,39,68,0.14); }
+        .cm-photo-ring img { width:100%;height:100%;object-fit:cover;display:block; }
+        .cm-photo-tag { display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:999px;background:rgba(255,255,255,0.7);border:1.5px solid rgba(90,168,224,0.3);color:#1a2744;font-family:"Georgia",serif;font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:background 0.2s ease,box-shadow 0.2s ease;-webkit-tap-highlight-color:transparent; }
+        .cm-photo-tag:hover { background:rgba(255,255,255,0.92);box-shadow:0 2px 10px rgba(26,39,68,0.09); }
+        .cm-photo-tag-danger { background:rgba(255,240,240,0.7);border-color:rgba(200,60,60,0.22);color:#b83232; }
         .cm-photo-tag-danger:hover { background:rgba(255,235,235,0.9); }
         @media (max-width:480px) {
-          .cm-nav { flex-direction:column-reverse; gap:10px; }
-          .cm-btn-primary,.cm-btn-ghost { width:100%; font-size:0.88rem; }
-          .cm-grid-2 { grid-template-columns:1fr; gap:16px; }
+          .cm-nav { flex-direction:column-reverse;gap:10px; }
+          .cm-btn-primary,.cm-btn-ghost { width:100%;font-size:0.88rem; }
+          .cm-grid-2 { grid-template-columns:1fr;gap:16px; }
         }
       `}</style>
 
-      {/* Nuvens decorativas */}
-      <div className="absolute top-[60px] left-[-60px] w-44 md:w-72 opacity-50 pointer-events-none select-none z-0"
-        style={{ animation:'floatCM1 11s ease-in-out infinite' }}>
+      <div className="absolute top-[60px] left-[-60px] w-44 md:w-72 opacity-50 pointer-events-none select-none z-0" style={{ animation:'floatCM1 11s ease-in-out infinite' }}>
         <img src="/clouds/cloud1.png" alt="" draggable={false} style={{ width:'100%',height:'auto',display:'block' }}/>
       </div>
-      <div className="absolute top-[100px] right-[-50px] w-40 md:w-60 opacity-40 pointer-events-none select-none z-0 hidden md:block"
-        style={{ animation:'floatCM2 13s ease-in-out infinite' }}>
+      <div className="absolute top-[100px] right-[-50px] w-40 md:w-60 opacity-40 pointer-events-none select-none z-0 hidden md:block" style={{ animation:'floatCM2 13s ease-in-out infinite' }}>
         <img src="/clouds/cloud2.png" alt="" draggable={false} style={{ width:'100%',height:'auto',display:'block' }}/>
       </div>
 
-      {/* ── HERO ── */}
-      <section className="relative z-10 overflow-hidden"
-        style={{ paddingTop:'clamp(100px,20vw,192px)', paddingBottom:'clamp(20px,4vw,48px)', animation:'revealCM 0.85s cubic-bezier(.22,1,.36,1) both' }}>
+      {/* HERO */}
+      <section className="relative z-10 overflow-hidden" style={{ paddingTop:'clamp(100px,20vw,192px)', paddingBottom:'clamp(20px,4vw,48px)', animation:'revealCM 0.85s cubic-bezier(.22,1,.36,1) both' }}>
         <div style={{ maxWidth:640, margin:'0 auto', padding:'0 20px' }}>
           <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:16 }}>
             <div style={{ height:1, width:28, background:'rgba(42,61,94,0.3)', flexShrink:0 }}/>
@@ -465,7 +583,6 @@ const CreateMemorial = () => {
           <h1 style={{ fontFamily:'"Georgia",serif', fontSize:'clamp(1.7rem,7vw,3.8rem)', fontWeight:700, color:'#1a2744', lineHeight:1.1, marginBottom:'clamp(20px,4vw,36px)' }}>
             {t('memorial.createTitle')}
           </h1>
-          {/* Steps */}
           <div style={{ display:'flex', alignItems:'center' }}>
             {[1,2,3].map((num) => (
               <div key={num} style={{ display:'flex', alignItems:'center' }}>
@@ -484,12 +601,11 @@ const CreateMemorial = () => {
         </div>
       </section>
 
-      {/* ── FORM CARD ── */}
+      {/* FORM CARD */}
       <section className="relative z-10" style={{ paddingBottom:'clamp(60px,10vw,144px)' }}>
         <div style={{ maxWidth:640, margin:'0 auto', padding:'0 16px' }}>
           <div style={{ background:'rgba(255,255,255,0.62)', backdropFilter:'blur(24px)', WebkitBackdropFilter:'blur(24px)', border:'1px solid rgba(255,255,255,0.85)', borderRadius:'clamp(18px,4vw,28px)', boxShadow:'0 20px 70px rgba(26,39,68,0.1)', animation:'slideCard 0.6s cubic-bezier(.22,1,.36,1) 0.15s both', overflow:'hidden' }}>
 
-            {/* Card header */}
             <div style={{ padding:'clamp(20px,4vw,28px) clamp(20px,5vw,36px) clamp(16px,3vw,24px)', borderBottom:'1px solid rgba(26,39,68,0.07)', display:'flex', alignItems:'center', gap:14 }}>
               <div style={{ width:4, height:36, borderRadius:99, background:'linear-gradient(180deg,#5aa8e0 0%,#2a3d5e 100%)', flexShrink:0 }}/>
               <div>
@@ -502,98 +618,68 @@ const CreateMemorial = () => {
 
             <div style={{ padding:'clamp(20px,5vw,32px) clamp(20px,5vw,36px)' }}>
 
-              {/* ── STEP 1 ── */}
+              {/* STEP 1 */}
               {step === 1 && (
                 <div style={{ display:'flex', flexDirection:'column', gap:18 }} data-testid="step-1">
-
                   <div>
                     <label className="cm-label" htmlFor="full_name">{t('memorial.fullName')} *</label>
-                    <input id="full_name" className="cm-input" value={personData.full_name}
-                      onChange={e => setPersonData({...personData, full_name:e.target.value})} data-testid="input-full-name"/>
+                    <input id="full_name" className="cm-input" value={personData.full_name} onChange={e => setPersonData({...personData, full_name:e.target.value})} data-testid="input-full-name"/>
                   </div>
-
                   <div>
                     <label className="cm-label" htmlFor="relationship">{t('memorial.relationship')} *</label>
-                    <input id="relationship" className="cm-input" placeholder="Ex: Pai, Mãe, Avô, Amigo..."
-                      value={personData.relationship} onChange={e => setPersonData({...personData, relationship:e.target.value})} data-testid="input-relationship"/>
+                    <input id="relationship" className="cm-input" placeholder="Ex: Pai, Mãe, Avô, Amigo..." value={personData.relationship} onChange={e => setPersonData({...personData, relationship:e.target.value})} data-testid="input-relationship"/>
                   </div>
-
                   <div className="cm-grid-2">
                     <div>
                       <label className="cm-label" htmlFor="birth_date">Data de Nascimento</label>
-                      <input id="birth_date" type="date" className="cm-input" value={personData.birth_date}
-                        onChange={e => setPersonData({...personData, birth_date:e.target.value})} data-testid="input-birth-date"/>
+                      <input id="birth_date" type="date" className="cm-input" value={personData.birth_date} onChange={e => setPersonData({...personData, birth_date:e.target.value})} data-testid="input-birth-date"/>
                     </div>
                     <div>
                       <label className="cm-label" htmlFor="death_date">Data de Falecimento</label>
-                      <input id="death_date" type="date" className="cm-input" value={personData.death_date}
-                        onChange={e => setPersonData({...personData, death_date:e.target.value})} data-testid="input-death-date"/>
+                      <input id="death_date" type="date" className="cm-input" value={personData.death_date} onChange={e => setPersonData({...personData, death_date:e.target.value})} data-testid="input-death-date"/>
                     </div>
                   </div>
-
                   <div className="cm-grid-2">
                     <div>
                       <label className="cm-label" htmlFor="birth_city">{t('memorial.birthCity')}</label>
-                      <input id="birth_city" className="cm-input" value={personData.birth_city}
-                        onChange={e => setPersonData({...personData, birth_city:e.target.value})} data-testid="input-birth-city"/>
+                      <input id="birth_city" className="cm-input" value={personData.birth_city} onChange={e => setPersonData({...personData, birth_city:e.target.value})} data-testid="input-birth-city"/>
                     </div>
                     <div>
                       <label className="cm-label" htmlFor="birth_state">{t('memorial.birthState')}</label>
-                      <input id="birth_state" className="cm-input" value={personData.birth_state}
-                        onChange={e => setPersonData({...personData, birth_state:e.target.value})} data-testid="input-birth-state"/>
+                      <input id="birth_state" className="cm-input" value={personData.birth_state} onChange={e => setPersonData({...personData, birth_state:e.target.value})} data-testid="input-birth-state"/>
                     </div>
                   </div>
-
                   <div className="cm-grid-2">
                     <div>
                       <label className="cm-label" htmlFor="death_city">{t('memorial.deathCity')}</label>
-                      <input id="death_city" className="cm-input" value={personData.death_city}
-                        onChange={e => setPersonData({...personData, death_city:e.target.value})} data-testid="input-death-city"/>
+                      <input id="death_city" className="cm-input" value={personData.death_city} onChange={e => setPersonData({...personData, death_city:e.target.value})} data-testid="input-death-city"/>
                     </div>
                     <div>
                       <label className="cm-label" htmlFor="death_state">{t('memorial.deathState')}</label>
-                      <input id="death_state" className="cm-input" value={personData.death_state}
-                        onChange={e => setPersonData({...personData, death_state:e.target.value})} data-testid="input-death-state"/>
+                      <input id="death_state" className="cm-input" value={personData.death_state} onChange={e => setPersonData({...personData, death_state:e.target.value})} data-testid="input-death-state"/>
                     </div>
                   </div>
-
-                  {/* ── Photo com crop ─────────────────────────────────────── */}
                   <div>
                     <label className="cm-label">{t('memorial.photo')}</label>
-
-                    {/* Input sempre presente — permite re-selecionar */}
-                    <input type="file" id="photo" accept="image/*"
-                      onChange={handlePhotoSelect} className="hidden" data-testid="input-photo"/>
-
+                    <input type="file" id="photo" accept="image/*" onChange={handlePhotoSelect} className="hidden" data-testid="input-photo"/>
                     {personData.photo_url ? (
-                      /* Preview circular + ações */
                       <div style={{ display:'flex', alignItems:'center', gap:18, padding:'18px 20px', borderRadius:16, background:'rgba(255,255,255,0.55)', border:'1.5px solid rgba(90,168,224,0.2)' }}>
-                        <div className="cm-photo-ring">
-                          <img src={personData.photo_url} alt="Foto do memorial"/>
-                        </div>
+                        <div className="cm-photo-ring"><img src={personData.photo_url} alt="Foto do memorial"/></div>
                         <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-start', gap:8, flex:1 }}>
                           <p style={{ fontFamily:'"Georgia",serif', fontSize:'0.75rem', color:'#3a5070', margin:'0 0 4px', lineHeight:1.4 }}>
                             <span style={{ color:'#3a9e6e', fontWeight:700 }}>✓</span> Foto recortada e pronta
                           </p>
                           <label htmlFor="photo" className="cm-photo-tag">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                            </svg>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                             Trocar foto
                           </label>
-                          <button className="cm-photo-tag cm-photo-tag-danger"
-                            onClick={() => setPersonData(prev => ({...prev, photo_url:null}))}>
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
-                              <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
-                            </svg>
+                          <button className="cm-photo-tag cm-photo-tag-danger" onClick={() => setPersonData(prev => ({...prev, photo_url:null}))}>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                             Remover
                           </button>
                         </div>
                       </div>
                     ) : (
-                      /* Zona de upload */
                       <label htmlFor="photo" className="cm-upload-zone" style={{ padding:'clamp(20px,5vw,28px)', textAlign:'center' }}>
                         {loading ? (
                           <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:10 }}>
@@ -613,33 +699,23 @@ const CreateMemorial = () => {
                       </label>
                     )}
                   </div>
-
-                  {/* Público */}
                   <label className="cm-check-wrapper" htmlFor="public_memorial">
-                    <Checkbox id="public_memorial" checked={personData.public_memorial}
-                      onCheckedChange={checked => setPersonData({...personData, public_memorial:checked})}
-                      data-testid="checkbox-public"
-                      className="border-[#5aa8e0] data-[state=checked]:bg-[#5aa8e0] data-[state=checked]:border-[#5aa8e0]"/>
-                    <span style={{ color:'#3a5070', fontSize:'0.9rem', fontFamily:'"Georgia",serif', lineHeight:1.4 }}>
-                      {t('memorial.publicMemorial')}
-                    </span>
+                    <Checkbox id="public_memorial" checked={personData.public_memorial} onCheckedChange={checked => setPersonData({...personData, public_memorial:checked})} data-testid="checkbox-public" className="border-[#5aa8e0] data-[state=checked]:bg-[#5aa8e0] data-[state=checked]:border-[#5aa8e0]"/>
+                    <span style={{ color:'#3a5070', fontSize:'0.9rem', fontFamily:'"Georgia",serif', lineHeight:1.4 }}>{t('memorial.publicMemorial')}</span>
                   </label>
                 </div>
               )}
 
-              {/* ── STEP 2 ── */}
+              {/* STEP 2 */}
               {step === 2 && (
                 <div style={{ display:'flex', flexDirection:'column', gap:18 }} data-testid="step-2">
                   <div>
                     <label className="cm-label" htmlFor="main_phrase">{t('memorial.mainPhrase')} *</label>
-                    <input id="main_phrase" className="cm-input" placeholder="Uma frase especial para homenagear..."
-                      value={content.main_phrase} onChange={e => setContent({...content, main_phrase:e.target.value})} data-testid="input-main-phrase"/>
+                    <input id="main_phrase" className="cm-input" placeholder="Uma frase especial para homenagear..." value={content.main_phrase} onChange={e => setContent({...content, main_phrase:e.target.value})} data-testid="input-main-phrase"/>
                   </div>
                   <div>
                     <label className="cm-label" htmlFor="biography">{t('memorial.biography')} *</label>
-                    <textarea id="biography" className="cm-textarea" rows={6}
-                      placeholder="Conte a história de vida, momentos especiais, características marcantes..."
-                      value={content.biography} onChange={e => setContent({...content, biography:e.target.value})} data-testid="input-biography"/>
+                    <textarea id="biography" className="cm-textarea" rows={6} placeholder="Conte a história de vida, momentos especiais, características marcantes..." value={content.biography} onChange={e => setContent({...content, biography:e.target.value})} data-testid="input-biography"/>
                   </div>
                   <div>
                     <label className="cm-label">{t('memorial.gallery')} (até 10 fotos)</label>
@@ -649,9 +725,7 @@ const CreateMemorial = () => {
                         <div style={{ width:44, height:44, borderRadius:12, background:'rgba(90,168,224,0.12)', border:'1px solid rgba(90,168,224,0.25)', display:'flex', alignItems:'center', justifyContent:'center' }}>
                           <Upload size={18} style={{ color:'#5aa8e0' }}/>
                         </div>
-                        <span style={{ color:'#3a5070', fontSize:'0.9rem', fontFamily:'"Georgia",serif' }}>
-                          Toque para adicionar fotos ({content.gallery_urls.length}/10)
-                        </span>
+                        <span style={{ color:'#3a5070', fontSize:'0.9rem', fontFamily:'"Georgia",serif' }}>Toque para adicionar fotos ({content.gallery_urls.length}/10)</span>
                       </div>
                     </label>
                     {content.gallery_urls.length > 0 && (
@@ -681,7 +755,7 @@ const CreateMemorial = () => {
                 </div>
               )}
 
-              {/* ── STEP 3 ── */}
+              {/* STEP 3 */}
               {step === 3 && (
                 <div style={{ display:'flex', flexDirection:'column', gap:18 }} data-testid="step-3">
                   <div style={{ padding:'14px 16px', borderRadius:14, background:'rgba(90,168,224,0.08)', border:'1px solid rgba(90,168,224,0.2)', display:'flex', alignItems:'flex-start', gap:10 }}>
@@ -692,23 +766,20 @@ const CreateMemorial = () => {
                   </div>
                   <div>
                     <label className="cm-label" htmlFor="responsible_name">{t('memorial.responsibleName')} *</label>
-                    <input id="responsible_name" className="cm-input" value={responsible.name}
-                      onChange={e => setResponsible({...responsible, name:e.target.value})} data-testid="input-responsible-name"/>
+                    <input id="responsible_name" className="cm-input" value={responsible.name} onChange={e => setResponsible({...responsible, name:e.target.value})} data-testid="input-responsible-name"/>
                   </div>
                   <div>
                     <label className="cm-label" htmlFor="phone">{t('memorial.phone')} *</label>
-                    <input id="phone" type="tel" className="cm-input" placeholder="+55 (00) 00000-0000"
-                      value={responsible.phone} onChange={e => setResponsible({...responsible, phone:e.target.value})} data-testid="input-phone"/>
+                    <input id="phone" type="tel" className="cm-input" placeholder="+55 (00) 00000-0000" value={responsible.phone} onChange={e => setResponsible({...responsible, phone:e.target.value})} data-testid="input-phone"/>
                   </div>
                   <div>
                     <label className="cm-label" htmlFor="email">{t('auth.email')} *</label>
-                    <input id="email" type="email" className="cm-input" value={responsible.email}
-                      onChange={e => setResponsible({...responsible, email:e.target.value})} data-testid="input-email"/>
+                    <input id="email" type="email" className="cm-input" value={responsible.email} onChange={e => setResponsible({...responsible, email:e.target.value})} data-testid="input-email"/>
                   </div>
                 </div>
               )}
 
-              {/* ── NAVIGATION ── */}
+              {/* NAVIGATION */}
               <div className="cm-nav">
                 {step > 1 ? (
                   <button className="cm-btn-ghost" onClick={() => setStep(step-1)} data-testid="button-back">
@@ -720,9 +791,14 @@ const CreateMemorial = () => {
                     {t('memorial.next')}<ChevronRight size={15}/>
                   </button>
                 ) : (
-                  <button className="cm-btn-primary" onClick={handleSubmit} disabled={loading} data-testid="button-finish"
-                    style={{ background:loading?'rgba(26,39,68,0.5)':'#1a2744' }}>
-                    {loading?'Salvando...':t('memorial.finish')}
+                  <button className="cm-btn-primary" onClick={() => handleSubmit()} disabled={loading} data-testid="button-finish"
+                    style={{ background: loading ? 'rgba(26,39,68,0.5)' : '#1a2744' }}>
+                    {loading ? (
+                      <>
+                        <div style={{ width:14, height:14, borderRadius:'50%', border:'2px solid rgba(255,255,255,0.3)', borderTop:'2px solid white', animation:'spin 0.7s linear infinite' }}/>
+                        Salvando...
+                      </>
+                    ) : t('memorial.finish')}
                   </button>
                 )}
               </div>
