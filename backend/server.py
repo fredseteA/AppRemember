@@ -1217,6 +1217,30 @@ async def get_memorial_by_slug(slug: str):
     memorial_data = deserialize_datetime(memorial_data, ["created_at", "updated_at"])
     return memorial_data
 
+@api_router.delete("/memorials/{memorial_id}")
+async def delete_memorial(
+    memorial_id: str,
+    token_data: dict = Depends(verify_firebase_token)
+):
+    memorial_ref = db.collection("memorials").document(memorial_id)
+    doc = memorial_ref.get()
+    
+    if not doc.exists:
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Memorial not found")
+    
+    memorial_data = doc.to_dict()
+    
+    if memorial_data["user_id"] != token_data["uid"]:
+        raise HTTPException(status_code=http_status.HTTP_403_FORBIDDEN, detail="Not authorized")
+    
+    if memorial_data.get("status") != "draft":
+        raise HTTPException(status_code=http_status.HTTP_400_BAD_REQUEST, detail="Only draft memorials can be deleted")
+    
+    # Deleta o memorial
+    memorial_ref.delete()
+    
+    return {"message": "Memorial deleted successfully"}
+
 @api_router.post("/admin/migrate/slugs")
 async def migrate_slugs(user: dict = Depends(verify_admin)):
     docs = list(db.collection("memorials").stream())  # ← converte para lista antes

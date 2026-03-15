@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../lib/firebase';
 import {
-  ChevronLeft, Save, Upload, Trash2, Loader2, X, Check
+  ChevronLeft, Save, Upload, Trash2, Loader2, X, Check, Globe, Lock
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -17,10 +17,10 @@ const EditMemorial = () => {
   const { token } = useAuth();
   const navigate = useNavigate();
 
-  const [loading, setLoading]   = useState(true);
-  const [saving, setSaving]     = useState(false);
+  const [loading, setLoading]     = useState(true);
+  const [saving, setSaving]       = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [memorial, setMemorial] = useState(null);
+  const [memorial, setMemorial]   = useState(null);
 
   const [personData, setPersonData] = useState({
     full_name: '', relationship: '', birth_date: '', death_date: '',
@@ -51,7 +51,7 @@ const EditMemorial = () => {
           death_city:      m.person_data?.death_city      || '',
           death_state:     m.person_data?.death_state     || '',
           photo_url:       m.person_data?.photo_url       || null,
-          public_memorial: m.person_data?.public_memorial || false,
+          public_memorial: m.person_data?.public_memorial ?? false,
         });
         setContent({
           main_phrase:  m.content?.main_phrase  || '',
@@ -160,6 +160,8 @@ const EditMemorial = () => {
     );
   }
 
+  const isPublished = memorial?.status === 'published';
+
   return (
     <div
       style={{
@@ -246,6 +248,39 @@ const EditMemorial = () => {
           color: white; transition: background .2s;
         }
         .em-gallery-remove:hover { background: #dc2626; }
+
+        /* Toggle visibilidade */
+        .em-visibility-toggle {
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 16px 18px; border-radius: 16px; cursor: pointer;
+          border: 1.5px solid transparent;
+          transition: background .25s, border-color .25s;
+        }
+        .em-visibility-toggle.public {
+          background: rgba(34,197,94,0.07);
+          border-color: rgba(34,197,94,0.25);
+        }
+        .em-visibility-toggle.private {
+          background: rgba(148,163,184,0.1);
+          border-color: rgba(148,163,184,0.25);
+        }
+        .em-toggle-track {
+          width: 46px; height: 26px; border-radius: 999px;
+          position: relative; flex-shrink: 0;
+          transition: background .3s;
+        }
+        .em-toggle-track.on  { background: #22c55e; }
+        .em-toggle-track.off { background: rgba(148,163,184,0.5); }
+        .em-toggle-thumb {
+          position: absolute; top: 3px;
+          width: 20px; height: 20px; border-radius: 50%;
+          background: white;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+          transition: left .3s cubic-bezier(.22,1,.36,1);
+        }
+        .em-toggle-thumb.on  { left: 23px; }
+        .em-toggle-thumb.off { left: 3px; }
+
         @media (max-width: 480px) {
           .em-grid-2 { grid-template-columns: 1fr; }
           .em-card-body { padding: 20px; }
@@ -274,6 +309,17 @@ const EditMemorial = () => {
             <div style={{ height: 1, width: 28, background: 'rgba(42,61,94,0.3)' }} />
             <span style={{ textTransform: 'uppercase', letterSpacing: '0.22em', fontSize: '0.62rem', fontWeight: 700, color: '#2a3d5e' }}>
               Editar memorial
+            </span>
+            {/* Badge de status */}
+            <span style={{
+              padding: '3px 10px', borderRadius: 999,
+              fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              background: isPublished ? 'rgba(34,197,94,0.15)' : 'rgba(251,191,36,0.18)',
+              color: isPublished ? '#15803d' : '#92400e',
+              border: isPublished ? '1px solid rgba(34,197,94,0.3)' : '1px solid rgba(251,191,36,0.35)',
+            }}>
+              {isPublished ? 'Publicado' : 'Rascunho'}
             </span>
           </div>
           <h1 style={{ fontFamily: '"Georgia", serif', fontSize: 'clamp(1.6rem, 5vw, 2.6rem)', fontWeight: 700, color: '#1a2744', lineHeight: 1.1 }}>
@@ -373,6 +419,81 @@ const EditMemorial = () => {
           </div>
         </div>
 
+        {/* ── Card: Visibilidade (apenas publicados) ── */}
+        {isPublished && (
+          <div className="em-card" style={{ animationDelay: '0.13s' }}>
+            <div className="em-card-header">
+              <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(90,168,224,0.12)', border: '1px solid rgba(90,168,224,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontSize: 15 }}>🌐</span>
+              </div>
+              <h2 style={{ fontFamily: '"Georgia", serif', fontSize: '1rem', fontWeight: 700, color: '#1a2744', margin: 0 }}>Visibilidade no Explorar</h2>
+            </div>
+            <div className="em-card-body">
+              <div
+                className={`em-visibility-toggle ${personData.public_memorial ? 'public' : 'private'}`}
+                onClick={() => setPersonData(p => ({ ...p, public_memorial: !p.public_memorial }))}
+                role="button"
+                tabIndex={0}
+                onKeyDown={e => e.key === 'Enter' && setPersonData(p => ({ ...p, public_memorial: !p.public_memorial }))}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{
+                    width: 38, height: 38, borderRadius: 12, flexShrink: 0,
+                    background: personData.public_memorial
+                      ? 'rgba(34,197,94,0.12)' : 'rgba(148,163,184,0.15)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    transition: 'background .3s',
+                  }}>
+                    {personData.public_memorial
+                      ? <Globe size={18} style={{ color: '#16a34a' }} />
+                      : <Lock size={18} style={{ color: '#64748b' }} />
+                    }
+                  </div>
+                  <div>
+                    <p style={{
+                      fontFamily: '"Georgia", serif', fontSize: '0.9rem',
+                      fontWeight: 700, color: '#1a2744', margin: 0, lineHeight: 1.3,
+                    }}>
+                      {personData.public_memorial ? 'Visível no Explorar' : 'Oculto do Explorar'}
+                    </p>
+                    <p style={{
+                      fontFamily: '"Georgia", serif', fontSize: '0.75rem',
+                      color: '#64748b', margin: 0, marginTop: 2, lineHeight: 1.5,
+                    }}>
+                      {personData.public_memorial
+                        ? 'Qualquer pessoa pode encontrar este memorial'
+                        : 'Somente quem tiver o link pode acessar'
+                      }
+                    </p>
+                  </div>
+                </div>
+
+                {/* Toggle switch */}
+                <div
+                  className={`em-toggle-track ${personData.public_memorial ? 'on' : 'off'}`}
+                  style={{ flexShrink: 0 }}
+                >
+                  <div className={`em-toggle-thumb ${personData.public_memorial ? 'on' : 'off'}`} />
+                </div>
+              </div>
+
+              {/* Nota informativa */}
+              <div style={{
+                padding: '10px 14px', borderRadius: 12,
+                background: 'rgba(90,168,224,0.06)',
+                border: '1px solid rgba(90,168,224,0.15)',
+              }}>
+                <p style={{
+                  fontFamily: '"Georgia", serif', fontSize: '0.75rem',
+                  color: '#3a5070', margin: 0, lineHeight: 1.6,
+                }}>
+                  💡 Independente desta configuração, qualquer pessoa com o link direto do memorial poderá visitá-lo.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ── Card: Conteúdo ── */}
         <div className="em-card" style={{ animationDelay: '0.15s' }}>
           <div className="em-card-header">
@@ -412,7 +533,6 @@ const EditMemorial = () => {
             </h2>
           </div>
           <div className="em-card-body">
-            {/* Grid de fotos existentes */}
             {content.gallery_urls.length > 0 && (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))', gap: 10 }}>
                 {content.gallery_urls.map((url, i) => (
@@ -425,7 +545,6 @@ const EditMemorial = () => {
                 ))}
               </div>
             )}
-            {/* Upload de novas */}
             {content.gallery_urls.length < 10 && (
               <>
                 <input type="file" id="gallery" accept="image/*" multiple onChange={handleGalleryUpload} className="hidden" />
