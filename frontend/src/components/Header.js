@@ -70,7 +70,6 @@ const Header = () => {
             backdrop-filter 0.45s ease;
         }
 
-        /* Nav links com underline animado */
         .nav-link {
           position: relative;
           text-decoration: none;
@@ -192,10 +191,11 @@ const Header = () => {
 
               <nav className="hidden md:flex items-center space-x-7">
                 {[
-                  { to: '/',                label: t('nav.home'),           testId: 'nav-home' },
-                  { to: '/how-it-works',    label: t('nav.howItWorks'),     testId: 'nav-how-it-works' },
-                  { to: '/explore',         label: t('nav.explore'),        testId: 'nav-explore' },
-                  { to: '/create-memorial', label: t('nav.createMemorial'), testId: 'nav-create-memorial' },
+                  { to: '/',                          label: t('nav.home'),              testId: 'nav-home' },
+                  { to: '/how-it-works',              label: t('nav.howItWorks'),        testId: 'nav-how-it-works' },
+                  { to: '/why-preserve-memories', label: 'Por que preservar?',      testId: 'nav-por-que-preservar' },
+                  { to: '/explore',                   label: t('nav.explore'),           testId: 'nav-explore' },
+                  { to: '/create-memorial',           label: t('nav.createMemorial'),    testId: 'nav-create-memorial' },
                 ].map(({ to, label, testId }) => (
                   <Link key={to} to={to} data-testid={testId}
                     className="nav-link text-sm font-medium"
@@ -278,6 +278,7 @@ const Header = () => {
             <nav style={{ marginBottom: 8 }}>
               <Link to="/" className="mobile-nav-link" onClick={closeMobile}>{t('nav.home')}</Link>
               <Link to="/how-it-works" className="mobile-nav-link" onClick={closeMobile}>{t('nav.howItWorks')}</Link>
+              <Link to="/por-que-preservar-memorias" className="mobile-nav-link" onClick={closeMobile}>Por que preservar?</Link>
               <Link to="/explore" className="mobile-nav-link" onClick={closeMobile}>{t('nav.explore')}</Link>
               <Link to="/create-memorial" className="mobile-nav-link" onClick={closeMobile}>{t('nav.createMemorial')}</Link>
             </nav>

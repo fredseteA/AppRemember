@@ -1144,30 +1144,7 @@ async def update_user_role(
 
 
 
-
 # ========== MEMORIAL ENDPOINTS ==========
-
-@api_router.post("/memorials", response_model=Memorial)
-async def create_memorial(memorial_request: CreateMemorialRequest, token_data: dict = Depends(verify_firebase_token)):
-    memorial = Memorial(
-        user_id=token_data["uid"],
-        person_data=memorial_request.person_data,
-        content=memorial_request.content,
-        responsible=memorial_request.responsible
-    )
-    slug = generate_unique_slug(memorial_request.person_data.full_name)
-    memorial.slug = slug
-    # [A-3.5] display_name para facilitar visualização no Firestore Console
-    full_name = memorial_request.person_data.full_name
-    relationship = memorial_request.person_data.relationship
-    year = datetime.now(timezone.utc).year
-    memorial.display_name = f"{full_name} — {relationship} — {year}"
-    memorial_dict = memorial.model_dump()
-    memorial_dict = serialize_datetime(memorial_dict)
-    db.collection("memorials").document(memorial.id).set(memorial_dict)
-    return memorial
-
-
 @api_router.get("/memorials/my", response_model=List[Memorial])
 async def get_my_memorials(token_data: dict = Depends(verify_firebase_token)):
     memorials_ref = db.collection("memorials").where(
@@ -1177,10 +1154,12 @@ async def get_my_memorials(token_data: dict = Depends(verify_firebase_token)):
     memorials = []
     for doc in docs:
         memorial_data = doc.to_dict()
+        # Esconde memoriais desativados pelo admin
+        if memorial_data.get("active") == False:
+            continue
         memorial_data = deserialize_datetime(memorial_data, ["created_at", "updated_at"])
         memorials.append(memorial_data)
     return memorials
-
 
 @api_router.get("/memorials/explore", response_model=List[Memorial])
 async def explore_memorials():
@@ -1191,13 +1170,15 @@ async def explore_memorials():
     memorials = []
     for doc in docs:
         memorial_data = doc.to_dict()
+        # Esconde memoriais desativados pelo admin
+        if memorial_data.get("active") == False:
+            continue
         person_data = memorial_data.get("person_data", {})
         if not person_data.get("public_memorial", False):
             continue
         memorial_data = deserialize_datetime(memorial_data, ["created_at", "updated_at"])
         memorials.append(memorial_data)
     return memorials
-
 
 @api_router.get("/memorials/by-slug/{slug}", response_model=Memorial)
 async def get_memorial_by_slug(slug: str):

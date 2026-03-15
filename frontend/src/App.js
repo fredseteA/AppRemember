@@ -22,6 +22,7 @@ import Profile from './pages/Profile';
 import MyMemorials from './pages/MyMemorials';
 import MyPurchases from './pages/MyPurchases';
 import EditMemorial from './pages/EditMemorial';
+import WhyPreserveMemories from './pages/WhyPreserveMemories';
 import { useEffect } from 'react';
 
 //Apoiador Pages
@@ -140,6 +141,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/how-it-works" element={<HowItWorks />} />
+              <Route path="/why-preserve-memories" element={<WhyPreserveMemories />} /> 
               <Route path="/explore" element={<Explore />} />
               <Route path="/create-memorial" element={<CreateMemorial />} />
               <Route path="/memorial/:id" element={<MemorialView />} />
