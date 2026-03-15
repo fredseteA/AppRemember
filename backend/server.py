@@ -1144,6 +1144,32 @@ async def update_user_role(
 
 # ========== MEMORIAL ENDPOINTS ==========
 
+@api_router.post("/memorials", response_model=Memorial)
+async def create_memorial(
+    memorial_request: CreateMemorialRequest,
+    token_data: dict = Depends(verify_firebase_token)
+):
+    memorial = Memorial(
+        user_id=token_data["uid"],
+        person_data=memorial_request.person_data,
+        content=memorial_request.content,
+        responsible=memorial_request.responsible
+    )
+ 
+    slug = generate_unique_slug(memorial_request.person_data.full_name)
+    memorial.slug = slug
+    full_name    = memorial_request.person_data.full_name
+    relationship = memorial_request.person_data.relationship
+    year         = datetime.now(timezone.utc).year
+    memorial.display_name = f"{full_name} — {relationship} — {year}"
+ 
+    memorial_dict = memorial.model_dump()
+    memorial_dict = serialize_datetime(memorial_dict)
+ 
+    db.collection("memorials").document(memorial.id).set(memorial_dict)
+ 
+    return memorial
+
 @api_router.get("/memorials/my", response_model=List[Memorial])
 async def get_my_memorials(token_data: dict = Depends(verify_firebase_token)):
     memorials_ref = db.collection("memorials").where(
@@ -1529,7 +1555,6 @@ async def create_checkout(
         logger.error(f"❌ {type(e).__name__}: {str(e)}\n{traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Erro interno: {str(e)}")
 
-
 @api_router.get("/payments/my", response_model=List[Payment])
 async def get_my_payments(token_data: dict = Depends(verify_firebase_token)):
     payments_ref = db.collection("payments").where(
@@ -1542,7 +1567,6 @@ async def get_my_payments(token_data: dict = Depends(verify_firebase_token)):
         payment_data = deserialize_datetime(payment_data, ["created_at", "updated_at"])
         payments.append(payment_data)
     return payments
-
 
 @api_router.post("/payments/confirm")
 async def confirm_payment(
@@ -1590,7 +1614,6 @@ async def confirm_payment(
     # [A-1.5] Função central com idempotência — não reprocessa se já aprovado
     processed = await _process_approved_payment(payment_ref, payment_data, background_tasks, source="confirm_payment")
     return {"status": "approved", "memorial_published": processed}
-
 
 @api_router.post("/payments/{payment_id}/request-cancel")
 async def request_cancel_payment(
@@ -1689,7 +1712,6 @@ async def request_cancel_payment(
 
     return {"message": "Solicitacao de cancelamento enviada com sucesso"}
 
-
 @api_router.post("/webhooks/mercadopago")
 async def handle_mercadopago_webhook(request: Request, background_tasks: BackgroundTasks):
     try:
@@ -1742,7 +1764,6 @@ async def get_admin_stats(user: dict = Depends(verify_admin)):
     payments_docs = list(db.collection("payments").stream())
     total_plaques = sum(1 for doc in payments_docs if doc.to_dict().get("plan_type") in ["plaque", "complete", "qrcode_plaque"])
     return {"total_memorials": len(memorials_docs), "total_orders": len(payments_docs), "total_plaques": total_plaques}
-
 
 @api_router.get("/admin/dashboard")
 async def get_admin_dashboard(user: dict = Depends(verify_admin)):
@@ -1855,7 +1876,6 @@ async def get_admin_dashboard(user: dict = Depends(verify_admin)):
         "sales_chart": chart_data, "type_chart": type_chart_data
     }
 
-
 @api_router.post("/admin/test-email")
 async def test_email_notification(user: dict = Depends(verify_admin)):
     try:
@@ -1867,7 +1887,6 @@ async def test_email_notification(user: dict = Depends(verify_admin)):
         raise HTTPException(status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Falha ao enviar e-mail de teste")
     except Exception as e:
         raise HTTPException(status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Erro ao enviar e-mail: {str(e)}")
-
 
 @api_router.get("/admin/orders")
 async def get_all_orders(
@@ -1904,7 +1923,6 @@ async def get_all_orders(
     )
     return orders
 
-
 @api_router.get("/admin/orders/{order_id}")
 async def get_order_details(order_id: str, user: dict = Depends(verify_admin)):
     doc = db.collection("payments").document(order_id).get()
@@ -1919,7 +1937,6 @@ async def get_order_details(order_id: str, user: dict = Depends(verify_admin)):
             order_data["memorial"] = memorial_doc.to_dict()
     return order_data
 
-
 @api_router.get("/admin/memorials")
 async def get_all_memorials(user: dict = Depends(verify_admin)):
     memorials_ref = db.collection("memorials").order_by("created_at", direction=firestore.Query.DESCENDING)
@@ -1930,7 +1947,6 @@ async def get_all_memorials(user: dict = Depends(verify_admin)):
         memorial_data = deserialize_datetime(memorial_data, ["created_at", "updated_at"])
         memorials.append(memorial_data)
     return memorials
-
 
 @api_router.put("/admin/orders/{order_id}/status")
 async def update_order_status(
@@ -1977,7 +1993,6 @@ async def update_order_status(
     )
 
     return {"message": "Status atualizado com sucesso", "new_status": new_status}
-
 
 @api_router.put("/admin/orders/{order_id}/cancel")
 async def cancel_order(
@@ -2037,7 +2052,6 @@ async def cancel_order(
 
     return {"message": "Pedido cancelado com sucesso"}
 
-
 @api_router.put("/admin/orders/{order_id}/archive")
 async def archive_order(
     order_id: str,
@@ -2072,7 +2086,6 @@ async def archive_order(
 
     return {"message": "Pedido arquivado com sucesso"}
 
-
 @api_router.put("/admin/orders/{order_id}/unarchive")
 async def unarchive_order(
     order_id: str,
@@ -2093,7 +2106,6 @@ async def unarchive_order(
         "unarchive_order", "order", order_id, {}
     )
     return {"message": "Pedido desarquivado com sucesso"}
-
 
 @api_router.put("/admin/orders/{order_id}/notes")
 async def update_order_notes(
@@ -2117,7 +2129,6 @@ async def update_order_notes(
         {"notes_preview": notes_data.notes[:100]}
     )
     return {"message": "Notas atualizadas com sucesso"}
-
 
 @api_router.put("/admin/orders/{order_id}/tracking")
 async def update_tracking(
@@ -2166,7 +2177,7 @@ async def update_tracking(
     return {"message": "Código de rastreio adicionado", "tracking_code": tracking_data.tracking_code}
 
 
-# ========== PRODUCTION QUEUE ==========
+# ========== ADMIN - PRODUCTION QUEUE ==========
 
 @api_router.get("/admin/production-queue")
 async def get_production_queue(user: dict = Depends(verify_admin)):
@@ -2295,19 +2306,7 @@ async def delete_order(
     order_ref.delete()
     return {"message": "Pedido excluído com sucesso"}
 
-# ========== PARTNERS ENDPOINTS ==========
-
-@api_router.get("/supporters/validate/{code}")
-async def validate_supporter_code(code: str):
-    supporter = supporter_service_validate(code)
-    if not supporter:
-        raise HTTPException(status_code=404, detail="Código inválido ou inativo.")
-    return {
-        "valid": True,
-        "supporter_name": supporter.get("name"),
-        "discount_percentage": DISCOUNT_PERCENTAGE,
-    }
-
+# ========== ADMIN - PARTNERS ENDPOINTS ==========
 
 @api_router.get("/admin/partners")
 async def get_all_partners(user: dict = Depends(verify_admin)):
@@ -2575,7 +2574,157 @@ async def pay_commission(
     )
     return {"message": "Comissão marcada como paga", "amount": comm_data.get("commission_amount")}
 
+@api_router.post("/admin/partners/{partner_id}/commissions/pay")
+async def mark_commissions_paid(
+    partner_id: str,
+    body: MarkCommissionPaidRequest,
+    background_tasks: BackgroundTasks,
+    admin: dict = Depends(verify_admin),
+):
+    """
+    Admin marca todas as comissões 'available' de um período como 'paid'.
+    Apenas admin pode chamar este endpoint.
+    """
+    # Valida formato do período
+    import re
+    if not re.match(r"^\d{4}-\d{2}$", body.period):
+        raise HTTPException(status_code=400, detail="Formato de período inválido. Use YYYY-MM")
+
+    # Confirma que o parceiro existe
+    partner_ref = db.collection("partners").document(partner_id)
+    if not partner_ref.get().exists:
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+
+    # Busca comissões available do parceiro
+    comm_docs = list(
+        db.collection("supporter_commissions")
+        .where(filter=firestore.FieldFilter("partner_id", "==", partner_id))
+        .where(filter=firestore.FieldFilter("commission_status", "==", "available"))
+        .stream()
+    )
+
+    # Filtra pelo período
+    now = datetime.now(timezone.utc)
+    updated = []
+    total_paid = 0.0
+
+    for cd in comm_docs:
+        c = cd.to_dict()
+        created = c.get("created_at")
+        if isinstance(created, str):
+            try:
+                created = datetime.fromisoformat(created)
+            except Exception:
+                continue
+
+        if created:
+            period_key = f"{created.year}-{str(created.month).zfill(2)}"
+            if period_key != body.period:
+                continue
+
+        # Atualiza para paid
+        cd.reference.update({
+            "commission_status": "paid",
+            "paid_at": now.isoformat(),
+            "payment_method": body.payment_method,
+            "payment_notes": body.payment_notes,
+            "paid_by_admin_uid": admin.get("uid"),
+            "updated_at": now.isoformat(),
+        })
+        total_paid += c.get("commission_amount", 0)
+        updated.append(cd.id)
+
+    if not updated:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Nenhuma comissão disponível encontrada para o período {body.period}"
+        )
+
+    background_tasks.add_task(
+        create_admin_log,
+        admin.get("uid"), admin.get("email"),
+        "mark_commissions_paid", "partner", partner_id,
+        {"period": body.period, "count": len(updated), "total_paid": total_paid}
+    )
+
+    return {
+        "message": f"{len(updated)} comissão(ões) marcada(s) como paga(s)",
+        "period": body.period,
+        "count": len(updated),
+        "total_paid": total_paid,
+    }
+
+@api_router.post("/admin/apoiador/create-user")
+async def create_apoiador_user(
+    body: CreateApoiadorUserRequest,
+    background_tasks: BackgroundTasks,
+    admin: dict = Depends(verify_admin)
+):
+    """Admin cria usuário apoiador no Firebase Auth + Firestore + vincula ao parceiro."""
+
+    # 1. Cria usuário no Firebase Authentication
+    try:
+        firebase_user = auth.create_user(
+            email=body.email,
+            password=body.password,
+            display_name=body.name,
+        )
+    except auth.EmailAlreadyExistsError:
+        raise HTTPException(status_code=400, detail="Este email já está cadastrado no Firebase.")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Erro ao criar usuário: {str(e)}")
+
+    uid = firebase_user.uid
+    now = datetime.now(timezone.utc).isoformat()
+
+    # 2. Cria documento na coleção users com role = apoiador
+    user_dict = {
+        "firebase_uid": uid,
+        "email": body.email,
+        "name": body.name,
+        "role": "apoiador",
+        "phone": None,
+        "created_at": now,
+        "updated_at": now,
+    }
+    db.collection("users").document(uid).set(user_dict)
+
+    # 3. Vincula ao parceiro se informado
+    if body.partner_id:
+        partner_ref = db.collection("partners").document(body.partner_id)
+        if not partner_ref.get().exists:
+            raise HTTPException(status_code=404, detail="Parceiro não encontrado.")
+        partner_ref.update({
+            "firebase_uid": uid,
+            "updated_at": now,
+        })
+
+    background_tasks.add_task(
+        create_admin_log, admin.get("uid"), admin.get("email"),
+        "create_apoiador_user", "user", uid,
+        {"email": body.email, "partner_id": body.partner_id}
+    )
+
+    return {
+        "message": "Usuário apoiador criado com sucesso.",
+        "uid": uid,
+        "email": body.email,
+        "role": "apoiador",
+    }
+
+
 # ========== APOIADOR ENDPOINTS ==========
+
+@api_router.get("/supporters/validate/{code}")
+async def validate_supporter_code(code: str):
+    supporter = supporter_service_validate(code)
+    if not supporter:
+        raise HTTPException(status_code=404, detail="Código inválido ou inativo.")
+    return {
+        "valid": True,
+        "supporter_name": supporter.get("name"),
+        "discount_percentage": DISCOUNT_PERCENTAGE,
+    }
 
 @api_router.get("/apoiador/me")
 async def get_apoiador_me(token_data: dict = Depends(verify_apoiador)):
@@ -2740,145 +2889,7 @@ async def get_apoiador_commissions(token_data: dict = Depends(verify_apoiador)):
         "totals": totals,
     }
 
-@api_router.post("/admin/partners/{partner_id}/commissions/pay")
-async def mark_commissions_paid(
-    partner_id: str,
-    body: MarkCommissionPaidRequest,
-    background_tasks: BackgroundTasks,
-    admin: dict = Depends(verify_admin),
-):
-    """
-    Admin marca todas as comissões 'available' de um período como 'paid'.
-    Apenas admin pode chamar este endpoint.
-    """
-    # Valida formato do período
-    import re
-    if not re.match(r"^\d{4}-\d{2}$", body.period):
-        raise HTTPException(status_code=400, detail="Formato de período inválido. Use YYYY-MM")
-
-    # Confirma que o parceiro existe
-    partner_ref = db.collection("partners").document(partner_id)
-    if not partner_ref.get().exists:
-        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
-
-    # Busca comissões available do parceiro
-    comm_docs = list(
-        db.collection("supporter_commissions")
-        .where(filter=firestore.FieldFilter("partner_id", "==", partner_id))
-        .where(filter=firestore.FieldFilter("commission_status", "==", "available"))
-        .stream()
-    )
-
-    # Filtra pelo período
-    now = datetime.now(timezone.utc)
-    updated = []
-    total_paid = 0.0
-
-    for cd in comm_docs:
-        c = cd.to_dict()
-        created = c.get("created_at")
-        if isinstance(created, str):
-            try:
-                created = datetime.fromisoformat(created)
-            except Exception:
-                continue
-
-        if created:
-            period_key = f"{created.year}-{str(created.month).zfill(2)}"
-            if period_key != body.period:
-                continue
-
-        # Atualiza para paid
-        cd.reference.update({
-            "commission_status": "paid",
-            "paid_at": now.isoformat(),
-            "payment_method": body.payment_method,
-            "payment_notes": body.payment_notes,
-            "paid_by_admin_uid": admin.get("uid"),
-            "updated_at": now.isoformat(),
-        })
-        total_paid += c.get("commission_amount", 0)
-        updated.append(cd.id)
-
-    if not updated:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Nenhuma comissão disponível encontrada para o período {body.period}"
-        )
-
-    background_tasks.add_task(
-        create_admin_log,
-        admin.get("uid"), admin.get("email"),
-        "mark_commissions_paid", "partner", partner_id,
-        {"period": body.period, "count": len(updated), "total_paid": total_paid}
-    )
-
-    return {
-        "message": f"{len(updated)} comissão(ões) marcada(s) como paga(s)",
-        "period": body.period,
-        "count": len(updated),
-        "total_paid": total_paid,
-    }
-
-@api_router.post("/admin/apoiador/create-user")
-async def create_apoiador_user(
-    body: CreateApoiadorUserRequest,
-    background_tasks: BackgroundTasks,
-    admin: dict = Depends(verify_admin)
-):
-    """Admin cria usuário apoiador no Firebase Auth + Firestore + vincula ao parceiro."""
-
-    # 1. Cria usuário no Firebase Authentication
-    try:
-        firebase_user = auth.create_user(
-            email=body.email,
-            password=body.password,
-            display_name=body.name,
-        )
-    except auth.EmailAlreadyExistsError:
-        raise HTTPException(status_code=400, detail="Este email já está cadastrado no Firebase.")
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Erro ao criar usuário: {str(e)}")
-
-    uid = firebase_user.uid
-    now = datetime.now(timezone.utc).isoformat()
-
-    # 2. Cria documento na coleção users com role = apoiador
-    user_dict = {
-        "firebase_uid": uid,
-        "email": body.email,
-        "name": body.name,
-        "role": "apoiador",
-        "phone": None,
-        "created_at": now,
-        "updated_at": now,
-    }
-    db.collection("users").document(uid).set(user_dict)
-
-    # 3. Vincula ao parceiro se informado
-    if body.partner_id:
-        partner_ref = db.collection("partners").document(body.partner_id)
-        if not partner_ref.get().exists:
-            raise HTTPException(status_code=404, detail="Parceiro não encontrado.")
-        partner_ref.update({
-            "firebase_uid": uid,
-            "updated_at": now,
-        })
-
-    background_tasks.add_task(
-        create_admin_log, admin.get("uid"), admin.get("email"),
-        "create_apoiador_user", "user", uid,
-        {"email": body.email, "partner_id": body.partner_id}
-    )
-
-    return {
-        "message": "Usuário apoiador criado com sucesso.",
-        "uid": uid,
-        "email": body.email,
-        "role": "apoiador",
-    }
-
-# ========== FINANCIAL ENDPOINTS ==========
+# ========== ADMIN - FINANCIAL ENDPOINTS ==========
 
 @api_router.get("/admin/finance/summary")
 async def get_finance_summary(
@@ -3009,7 +3020,7 @@ async def export_finance_data(
     }
 
 
-# ========== MEMORIALS ADMIN ENDPOINTS ==========
+# ========== ADMIN - MEMORIALS ENDPOINTS ==========
 
 @api_router.put("/admin/memorials/{memorial_id}")
 async def update_memorial_admin(memorial_id: str, updates: UpdateMemorialAdminRequest, background_tasks: BackgroundTasks, user: dict = Depends(verify_admin)):
@@ -3022,7 +3033,6 @@ async def update_memorial_admin(memorial_id: str, updates: UpdateMemorialAdminRe
     background_tasks.add_task(create_admin_log, user.get("uid"), user.get("email"), "update_memorial", "memorial", memorial_id, updates_dict)
     return {"message": "Memorial atualizado com sucesso"}
 
-
 @api_router.put("/admin/memorials/{memorial_id}/toggle")
 async def toggle_memorial(memorial_id: str, background_tasks: BackgroundTasks, user: dict = Depends(verify_admin)):
     memorial_ref = db.collection("memorials").document(memorial_id)
@@ -3033,7 +3043,6 @@ async def toggle_memorial(memorial_id: str, background_tasks: BackgroundTasks, u
     memorial_ref.update({"active": new_active, "updated_at": datetime.now(timezone.utc).isoformat()})
     background_tasks.add_task(create_admin_log, user.get("uid"), user.get("email"), "toggle_memorial", "memorial", memorial_id, {"active": new_active})
     return {"message": f"Memorial {'ativado' if new_active else 'desativado'}", "active": new_active}
-
 
 @api_router.put("/admin/memorials/{memorial_id}/feature")
 async def feature_memorial(memorial_id: str, background_tasks: BackgroundTasks, user: dict = Depends(verify_admin)):
@@ -3046,8 +3055,6 @@ async def feature_memorial(memorial_id: str, background_tasks: BackgroundTasks, 
     background_tasks.add_task(create_admin_log, user.get("uid"), user.get("email"), "feature_memorial", "memorial", memorial_id, {"featured": new_featured})
     return {"message": f"Memorial {'destacado' if new_featured else 'removido dos destaques'}", "featured": new_featured}
 
-
-# [A-3.3] Regenerar QR Code de um memorial (quando URL muda, erro na geração, etc.)
 @api_router.post("/admin/memorials/{memorial_id}/regenerate-qr")
 async def regenerate_qr_code(
     memorial_id: str,
@@ -3080,8 +3087,6 @@ async def regenerate_qr_code(
 
     return {"message": "QR Code regenerado com sucesso", "memorial_url": memorial_url, "qr_code_url": new_qr_code}
 
-
-# [A-3.4] Reenviar email de confirmação/status ao cliente
 @api_router.post("/admin/orders/{order_id}/resend-email")
 async def resend_confirmation_email(
     order_id: str,
@@ -3122,7 +3127,7 @@ async def resend_confirmation_email(
     }
 
 
-# ========== NOTIFICATIONS ENDPOINTS ==========
+# ========== ADMIN - NOTIFICATIONS ENDPOINTS ==========
 
 @api_router.get("/admin/notifications")
 async def get_admin_notifications(user: dict = Depends(verify_admin)):
@@ -3148,12 +3153,10 @@ async def get_admin_notifications(user: dict = Depends(verify_admin)):
     )
     return notifications
 
-
 @api_router.get("/admin/notifications/unread-count")
 async def get_unread_count(user: dict = Depends(verify_admin)):
     docs = list(db.collection("admin_notifications").where(filter=firestore.FieldFilter("read", "==", False)).stream())
     return {"count": len(docs)}
-
 
 @api_router.put("/admin/notifications/{notification_id}/read")
 async def mark_notification_read(notification_id: str, user: dict = Depends(verify_admin)):
@@ -3163,7 +3166,6 @@ async def mark_notification_read(notification_id: str, user: dict = Depends(veri
     notif_ref.update({"read": True})
     return {"message": "Notificação marcada como lida"}
 
-
 @api_router.put("/admin/notifications/read-all")
 async def mark_all_notifications_read(user: dict = Depends(verify_admin)):
     docs = db.collection("admin_notifications").where(filter=firestore.FieldFilter("read", "==", False)).stream()
@@ -3171,8 +3173,6 @@ async def mark_all_notifications_read(user: dict = Depends(verify_admin)):
         doc.reference.update({"read": True})
     return {"message": "Todas as notificações marcadas como lidas"}
 
-
-# [A-6.6] Deletar notificação individual
 @api_router.delete("/admin/notifications/{notification_id}")
 async def delete_notification(notification_id: str, user: dict = Depends(verify_admin)):
     notif_ref = db.collection("admin_notifications").document(notification_id)
@@ -3181,8 +3181,6 @@ async def delete_notification(notification_id: str, user: dict = Depends(verify_
     notif_ref.delete()
     return {"message": "Notificação excluída"}
 
-
-# [A-6.6] Limpar todas as notificações já lidas — evita crescimento indefinido da coleção
 @api_router.delete("/admin/notifications/clear-read")
 async def clear_read_notifications(user: dict = Depends(verify_admin)):
     docs = list(db.collection("admin_notifications").where(
@@ -3195,7 +3193,7 @@ async def clear_read_notifications(user: dict = Depends(verify_admin)):
     return {"message": f"{count} notificações lidas foram excluídas", "deleted_count": count}
 
 
-# ========== ADMIN LOGS ENDPOINTS ==========
+# ========== ADMIN - LOGS ENDPOINTS ==========
 
 @api_router.get("/admin/logs")
 async def get_admin_logs(user: dict = Depends(verify_admin), limit: int = 100, entity_type: Optional[str] = None):
@@ -3228,7 +3226,6 @@ async def create_review(review_req: CreateReviewRequest, token_data: dict = Depe
     db.collection("reviews").document(review.id).set(review_dict)
     return review
 
-
 @api_router.get("/reviews")
 async def get_approved_reviews():
     try:
@@ -3246,7 +3243,6 @@ async def get_approved_reviews():
     reviews.sort(key=lambda r: r.get("created_at", datetime.min.replace(tzinfo=timezone.utc)), reverse=True)
     return reviews
 
-
 @api_router.get("/reviews/my")
 async def get_my_review(token_data: dict = Depends(verify_firebase_token)):
     docs = list(db.collection("reviews").where(filter=firestore.FieldFilter("user_id", "==", token_data["uid"])).limit(1).stream())
@@ -3256,6 +3252,8 @@ async def get_my_review(token_data: dict = Depends(verify_firebase_token)):
     review_data = deserialize_datetime(review_data, ["created_at"])
     return review_data
 
+
+# ========== ADMIN - REVIEWS ENDPOINTS ==========
 
 @api_router.get("/admin/reviews")
 async def get_all_reviews(user: dict = Depends(verify_admin)):
@@ -3267,7 +3265,6 @@ async def get_all_reviews(user: dict = Depends(verify_admin)):
         reviews.append(review_data)
     return reviews
 
-
 @api_router.put("/admin/reviews/{review_id}/approve")
 async def approve_review(review_id: str, background_tasks: BackgroundTasks, user: dict = Depends(verify_admin)):
     review_ref = db.collection("reviews").document(review_id)
@@ -3276,7 +3273,6 @@ async def approve_review(review_id: str, background_tasks: BackgroundTasks, user
     review_ref.update({"approved": True})
     background_tasks.add_task(create_admin_log, user.get("uid"), user.get("email"), "approve_review", "review", review_id, {})
     return {"message": "Avaliação aprovada com sucesso"}
-
 
 @api_router.put("/admin/reviews/{review_id}/reject")
 async def reject_review(review_id: str, background_tasks: BackgroundTasks, user: dict = Depends(verify_admin)):
@@ -3287,7 +3283,6 @@ async def reject_review(review_id: str, background_tasks: BackgroundTasks, user:
     background_tasks.add_task(create_admin_log, user.get("uid"), user.get("email"), "reject_review", "review", review_id, {})
     return {"message": "Avaliação reprovada"}
 
-
 @api_router.post("/admin/reviews/{review_id}/respond")
 async def respond_to_review(review_id: str, response_data: RespondReviewRequest, background_tasks: BackgroundTasks, user: dict = Depends(verify_admin)):
     review_ref = db.collection("reviews").document(review_id)
@@ -3296,7 +3291,6 @@ async def respond_to_review(review_id: str, response_data: RespondReviewRequest,
     review_ref.update({"admin_response": response_data.response, "response_date": datetime.now(timezone.utc).isoformat(), "responded_by": user.get("email")})
     background_tasks.add_task(create_admin_log, user.get("uid"), user.get("email"), "respond_review", "review", review_id, {"response": response_data.response[:100]})
     return {"message": "Resposta adicionada com sucesso"}
-
 
 @api_router.delete("/admin/reviews/{review_id}")
 async def delete_review(review_id: str, background_tasks: BackgroundTasks, user: dict = Depends(verify_admin)):
@@ -3313,7 +3307,6 @@ async def delete_review(review_id: str, background_tasks: BackgroundTasks, user:
 @api_router.get("/")
 async def root():
     return {"status": "ok", "message": "API Remember está rodando 🚀"}
-
 
 app.include_router(api_router)
 
