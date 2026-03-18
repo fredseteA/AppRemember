@@ -40,6 +40,7 @@ const defaultReviews = [
 
 // ── ReviewCard ──────────────────────────────────────────────────────────────
 function ReviewCard({ review, featured = false }) {
+  const { t } = useTranslation();
   return (
     <div style={{
       borderRadius: "22px",

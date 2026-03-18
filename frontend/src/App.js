@@ -6,7 +6,7 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
 import ErrorBoundary from "./components/ErrorBoundary";
-import Home from './pages/Home';
+import Home from '@/pages/home/index';
 import HowItWorks from './pages/HowItWorks';
 import Explore from './pages/Explore';
 import CreateMemorial from './pages/CreateMemorial';
