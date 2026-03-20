@@ -1,17 +1,135 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
+{/*import { useTranslation } from 'react-i18next';*/}
 
+// ── STEPS ───────────────────────────────────────────────────────
+const STEPS = [
+  {
+    num: "01",
+    label: "Crie o memorial",
+    title: "Crie o memorial",
+    subtitle: "Como preencher?",
+    description: "Preencha as informações da homenagem: dados pessoais, uma frase especial, biografia, fotos e até um áudio. Tudo de forma simples e carinhosa.",
+    cta: "Começar agora",
+    ctaLink: "/create-memorial",
+    testId: "step-1",
+    image: "/step1.png"
+  },
+  {
+    num: "02",
+    label: "Veja o resultado",
+    title: "Veja o resultado",
+    subtitle: "Como fica o memorial?",
+    description: "O memorial é exibido pronto na tela para você ver como ficou. Ele fica salvo no seu perfil, pronto para ser publicado quando você decidir.",
+    cta: "Ver exemplo",
+    ctaLink: "/explore",
+    testId: "step-2",
+    image: "/step2.png"
+  },
+  {
+    num: "03",
+    label: "Escolha um plano",
+    title: "Escolha um plano",
+    subtitle: "Como publicar?",
+    description: "Se gostar do resultado, escolha um plano para publicar o memorial online e/ou receber a placa física com QR Code para o túmulo.",
+    cta: "Ver planos",
+    ctaLink: "/#plans",
+    testId: "step-3",
+    image: "/step3.png"
+  },
+];
 
+function PanelContent({ step, onScrollToPlans }) {
+  const [imgLoaded, setImgLoaded] = useState(false);
+ 
+  const isScrollLink = step.ctaLink.startsWith('/#');
+ 
+  return (
+    <>
+      {/* ── Card de texto ── */}
+      <div
+        className="howit-pill"
+        style={{
+          flex: "1 1 260px", maxWidth: "380px", borderRadius: "22px",
+          padding: "clamp(18px, 3vw, 32px) clamp(16px, 2.5vw, 28px)",
+          background: "rgba(255,255,255,0.58)", backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)", border: "1px solid rgba(255,255,255,0.82)",
+          boxShadow: "0 12px 36px rgba(26,39,68,0.1), 0 2px 6px rgba(26,39,68,0.05), inset 0 1px 0 rgba(255,255,255,0.9)",
+        }}
+      >
+        {/* Número + label */}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: "50%",
+            background: "#1a2744", color: "white",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontFamily: '"Georgia", serif', fontSize: "0.8rem", fontWeight: 700,
+            flexShrink: 0, animation: "pulseRing 2.5s ease-out infinite",
+          }}>
+            {parseInt(step.num)}
+          </div>
+          <span style={{ fontSize: "0.58rem", letterSpacing: "0.22em", color: "#5aa8e0", fontWeight: 700, textTransform: "uppercase" }}>
+            Passo {step.num}
+          </span>
+        </div>
+ 
+        {/* Título */}
+        <h3 style={{ fontFamily: '"Georgia", serif', fontSize: "clamp(1rem, 4vw, 1.5rem)", fontWeight: 700, color: "#1a2744", lineHeight: 1.22, marginBottom: "3px" }}>
+          {step.title}
+        </h3>
+ 
+        {/* Subtítulo */}
+        <h4 className="howit-subtitle" style={{ fontFamily: '"Georgia", serif', fontSize: "clamp(0.78rem, 3vw, 0.9rem)", fontWeight: 400, color: "#5aa8e0", marginBottom: "10px" }}>
+          {step.subtitle}
+        </h4>
+ 
+        {/* Descrição */}
+        <p style={{ color: "#3a5070", fontSize: "clamp(0.8rem, 3vw, 0.88rem)", lineHeight: 1.65, marginBottom: "18px" }}>
+          {step.description}
+        </p>
+ 
+        {/* CTA corrigido */}
+        {isScrollLink ? (
+          <button className="howit-cta-btn" onClick={onScrollToPlans}>
+            {step.cta}
+          </button>
+        ) : (
+          <Link to={step.ctaLink} className="howit-cta-btn" style={{ display: 'inline-block', textDecoration: 'none' }}>
+            {step.cta}
+          </Link>
+        )}
+      </div>
+ 
+      {/* ── Imagem ── */}
+      <div
+        className={`howit-img-wrap${!imgLoaded ? " howit-img-shimmer" : ""}`}
+        style={{
+          flex: "1 1 260px", maxWidth: "420px",
+          height: "clamp(200px, 28vw, 300px)", borderRadius: "18px",
+          border: "1.5px dashed rgba(26,39,68,0.2)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          overflow: "hidden", boxShadow: "0 6px 24px rgba(26,39,68,0.07)",
+        }}
+      >
+        <img
+          src={step.image} alt={step.title}
+          onLoad={() => setImgLoaded(true)}
+          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "opacity 0.4s ease", opacity: imgLoaded ? 1 : 0 }}
+        />
+      </div>
+    </>
+  );
+}
 
 const HowItWorksSection = () => {
-  const [activeStep, setActiveStep] = useState(0);
-  const [prevStep, setPrevStep] = useState(null);
-  const [isVisible, setIsVisible] = useState(false);
+  const [activeStep, setActiveStep]       = useState(0);
+  const [prevStep, setPrevStep]           = useState(null);
+  const [isVisible, setIsVisible]         = useState(false);
   const [transitioning, setTransitioning] = useState(false);
-  const sectionRef = useRef(null);
-  const timerRef = useRef(null);
-
-  const { t } = useTranslation();
+  const sectionRef                        = useRef(null);
+  const timerRef                          = useRef(null);
+  {/*const { t } = useTranslation();*/}
+  
 
   useEffect(() => {
     const observer = new IntersectionObserver(

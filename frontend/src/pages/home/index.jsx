@@ -1,11 +1,13 @@
-import HeroSection from './sections/HeroSection';
-import HowItWorksSection from './sections/HowItWorksSection';
-import PlansSection from './sections/PlansSection';
-import ProductShowcaseSection from './sections/ProductShowcaseSection';
-import TrustBadgesSection from './sections/TrustBadgesSection';
-import FAQSection from './sections/FAQSection';
-import TestimonialsSection from './sections/TestimonialsSection';
-import WhySection from './sections/WhySection';
+import {
+  HeroSection,
+  HowItWorksSection,
+  PlansSection,
+  FAQSection,
+  ProductShowcaseSection,
+  TestimonialsSection,
+  WhySection,
+  TrustBadgesSection,
+} from './sections/index.js';
 
 const Home = () => (
   <div data-testid="home-page" className="overflow-x-hidden"

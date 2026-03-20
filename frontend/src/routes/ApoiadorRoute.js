@@ -1,12 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
-
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+import { API } from '@/config';
 
 export default function ApoiadorRoute({ children }) {
-  const { user, getToken } = useAuth(); // ← usa getToken que sempre retorna token fresco
+  const { user, getToken } = useAuth(); 
   const [status, setStatus] = useState('loading');
 
   useEffect(() => {
@@ -17,7 +16,7 @@ export default function ApoiadorRoute({ children }) {
 
     (async () => {
       try {
-        const token = await getToken(); // ← token fresco via firebaseUser.getIdToken()
+        const token = await getToken(); 
 
         if (!token) {
           setStatus('denied');
@@ -39,7 +38,7 @@ export default function ApoiadorRoute({ children }) {
         setStatus('denied');
       }
     })();
-  }, [user]);
+  }, [user, getToken]);
 
   if (status === 'loading') {
     return (

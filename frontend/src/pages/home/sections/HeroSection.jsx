@@ -1,10 +1,11 @@
-import { Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { Button } from '../../../components/ui/button';
-import SecurityBadge from '../../../components/SecurityBadge';
+/*import { useTranslation } from 'react-i18next';*/
+import { Link} from 'react-router-dom';
+import SecurityBadge from '@/components/shared/SecurityBadge';
+import { Button } from '@/components/ui/button';
+
 
 const HeroSection = () => {
-  const { t } = useTranslation();
+  {/*const { t } = useTranslation();*/}
 
   return (
     <section
