@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import AffiliateLayout from './layouts/AffiliateLayout';
 import { useAuth } from '../../contexts/AuthContext';
-import affiliateLayout from './layouts/AffiliateLayout';
 import axios from 'axios';
 import { QrCode, Copy, Check, RefreshCw, Link2, BarChart2, Download, Share2 } from 'lucide-react';
 import { API, FRONTEND_URL} from '@/config';
@@ -104,7 +104,7 @@ export default function AffiliateMyCode() {
   };
 
   if (loading) return (
-    <affiliateLayout>
+    <AffiliateLayout>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 300 }}>
         <div style={{ textAlign: 'center', color: '#7a8aaa' }}>
           <RefreshCw size={26} style={{ animation: 'spin 1s linear infinite' }} />
@@ -112,20 +112,20 @@ export default function AffiliateMyCode() {
         </div>
       </div>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-    </affiliateLayout>
+    </AffiliateLayout>
   );
 
   if (error) return (
-    <affiliateLayout>
+    <AffiliateLayout>
       <div style={{ background: '#fff', borderRadius: 16, padding: 40, textAlign: 'center', border: '1px solid #fecaca' }}>
         <p style={{ color: '#ef4444', marginBottom: 16 }}>{error}</p>
         <button onClick={handleRefresh} style={{ padding: '10px 24px', background: '#1a2744', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontFamily: '"Georgia", serif' }}>Tentar novamente</button>
       </div>
-    </affiliateLayout>
+    </AffiliateLayout>
   );
 
   return (
-    <affiliateLayout>
+    <AffiliateLayout>
       <div style={{ maxWidth: 780, margin: '0 auto' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
           <div>
@@ -226,6 +226,6 @@ export default function AffiliateMyCode() {
         </div>
       </div>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-    </affiliateLayout>
+    </AffiliateLayout>
   );
 }

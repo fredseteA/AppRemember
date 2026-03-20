@@ -37,7 +37,7 @@ import ReturnPolicyPage from '@/pages/institutional/ReturnPolicyPage.jsx';
 import TermsAndConditionsPage from '@/pages/institutional/TermsAndConditionsPage.jsx';
 import DeliveryPolicyPage from '@/pages/institutional/DeliveryPolicyPage.jsx';
 //Protected Routes
-import AffiliateRoute from '@/routes/affiliateRoute';
+import AffiliateRoute from '@/routes/AffiliateRoute';
 import AdminRoute from '@/routes/AdminRoute';
 import ProtectedRoute from '@/routes/ProtectedRoute';
 //Affiliate Pages

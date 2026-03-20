@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import affiliateLayout from './layouts/AffiliateLayout';
 import axios from 'axios';
 import {
   LayoutDashboard, TrendingUp, Coins, Wallet, Percent, Star, ArrowUpRight, RefreshCw,
 } from 'lucide-react';
 import { API } from '@/config';
 import { PLAN_LABELS, LEVELS } from './constants/index';
+import AffiliateLayout from './layouts/AffiliateLayout';
 
 function getLevel(sales) { return LEVELS.find(l => sales >= l.min && sales <= l.max) || LEVELS[0]; }
 function getNextLevel(sales) { const idx = LEVELS.findIndex(l => sales >= l.min && sales <= l.max); return LEVELS[idx + 1] || null; }
@@ -144,7 +144,7 @@ export default function AffiliateDashboard() {
   const availableCommission = sales.reduce((acc, s) => acc + (s.commission_status === 'available' ? (s.commission_amount || 0) : 0), 0);
 
   if (loading) return (
-    <affiliateLayout>
+    <AffiliateLayout>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 300 }}>
         <div style={{ textAlign: 'center', color: '#7a8aaa' }}>
           <RefreshCw size={28} style={{ animation: 'spin 1s linear infinite', marginBottom: 12 }} />
@@ -152,20 +152,20 @@ export default function AffiliateDashboard() {
         </div>
       </div>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-    </affiliateLayout>
+    </AffiliateLayout>
   );
 
   if (error) return (
-    <affiliateLayout>
+    <AffiliateLayout>
       <div style={{ background: '#fff', borderRadius: 16, padding: 40, textAlign: 'center', border: '1px solid #fecaca' }}>
         <p style={{ color: '#ef4444', marginBottom: 16 }}>{error}</p>
         <button onClick={handleRefresh} style={{ padding: '10px 24px', background: '#1a2744', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontFamily: '"Georgia", serif', fontSize: '0.88rem' }}>Tentar novamente</button>
       </div>
-    </affiliateLayout>
+    </AffiliateLayout>
   );
 
   return (
-    <affiliateLayout>
+    <AffiliateLayout>
       <div style={{ maxWidth: 1000, margin: '0 auto' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
           <div>
@@ -209,6 +209,6 @@ export default function AffiliateDashboard() {
         </div>
       </div>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-    </affiliateLayout>
+    </AffiliateLayout>
   );
 }

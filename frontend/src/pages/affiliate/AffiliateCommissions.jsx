@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import affiliateLayout from './layouts/AffiliateLayout';
 import axios from 'axios';
 import { Coins, RefreshCw, Clock, Wallet, CheckCircle, ChevronDown, Filter, X } from 'lucide-react';
 import { API } from '@/config';
 import { COMMISSION_STATUS } from './constants/index';
 import {StatusBadge, SummaryCard} from './components/index';
+import AffiliateLayout from './layouts/AffiliateLayout';
 
 
 function groupByMonth(commissions) {
@@ -91,7 +91,7 @@ export default function AffiliateCommissions() {
   const groups = useMemo(() => groupByMonth(filtered), [filtered]);
 
   if (loading) return (
-    <affiliateLayout>
+    <AffiliateLayout>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 300 }}>
         <div style={{ textAlign: 'center', color: '#7a8aaa' }}>
           <RefreshCw size={26} style={{ animation: 'spin 1s linear infinite' }} />
@@ -99,20 +99,20 @@ export default function AffiliateCommissions() {
         </div>
       </div>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-    </affiliateLayout>
+    </AffiliateLayout>
   );
 
   if (error) return (
-    <affiliateLayout>
+    <AffiliateLayout>
       <div style={{ background: '#fff', borderRadius: 16, padding: 40, textAlign: 'center', border: '1px solid #fecaca' }}>
         <p style={{ color: '#ef4444', marginBottom: 16 }}>{error}</p>
         <button onClick={handleRefresh} style={{ padding: '10px 24px', background: '#1a2744', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontFamily: '"Georgia", serif' }}>Tentar novamente</button>
       </div>
-    </affiliateLayout>
+    </AffiliateLayout>
   );
 
   return (
-    <affiliateLayout>
+    <AffiliateLayout>
       <div style={{ maxWidth: 1000, margin: '0 auto' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
           <div>
@@ -179,6 +179,6 @@ export default function AffiliateCommissions() {
         </div>
       </div>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-    </affiliateLayout>
+    </AffiliateLayout>
   );
 }

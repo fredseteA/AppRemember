@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import { API } from '@/config';
 
-export default function affiliateRoute({ children }) {
+export default function AffiliateRoute({ children }) {
   const { user, getToken } = useAuth(); 
   const [status, setStatus] = useState('loading');
 
