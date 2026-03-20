@@ -123,7 +123,8 @@ const TestimonialsSection = () => {
     try {
       setLoadingReviews(true);
       const { data } = await axios.get('/api/reviews');
-      setReviews(data.length > 0 ? data : defaultReviews);
+      const reviewsArray = Array.isArray(data) ? data : (data?.reviews ?? []);
+      setReviews(reviewsArray.length > 0 ? reviewsArray : defaultReviews);
     } catch (error) {
       console.error('Error fetching reviews:', error);
       setReviews(defaultReviews);
