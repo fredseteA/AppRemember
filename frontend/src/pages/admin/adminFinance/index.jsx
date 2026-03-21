@@ -3,7 +3,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import axios from 'axios';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
-import AdminCostSettings from '../adminCostSettings';
+import AdminCostSettings from '../adminCostSettings/index.jsx';
 import {
   DollarSign, Download, TrendingUp, Calendar,
   Filter, Clock, CheckCircle2, Banknote,
@@ -221,25 +221,33 @@ const ProfitPerSaleCard = ({ semAfiliado, comAfiliado }) => {
 // ─── Página principal ─────────────────────────────────────────────────────────
 const AdminFinance = () => {
   const { token } = useAuth();
-  const [loading, setLoading]   = useState(true);
-  const [data, setData]         = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState(null);
   const [dateFilter, setDateFilter] = useState({ start: '', end: '' });
-
-  useEffect(() => { fetchFinanceData(); }, [token, fetchFinanceData]);
 
   const fetchFinanceData = useCallback(async () => {
     try {
       setLoading(true);
       const params = {};
       if (dateFilter.start) params.start_date = dateFilter.start;
-      if (dateFilter.end)   params.end_date   = dateFilter.end;
+      if (dateFilter.end) params.end_date = dateFilter.end;
+
       const res = await axios.get(`${API}/admin/finance/summary`, {
-        headers: { Authorization: `Bearer ${token}` }, params
+        headers: { Authorization: `Bearer ${token}` },
+        params
       });
+
       setData(res.data);
-    } catch { toast.error('Erro ao carregar dados financeiros'); }
-    finally { setLoading(false); }
+    } catch {
+      toast.error('Erro ao carregar dados financeiros');
+    } finally {
+      setLoading(false);
+    }
   }, [token, dateFilter]);
+
+  useEffect(() => {
+    fetchFinanceData();
+  }, [fetchFinanceData]);
 
   const exportToExcel = async () => {
     try {
