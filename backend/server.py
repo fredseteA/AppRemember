@@ -343,7 +343,7 @@ class User(BaseModel):
     zip_code: Optional[str] = None
     photo_url: Optional[str] = None
     delivery_address: Optional[DeliveryAddress] = None
-    role: str = "user"  # "user" | "admin" | "apoiador"
+    role: str = "user"  # "user" | "admin" | "affiliate"
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class UpdateUserRequest(BaseModel):
@@ -359,14 +359,14 @@ class UpdateUserRequest(BaseModel):
     role: Optional[str] = None
 
 class UpdateRoleRequest(BaseModel):
-    role: str  # "user" | "admin" | "apoiador"
+    role: str  # "user" | "admin" | "affiliate"
 
 class MarkCommissionPaidRequest(BaseModel):
     period: str          # "2025-03" (ano-mês)
     payment_method: Optional[str] = "pix"
     payment_notes: Optional[str] = None
 
-class CreateApoiadorUserRequest(BaseModel):
+class CreateaffiliateUserRequest(BaseModel):
     email: EmailStr
     password: str
     name: str
@@ -472,9 +472,9 @@ async def verify_admin(token_data: dict = Depends(verify_firebase_token)):
 
     return {**token_data, "role": "admin"}
 
-async def verify_apoiador(token_data: dict = Depends(verify_firebase_token)):
+async def verify_affiliate(token_data: dict = Depends(verify_firebase_token)):
     """
-    Permite acesso APENAS a usuários com role 'apoiador' ou 'admin'.
+    Permite acesso APENAS a usuários com role 'affiliate' ou 'admin'.
     Retorna token_data enriquecido com role e partner_uid para filtros.
     """
     if token_data is None:
@@ -500,10 +500,10 @@ async def verify_apoiador(token_data: dict = Depends(verify_firebase_token)):
     user_data = user_doc.to_dict()
     role = user_data.get("role", "user")
 
-    if role not in ("apoiador", "admin"):
+    if role not in ("affiliate", "admin"):
         raise HTTPException(
             status_code=http_status.HTTP_403_FORBIDDEN,
-            detail="Acesso negado. Área restrita a apoiadores."
+            detail="Acesso negado. Área restrita a affiliatees."
         )
 
     return {**token_data, "role": role, "user_data": user_data}
@@ -673,9 +673,9 @@ async def send_supporter_sale_email(partner_data: dict, payment_data: dict, calc
             "html": html
         }
         result = await asyncio.to_thread(resend.Emails.send, params)
-        logger.info(f"✅ Email de venda enviado ao apoiador {partner_data.get('email')}. ID: {result.get('id')}")
+        logger.info(f"✅ Email de venda enviado ao affiliate {partner_data.get('email')}. ID: {result.get('id')}")
     except Exception as e:
-        logger.error(f"❌ Erro ao enviar email ao apoiador: {str(e)}")
+        logger.error(f"❌ Erro ao enviar email ao affiliate: {str(e)}")
 
 # ========== PRODUCT COST CONFIG FUNCTIONS ==========
 
@@ -1241,7 +1241,7 @@ async def update_user_role(
     background_tasks: BackgroundTasks,
     user: dict = Depends(verify_admin)
 ):
-    valid_roles = {"user", "admin", "apoiador"}
+    valid_roles = {"user", "admin", "affiliate"}
     if body.role not in valid_roles:
         raise HTTPException(status_code=400, detail=f"Role inválido. Use: {valid_roles}")
     user_ref = db.collection("users").document(uid)
@@ -1555,7 +1555,7 @@ async def create_checkout(
         raw_code = payment_req.supporter_code.strip().upper()
         supporter_data = supporter_service_validate(raw_code)
         if not supporter_data:
-            raise HTTPException(status_code=400, detail="Código de apoiador inválido ou inativo.")
+            raise HTTPException(status_code=400, detail="Código de affiliate inválido ou inativo.")
 
         commission_rate = supporter_data.get("commission_rate", 0.10)
         calc = commission_service_calculate(original_amount, commission_rate)
@@ -1567,7 +1567,7 @@ async def create_checkout(
         supporter_id      = supporter_data.get("id")
         supporter_code    = raw_code
 
-        logger.info(f"Código apoiador '{raw_code}' válido. Desconto: R${discount_amount} | Comissão: R${commission_amount}")
+        logger.info(f"Código affiliate '{raw_code}' válido. Desconto: R${discount_amount} | Comissão: R${commission_amount}")
 
     payment = Payment(
         memorial_id=payment_req.memorial_id,
@@ -2576,12 +2576,12 @@ async def create_partner(
     now = datetime.now(timezone.utc).isoformat()
     partner_id = str(uuid.uuid4())
 
-    # Cria documento users com role apoiador
+    # Cria documento users com role affiliate
     db.collection("users").document(uid).set({
         "firebase_uid": uid,
         "email": partner_req.email,
         "name": partner_req.name,
-        "role": "apoiador",
+        "role": "affiliate",
         "phone": partner_req.phone,
         "created_at": now,
         "updated_at": now,
@@ -2838,13 +2838,13 @@ async def mark_commissions_paid(
         "total_paid": total_paid,
     }
 
-@api_router.post("/admin/apoiador/create-user")
-async def create_apoiador_user(
-    body: CreateApoiadorUserRequest,
+@api_router.post("/admin/affiliate/create-user")
+async def create_affiliate_user(
+    body: CreateaffiliateUserRequest,
     background_tasks: BackgroundTasks,
     admin: dict = Depends(verify_admin)
 ):
-    """Admin cria usuário apoiador no Firebase Auth + Firestore + vincula ao parceiro."""
+    """Admin cria usuário affiliate no Firebase Auth + Firestore + vincula ao parceiro."""
 
     # 1. Cria usuário no Firebase Authentication
     try:
@@ -2861,12 +2861,12 @@ async def create_apoiador_user(
     uid = firebase_user.uid
     now = datetime.now(timezone.utc).isoformat()
 
-    # 2. Cria documento na coleção users com role = apoiador
+    # 2. Cria documento na coleção users com role = affiliate
     user_dict = {
         "firebase_uid": uid,
         "email": body.email,
         "name": body.name,
-        "role": "apoiador",
+        "role": "affiliate",
         "phone": None,
         "created_at": now,
         "updated_at": now,
@@ -2885,19 +2885,19 @@ async def create_apoiador_user(
 
     background_tasks.add_task(
         create_admin_log, admin.get("uid"), admin.get("email"),
-        "create_apoiador_user", "user", uid,
+        "create_affiliate_user", "user", uid,
         {"email": body.email, "partner_id": body.partner_id}
     )
 
     return {
-        "message": "Usuário apoiador criado com sucesso.",
+        "message": "Usuário affiliate criado com sucesso.",
         "uid": uid,
         "email": body.email,
-        "role": "apoiador",
+        "role": "affiliate",
     }
 
 
-# ========== APOIADOR ENDPOINTS ==========
+# ========== affiliate ENDPOINTS ==========
 
 @api_router.get("/supporters/validate/{code}")
 async def validate_supporter_code(code: str):
@@ -2910,8 +2910,8 @@ async def validate_supporter_code(code: str):
         "discount_percentage": DISCOUNT_PERCENTAGE,
     }
 
-@api_router.get("/apoiador/me")
-async def get_apoiador_me(token_data: dict = Depends(verify_apoiador)):
+@api_router.get("/affiliate/me")
+async def get_affiliate_me(token_data: dict = Depends(verify_affiliate)):
     """Retorna dados do parceiro vinculado ao uid autenticado."""
     uid = token_data["uid"]
 
@@ -2936,12 +2936,12 @@ async def get_apoiador_me(token_data: dict = Depends(verify_apoiador)):
     partner_data = deserialize_datetime(partner_data, ["created_at", "updated_at"])
     return partner_data
 
-@api_router.get("/apoiador/sales")
-async def get_apoiador_sales(token_data: dict = Depends(verify_apoiador)):
+@api_router.get("/affiliate/sales")
+async def get_affiliate_sales(token_data: dict = Depends(verify_affiliate)):
     """
-    Apoiador busca APENAS suas próprias vendas.
+    affiliate busca APENAS suas próprias vendas.
     Filtro duplo: firebase_uid → supporter_code → payments.
-    Nunca retorna vendas de outros apoiadores.
+    Nunca retorna vendas de outros affiliatees.
     """
     uid = token_data["uid"]
 
@@ -3010,10 +3010,10 @@ async def get_apoiador_sales(token_data: dict = Depends(verify_apoiador)):
         "partner_id": partner_id,
     }
 
-@api_router.get("/apoiador/commissions")
-async def get_apoiador_commissions(token_data: dict = Depends(verify_apoiador)):
+@api_router.get("/affiliate/commissions")
+async def get_affiliate_commissions(token_data: dict = Depends(verify_affiliate)):
     """
-    Apoiador busca APENAS suas próprias comissões.
+    affiliate busca APENAS suas próprias comissões.
     Filtro por firebase_uid → partner_id.
     """
     uid = token_data["uid"]
@@ -3049,7 +3049,7 @@ async def get_apoiador_commissions(token_data: dict = Depends(verify_apoiador)):
 
         c = deserialize_datetime(c, ["created_at", "paid_at", "updated_at"])
 
-        # Remove campos que o apoiador não deve ver
+        # Remove campos que o affiliate não deve ver
         c.pop("admin_notes", None)
         c.pop("pix_key", None)
         c.pop("bank_data", None)

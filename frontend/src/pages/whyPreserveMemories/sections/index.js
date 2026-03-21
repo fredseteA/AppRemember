@@ -1,0 +1,9 @@
+export { default as HeroSection }        from './HeroSection.jsx';
+export { default as ProblemSection }     from './ProblemSection.jsx';
+export { default as BeforeAfterSection } from './BeforeAfterSection.jsx';
+export { default as WhatIsSection }      from './WhatIsSection.jsx';
+export { default as MomentsSection }     from './MomentsSection.jsx';
+export { default as HowItWorksSection }  from './HowItWorksSection.jsx';
+export { default as TestimonialsSection } from './TestimonialsSection.jsx';
+export { default as MeaningSection }     from './MeaningSection.jsx';
+export { default as FinalCTASection }    from './FinalCTASection.jsx';

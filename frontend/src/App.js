@@ -1,113 +1,91 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { Toaster } from './components/ui/sonner';
-import { Analytics } from '@vercel/analytics/react';
-import Header from './components/Header';
-import Footer from './components/Footer';
-import ScrollToTop from './components/ScrollToTop';
-import ErrorBoundary from "./components/ErrorBoundary";
-import Home from './pages/Home';
-import HowItWorks from './pages/HowItWorks';
-import Explore from './pages/Explore';
-import CreateMemorial from './pages/CreateMemorial';
-import MemorialView from './pages/MemorialView';
-import PreviewMemorial from './pages/PreviewMemorial';
-import SelectPlan from './pages/SelectPlan';
-import PaymentSuccess from './pages/PaymentSuccess';
-import PaymentFailure from './pages/PaymentFailure';
-import PaymentPending from './pages/PaymentPending';
-import Payment from './pages/Payment';
-import Dashboard from './pages/Dashboard';
-import Profile from './pages/Profile';
-import MyMemorials from './pages/MyMemorials';
-import MyPurchases from './pages/MyPurchases';
-import EditMemorial from './pages/EditMemorial';
-import WhyPreserveMemories from './pages/WhyPreserveMemories';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
-
-//Apoiador Pages
-import ApoiadorRoute from './routes/ApoiadorRoute';
-import ApoiadorDashboard from './pages/apoiador/ApoiadorDashboard';
-import { ApoiadorVendas, ApoiadorComissoes, ApoiadorMeuCodigo } from './pages/apoiador/ApoiadorPages';
-import SobrePage from './pages/SobrePage';
-import PoliticaResponsabilidadePage from './pages/PoliticaResponsabilidadePage';
-import PoliticaPrivacidadePage from './pages/PoliticaPrivacidadePage';
-import PoliticaTrocaDevolucaoPage from './pages/PoliticaTrocaDevolucaoPage';
-import TermosCondicoesPage from './pages/TermosCondicoesPage';
-import PoliticaEntregaPage from './pages/PoliticaEntregaPage'
-
-// Admin Pages
-import AdminLayout from './components/admin/AdminLayout';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminOrders from './pages/admin/AdminOrders';
-import AdminProduction from './pages/admin/AdminProduction';
-import AdminPartners from './pages/admin/AdminPartners';
-import AdminFinance from './pages/admin/AdminFinance';
-import AdminMemorials from './pages/admin/AdminMemorials';
-import AdminReviews from './pages/admin/AdminReviews';
-import AdminNotifications from './pages/admin/AdminNotifications';
-import AdminLogs from './pages/admin/AdminLogs';
+import { AuthProvider } from './contexts/AuthContext';
+import { Toaster } from '@/components/ui/sonner';
+import { Analytics } from '@vercel/analytics/react';
+//Components & utils
+import Header from '@/components/layout/Header.jsx';
+import Footer from '@/components/layout/Footer.jsx';
+import ScrollToTop from '@/components/shared/ScrollToTop';
+import ErrorBoundary from "@/components/shared/ErrorBoundary";
+//Pages
+import Home from '@/pages/home/index.jsx';
+import HowItWorks from '@/pages/howitworks/index.jsx';
+import WhyPreserveMemories from '@/pages/whyPreserveMemories/index.jsx';
+import Explore from '@/pages/memorial/Explore.jsx';
+import SelectPlan from '@/pages/payments/SelectPlan.jsx';
+//Memorial Pages
+import CreateMemorial from '@/pages/memorial/createMemorial/index.jsx';
+import MemorialView from '@/pages/memorial/MemorialView.jsx';
+import PreviewMemorial from '@/pages/memorial/PreviewMemorial.jsx';
+import EditMemorial from '@/pages/memorial/EditMemorial.jsx';
+//Payment Pages
+import PaymentSuccess from '@/pages/payments/PaymentSuccess.jsx';
+import PaymentFailure from '@/pages/payments/PaymentFailure.jsx';
+import PaymentPending from '@/pages/payments/PaymentPending.jsx';
+import Payment from '@/pages/payments/Payment.jsx';
+//User Pages
+import Dashboard from '@/pages/userPages/Dashboard.jsx';
+import Profile from '@/pages/userPages/Profile.jsx';
+import MyMemorials from '@/pages/userPages/MyMemorials.jsx';
+import MyPurchases from '@/pages/userPages/MyPurchases.jsx';
+//Institutional Pages
+import AboutPage from '@/pages/institutional/AboutPage.jsx';
+import ResponsibilityPolicyPage from '@/pages/institutional/ResponsibilityPolicyPage.jsx';
+import PrivacyPolicyPage from '@/pages/institutional/PrivacyPolicyPage.jsx';
+import ReturnPolicyPage from '@/pages/institutional/ReturnPolicyPage.jsx';
+import TermsAndConditionsPage from '@/pages/institutional/TermsAndConditionsPage.jsx';
+import DeliveryPolicyPage from '@/pages/institutional/DeliveryPolicyPage.jsx';
+//Protected Routes
+import AffiliateRoute from '@/routes/AffiliateRoute';
+import AdminRoute from '@/routes/AdminRoute';
+import ProtectedRoute from '@/routes/ProtectedRoute';
+//Affiliate Pages
+import { AffiliateSales, AffiliateCommissions, AffiliateMyCode, AffiliateDashboard } from '@/pages/affiliate';
+//Admin Pages
+import AdminLayout from '@/pages/admin/components/AdminLayout.jsx';
+import AdminDashboard from '@/pages/admin/adminDashboard/index.jsx';
+import AdminOrders from '@/pages/admin/adminOrders/index.jsx';
+import AdminProduction from '@/pages/admin/adminProduction/index.jsx';
+import AdminPartners from '@/pages/admin/adminPartners/index.jsx';
+import AdminFinance from '@/pages/admin/adminFinance/index.jsx';
+import AdminMemorials from '@/pages/admin/adminMemorials/index.jsx';
+import AdminReviews from '@/pages/admin/adminReviews/index.jsx';
+import AdminNotifications from '@/pages/admin/adminNotification/index.jsx';
+import AdminLogs from '@/pages/admin/adminLogs/index.jsx';
 
 import './lib/i18n';
 import './App.css';
 
-const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useAuth();
-  
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-  
-  return user ? children : <Navigate to="/" replace />;
-};
-
-const AdminRoute = ({ children }) => {
-  const { user, loading } = useAuth();
-  
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-  
-  return user && user.is_admin ? children : <Navigate to="/" replace />;
-};
-
-// Layout wrapper component that conditionally shows header/footer
 const FOOTER_START_COLOR = {
-  '/':             '#eef8fb', 
-  '/how-it-works': '#eef8fb', 
-  '/explore':      '#eef8fb',
-  '/create-memorial': '#eef8fb',
-  '/dashboard': '#eef8fb',
-  '/my-memorials': '#eef8fb',
-  '/my-purchases': '#eef8fb',
-  '/profile': '#eef8fb',
-  '/payment/:id': '#eef8fb',
-  '/select-plan/:id': '#eef8fb',
+  '/':                  '#eef8fb',
+  '/how-it-works':      '#eef8fb',
+  '/explore':           '#eef8fb',
+  '/create-memorial':   '#eef8fb',
+  '/dashboard':         '#eef8fb',
+  '/my-memorials':      '#eef8fb',
+  '/my-purchases':      '#eef8fb',
+  '/profile':           '#eef8fb',
+  '/payment/:id':       '#eef8fb',
+  '/select-plan/:id':   '#eef8fb',
 };
 
-const DEFAULT_FOOTER_COLOR = '#ffffff'; // fallback para demais páginas
+const DEFAULT_FOOTER_COLOR = '#ffffff';
 
-// Layout wrapper component that conditionally shows header/footer
 const AppLayout = ({ children }) => {
   const location = useLocation();
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const apoio = params.get('apoio');
     if (apoio) sessionStorage.setItem('apoio_code', apoio.toUpperCase());
   }, []);
-  const isMemorialPage = location.pathname.startsWith('/memorial/');
-  const isAdminPage = location.pathname.startsWith('/admin');
-  const isApoiadorPage = location.pathname.startsWith('/apoiador'); // ← ADICIONAR
 
-  if (isAdminPage || isApoiadorPage) { // ← ADICIONAR isApoiadorPage aqui
+  const isMemorialPage  = location.pathname.startsWith('/memorial/');
+  const isAdminPage     = location.pathname.startsWith('/admin');
+  const isAffiliatePage = location.pathname.startsWith('/affiliate');
+
+  if (isAdminPage || isAffiliatePage) {
     return (
       <div className="App min-h-screen">
         {children}
@@ -116,8 +94,7 @@ const AppLayout = ({ children }) => {
     );
   }
 
-  const footerStartColor =
-    FOOTER_START_COLOR[location.pathname] ?? DEFAULT_FOOTER_COLOR;
+  const footerStartColor = FOOTER_START_COLOR[location.pathname] ?? DEFAULT_FOOTER_COLOR;
 
   return (
     <div className="App min-h-screen flex flex-col">
@@ -139,174 +116,98 @@ function App() {
           <AppLayout>
             <ScrollToTop />
             <Routes>
+              {/* Public Routes */}
               <Route path="/" element={<Home />} />
               <Route path="/how-it-works" element={<HowItWorks />} />
-              <Route path="/why-preserve-memories" element={<WhyPreserveMemories />} /> 
+              <Route path="/why-preserve-memories" element={<WhyPreserveMemories />} />
               <Route path="/explore" element={<Explore />} />
+
+              {/* Institutional Routes */}
+              <Route path="/about" element={<AboutPage />} />
+              <Route path="/responsibility-policy" element={<ResponsibilityPolicyPage />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+              <Route path="/return-policy" element={<ReturnPolicyPage />} />
+              <Route path="/terms-and-conditions" element={<TermsAndConditionsPage />} />
+              <Route path="/delivery-policy" element={<DeliveryPolicyPage />} />
+
+              {/* Memorial Routes */}
               <Route path="/create-memorial" element={<CreateMemorial />} />
               <Route path="/memorial/:id" element={<MemorialView />} />
-              <Route path="/sobre" element={<SobrePage />} />
-              <Route path="/politica-de-responsabilidade" element={<PoliticaResponsabilidadePage />} />
-              <Route path="/politica-de-privacidade" element={<PoliticaPrivacidadePage />} />
-              <Route path="/politica-de-troca-devolucao-reembolso" element={<PoliticaTrocaDevolucaoPage />} />
-              <Route path="/termos-e-condicoes" element={<TermosCondicoesPage />} />
-              <Route path="/politica-de-entrega" element={<PoliticaEntregaPage />} />
-              <Route
-                  path="/preview/:id"
-                  element={
-                    <ProtectedRoute>
-                      <PreviewMemorial />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/select-plan/:id"
-                  element={
-                    <ProtectedRoute>
-                      <SelectPlan />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/payment/:id"
-                  element={
-                    <ProtectedRoute>
-                      <Payment />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route path="/payment/success" element={<PaymentSuccess />} />
-                <Route path="/payment/failure" element={<PaymentFailure />} />
-                <Route path="/payment/pending" element={<PaymentPending />} />
-                <Route
-                  path="/dashboard"
-                  element={
-                    <ProtectedRoute>
-                      <Dashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/profile"
-                  element={
-                    <ProtectedRoute>
-                      <Profile />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/my-memorials"
-                  element={
-                    <ProtectedRoute>
-                      <MyMemorials />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/edit-memorial/:id"
-                  element={
-                    <ProtectedRoute>
-                      <EditMemorial />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/my-purchases"
-                  element={
-                    <ProtectedRoute>
-                      <MyPurchases />
-                    </ProtectedRoute>
-                  }
-                />
+              <Route path="/preview/:id" element={
+                <ProtectedRoute><PreviewMemorial /></ProtectedRoute>
+              } />
+              <Route path="/edit-memorial/:id" element={
+                <ProtectedRoute><EditMemorial /></ProtectedRoute>
+              } />
 
-                {/* Apoiador Routes */}
-                <Route path="/apoiador" element={
-                  <ApoiadorRoute><ApoiadorDashboard /></ApoiadorRoute>
-                } />
-                <Route path="/apoiador/vendas" element={
-                  <ApoiadorRoute><ApoiadorVendas /></ApoiadorRoute>
-                } />
-                <Route path="/apoiador/comissoes" element={
-                  <ApoiadorRoute><ApoiadorComissoes /></ApoiadorRoute>
-                } />
-                <Route path="/apoiador/meu-codigo" element={
-                  <ApoiadorRoute><ApoiadorMeuCodigo /></ApoiadorRoute>
-                } />
-                
-                {/* Admin Routes */}
-                <Route
-                  path="/admin"
-                  element={
-                    <AdminRoute>
-                      <AdminLayout><AdminDashboard /></AdminLayout>
-                    </AdminRoute>
-                  }
-                />
-                <Route
-                  path="/admin/orders"
-                  element={
-                    <AdminRoute>
-                      <AdminLayout><AdminOrders /></AdminLayout>
-                    </AdminRoute>
-                  }
-                />
-                <Route
-                  path="/admin/production"
-                  element={
-                    <AdminRoute>
-                      <AdminLayout><AdminProduction /></AdminLayout>
-                    </AdminRoute>
-                  }
-                />
-                <Route
-                  path="/admin/partners"
-                  element={
-                    <AdminRoute>
-                      <AdminLayout><AdminPartners /></AdminLayout>
-                    </AdminRoute>
-                  }
-                />
-                <Route
-                  path="/admin/finance"
-                  element={
-                    <AdminRoute>
-                      <AdminLayout><AdminFinance /></AdminLayout>
-                    </AdminRoute>
-                  }
-                />
-                <Route
-                  path="/admin/memorials"
-                  element={
-                    <AdminRoute>
-                      <AdminLayout><AdminMemorials /></AdminLayout>
-                    </AdminRoute>
-                  }
-                />
-                <Route
-                  path="/admin/reviews"
-                  element={
-                    <AdminRoute>
-                      <AdminLayout><AdminReviews /></AdminLayout>
-                    </AdminRoute>
-                  }
-                />
-                <Route
-                  path="/admin/notifications"
-                  element={
-                    <AdminRoute>
-                      <AdminLayout><AdminNotifications /></AdminLayout>
-                    </AdminRoute>
-                  }
-                />
-                <Route
-                  path="/admin/logs"
-                  element={
-                    <AdminRoute>
-                      <AdminLayout><AdminLogs /></AdminLayout>
-                    </AdminRoute>
-                  }
-                />
-              </Routes>
+              {/* Payment Routes */}
+              <Route path="/select-plan/:id" element={
+                <ProtectedRoute><SelectPlan /></ProtectedRoute>
+              } />
+              <Route path="/payment/:id" element={
+                <ProtectedRoute><Payment /></ProtectedRoute>
+              } />
+              <Route path="/payment/success" element={<PaymentSuccess />} />
+              <Route path="/payment/failure" element={<PaymentFailure />} />
+              <Route path="/payment/pending" element={<PaymentPending />} />
+
+              {/* User Routes */}
+              <Route path="/dashboard" element={
+                <ProtectedRoute><Dashboard /></ProtectedRoute>
+              } />
+              <Route path="/profile" element={
+                <ProtectedRoute><Profile /></ProtectedRoute>
+              } />
+              <Route path="/my-memorials" element={
+                <ProtectedRoute><MyMemorials /></ProtectedRoute>
+              } />
+              <Route path="/my-purchases" element={
+                <ProtectedRoute><MyPurchases /></ProtectedRoute>
+              } />
+
+              {/* Affiliate Routes */}
+              <Route path="/affiliate" element={
+                <AffiliateRoute><AffiliateDashboard /></AffiliateRoute>
+              } />
+              <Route path="/affiliate/sales" element={
+                <AffiliateRoute><AffiliateSales /></AffiliateRoute>
+              } />
+              <Route path="/affiliate/commissions" element={
+                <AffiliateRoute><AffiliateCommissions /></AffiliateRoute>
+              } />
+              <Route path="/affiliate/my-code" element={
+                <AffiliateRoute><AffiliateMyCode /></AffiliateRoute>
+              } />
+
+              {/* Admin Routes */}
+              <Route path="/admin" element={
+                <AdminRoute><AdminLayout><AdminDashboard /></AdminLayout></AdminRoute>
+              } />
+              <Route path="/admin/orders" element={
+                <AdminRoute><AdminLayout><AdminOrders /></AdminLayout></AdminRoute>
+              } />
+              <Route path="/admin/production" element={
+                <AdminRoute><AdminLayout><AdminProduction /></AdminLayout></AdminRoute>
+              } />
+              <Route path="/admin/partners" element={
+                <AdminRoute><AdminLayout><AdminPartners /></AdminLayout></AdminRoute>
+              } />
+              <Route path="/admin/finance" element={
+                <AdminRoute><AdminLayout><AdminFinance /></AdminLayout></AdminRoute>
+              } />
+              <Route path="/admin/memorials" element={
+                <AdminRoute><AdminLayout><AdminMemorials /></AdminLayout></AdminRoute>
+              } />
+              <Route path="/admin/reviews" element={
+                <AdminRoute><AdminLayout><AdminReviews /></AdminLayout></AdminRoute>
+              } />
+              <Route path="/admin/notifications" element={
+                <AdminRoute><AdminLayout><AdminNotifications /></AdminLayout></AdminRoute>
+              } />
+              <Route path="/admin/logs" element={
+                <AdminRoute><AdminLayout><AdminLogs /></AdminLayout></AdminRoute>
+              } />
+            </Routes>
           </AppLayout>
           <Analytics />
         </BrowserRouter>
