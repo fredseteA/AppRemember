@@ -11,7 +11,7 @@ import { Menu, X, User } from 'lucide-react';
 import AuthModal from '../AuthModal';
 import { FLAGS } from '@/lib/i18n.jsx';
 
-const I18N_ENABLED = true;
+const I18N_ENABLED = false;
 
 
 const FlagButton = ({ language, onClick, className = '', style = {} }) => (
