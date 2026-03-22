@@ -9,6 +9,10 @@ import {
 } from '../ui/dropdown-menu';
 import { Menu, X, User } from 'lucide-react';
 import AuthModal from '../AuthModal';
+import { FLAGS } from '@/lib/i18n.jsx';
+
+const I18N_ENABLED = true;
+
 
 const FlagButton = ({ language, onClick, className = '', style = {} }) => (
   <button
@@ -18,8 +22,7 @@ const FlagButton = ({ language, onClick, className = '', style = {} }) => (
       background: 'transparent', border: 'none', cursor: 'pointer',
       padding: '4px', borderRadius: '50%',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: '1.25rem', lineHeight: 1,
-      transition: 'transform 0.2s ease',
+      lineHeight: 1, transition: 'transform 0.2s ease',
       ...style,
     }}
     aria-label={language === 'pt' ? 'Mudar para inglês' : 'Switch to Portuguese'}
@@ -27,9 +30,9 @@ const FlagButton = ({ language, onClick, className = '', style = {} }) => (
     onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.18)'; }}
     onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
   >
-    {language === 'pt' ? '🇧🇷' : '🇺🇸'}
+    {language === 'pt' ? FLAGS.pt : FLAGS.en}
   </button>
-);
+)
 
 const Header = () => {
   const { user, logout } = useAuth();
@@ -174,7 +177,14 @@ const Header = () => {
               </nav>
 
               <div className="hidden md:flex items-center space-x-3">
-                <FlagButton language={currentLang} onClick={toggleLanguage} data-testid="language-toggle" />
+                {I18N_ENABLED && (
+                  <FlagButton 
+                    language={currentLang} 
+                    onClick={toggleLanguage} 
+                    className="header-icon"
+                    data-testid="language-toggle" 
+                  />
+                )}
 
                 {user ? (
                   <DropdownMenu>

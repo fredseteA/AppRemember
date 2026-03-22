@@ -1,7 +1,5 @@
 import { Link } from 'react-router-dom';
 
-// O hero interno termina em #7bbde8
-// O fundo da página continua a partir daí: #7bbde8 → #b8e0f5 → #eef8fb
 const pageStyle = {
   background: 'linear-gradient(180deg, #c8e8f5 0%, #a8d8f0 18%, #7bbde8 32%, #b8e0f5 55%, #eef8fb 100%)',
   minHeight: '100vh',

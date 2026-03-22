@@ -224,8 +224,26 @@ const Dashboard = () => {
 
             <button
               onClick={openWhatsApp}
-              className="dash-whatsapp-btn"
               data-testid="button-whatsapp"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                padding: '12px 24px', borderRadius: 999,
+                background: 'rgba(255,255,255,0.1)', color: 'white',
+                fontFamily: '"Georgia", serif', fontSize: '0.85rem', fontWeight: 700,
+                border: '1.5px solid rgba(255,255,255,0.25)', cursor: 'pointer', whiteSpace: 'nowrap',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+                transition: 'all 0.25s ease', flexShrink: 0,
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = 'rgba(255,255,255,0.18)';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.45)';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
             >
               Falar no WhatsApp
             </button>

@@ -30,7 +30,7 @@ const WhySection = () => {
           <p style={{ color: "#3a5070", fontSize: "clamp(0.88rem, 3.5vw, 1.1rem)", lineHeight: 1.72, maxWidth: "520px", margin: "0 auto 36px", fontFamily: '"Georgia", serif' }}>
             Escolha quem entende a importância de preservar memórias. Oferecemos uma tecnologia única de QR Codes personalizados, que conecta o presente ao passado de forma significativa.
           </p>
-          <Link to="/sobre">
+          <Link to="./about">
             <button className="why-btn" style={{ borderRadius: "999px", padding: "13px 34px", background: "rgba(255,255,255,0.55)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", border: "1.5px solid rgba(26,39,68,0.2)", color: "#1a2744", fontFamily: '"Georgia", serif', fontSize: "clamp(0.82rem, 3.5vw, 0.95rem)", fontWeight: 700, letterSpacing: "0.05em", cursor: "pointer", boxShadow: "0 4px 18px rgba(26,39,68,0.08)" }}>
               Sobre a Remember QRCode
             </button>

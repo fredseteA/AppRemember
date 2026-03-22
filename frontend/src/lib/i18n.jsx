@@ -1,6 +1,47 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
+export const FLAGS = {
+  pt: (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 22" width="28" height="20" fill="none">
+      <g style={{ transformOrigin: '0px 11px', animation: 'subtleWave 3s ease-in-out infinite' }}>
+        <style>{`
+          @keyframes subtleWave {
+            0%,100% { transform: skewY(0deg) scaleX(1); }
+            30%      { transform: skewY(1.2deg) scaleX(0.98); }
+            60%      { transform: skewY(-0.8deg) scaleX(1.01); }
+          }
+        `}</style>
+        <rect x="1" y="1" width="30" height="20" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+        <polygon points="16,3.5 28,11 16,18.5 4,11" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+        <circle cx="16" cy="11" r="4.5" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+        <path d="M11.8,8.5 Q16,7 20.2,8.5" stroke="currentColor" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+      </g>
+    </svg>
+  ),
+  en: (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 22" width="28" height="20" fill="none">
+      <g style={{ transformOrigin: '0px 11px', animation: 'subtleWave 3s ease-in-out infinite' }}>
+        <rect x="1" y="1" width="30" height="20" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+        <rect x="1" y="1" width="12" height="10" rx="1" stroke="currentColor" strokeWidth="1.2" fill="none"/>
+        <line x1="1"  y1="5"  x2="31" y2="5"  stroke="currentColor" strokeWidth="0.9" strokeDasharray="2 1"/>
+        <line x1="1"  y1="8"  x2="31" y2="8"  stroke="currentColor" strokeWidth="0.9" strokeDasharray="2 1"/>
+        <line x1="13" y1="11" x2="31" y2="11" stroke="currentColor" strokeWidth="0.9" strokeDasharray="2 1"/>
+        <line x1="1"  y1="14" x2="31" y2="14" stroke="currentColor" strokeWidth="0.9" strokeDasharray="2 1"/>
+        <line x1="1"  y1="17" x2="31" y2="17" stroke="currentColor" strokeWidth="0.9" strokeDasharray="2 1"/>
+        <circle cx="4"  cy="3.5" r="0.7" fill="currentColor"/>
+        <circle cx="7"  cy="3.5" r="0.7" fill="currentColor"/>
+        <circle cx="10" cy="3.5" r="0.7" fill="currentColor"/>
+        <circle cx="4"  cy="6.5" r="0.7" fill="currentColor"/>
+        <circle cx="7"  cy="6.5" r="0.7" fill="currentColor"/>
+        <circle cx="10" cy="6.5" r="0.7" fill="currentColor"/>
+        <circle cx="4"  cy="9.5" r="0.7" fill="currentColor"/>
+        <circle cx="7"  cy="9.5" r="0.7" fill="currentColor"/>
+        <circle cx="10" cy="9.5" r="0.7" fill="currentColor"/>
+      </g>
+    </svg>
+  ),
+};
 const resources = {
   pt: {
     translation: {

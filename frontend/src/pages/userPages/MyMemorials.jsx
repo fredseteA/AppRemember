@@ -8,7 +8,7 @@ import QRCodeModal from '@/components/memorial/QRCodeModal.jsx';
 import { QrCode } from 'lucide-react';
 import { toast } from 'sonner';
 import { API } from '@/config';
-import { userPageStyles, pageBackground } from './shared/userPageStyles.js'
+import { myMemorialsStyles, pageBackground } from './shared/userPageStyles.js'
 
 // ─── Modal de confirmação de exclusão ────────────────────────────────────────
 const DeleteConfirmModal = ({ memorial, onConfirm, onCancel, deleting }) => (
@@ -208,7 +208,7 @@ const MyMemorials = () => {
           minHeight: '100vh',
         }}
       >
-        <style>{userPageStyles}</style>
+        <style>{myMemorialsStyles}</style>
 
         {/* Nuvem esquerda */}
         <div

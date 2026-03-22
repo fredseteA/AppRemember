@@ -30,6 +30,11 @@ app.include_router(reviews.router)
 app.include_router(affiliate.router)
 
 
+@app.get("/api/")
+async def health_check():
+    return {"status": "ok", "message": "API Remember está rodando 🚀"}
+
+
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     logger = logging.getLogger(__name__)

@@ -55,7 +55,6 @@ import AdminNotifications from '@/pages/admin/adminNotification/index.jsx';
 import AdminLogs from '@/pages/admin/adminLogs/index.jsx';
 
 import './lib/i18n';
-import './App.css';
 
 const FOOTER_START_COLOR = {
   '/':                  '#eef8fb',

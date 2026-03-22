@@ -6,7 +6,7 @@ import { User, Phone, Mail, Calendar, CreditCard, Save, ArrowLeft, Camera, Loade
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { API } from '@/config';
-import { userPageStyles, pageBackground } from './shared/userPageStyles.js'
+import { profileStyles, pageBackground } from './shared/userPageStyles.js'
 
 const Profile = () => {
   const { user, token } = useAuth();
@@ -208,7 +208,7 @@ const Profile = () => {
         minHeight: '100vh',
       }}
     >
-      <style>{userPageStyles}</style>
+      <style>{profileStyles}</style>
 
       {/* Nuvem esquerda */}
       <div
