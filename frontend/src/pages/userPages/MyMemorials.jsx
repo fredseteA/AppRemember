@@ -9,129 +9,133 @@ import { QrCode } from 'lucide-react';
 import { toast } from 'sonner';
 import { API } from '@/config';
 import { myMemorialsStyles, pageBackground } from './shared/userPageStyles.js'
+import { useTranslation } from 'react-i18next';
 
 // ─── Modal de confirmação de exclusão ────────────────────────────────────────
-const DeleteConfirmModal = ({ memorial, onConfirm, onCancel, deleting }) => (
-  <div
-    style={{
-      position: 'fixed', inset: 0, zIndex: 1000,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: '0 20px',
-    }}
-  >
-    {/* Backdrop */}
-    <div
-      onClick={onCancel}
-      style={{
-        position: 'absolute', inset: 0,
-        background: 'rgba(15,25,50,0.55)',
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)',
-        animation: 'fadeInBd 0.2s ease both',
-      }}
-    />
-
-    {/* Card */}
+const DeleteConfirmModal = ({ memorial, onConfirm, onCancel, deleting }) => {
+  const {t} = useTranslation();
+  return (
     <div
       style={{
-        position: 'relative', zIndex: 1,
-        background: 'rgba(255,255,255,0.92)',
-        backdropFilter: 'blur(24px)',
-        WebkitBackdropFilter: 'blur(24px)',
-        border: '1px solid rgba(255,255,255,0.9)',
-        borderRadius: 28,
-        padding: 'clamp(28px, 5vw, 40px)',
-        maxWidth: 420, width: '100%',
-        boxShadow: '0 32px 80px rgba(15,25,50,0.18)',
-        animation: 'revealModal 0.35s cubic-bezier(.22,1,.36,1) both',
-        textAlign: 'center',
+        position: 'fixed', inset: 0, zIndex: 1000,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '0 20px',
       }}
     >
-      {/* Ícone */}
-      <div style={{
-        width: 60, height: 60, borderRadius: '50%',
-        background: 'rgba(239,68,68,0.08)',
-        border: '1.5px solid rgba(239,68,68,0.2)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        margin: '0 auto 20px',
-      }}>
-        <AlertTriangle size={26} style={{ color: '#ef4444' }} />
-      </div>
+      {/* Backdrop */}
+      <div
+        onClick={onCancel}
+        style={{
+          position: 'absolute', inset: 0,
+          background: 'rgba(15,25,50,0.55)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          animation: 'fadeInBd 0.2s ease both',
+        }}
+      />
 
-      <h2 style={{
-        fontFamily: '"Georgia", serif',
-        fontSize: '1.25rem', fontWeight: 700,
-        color: '#1a2744', marginBottom: 10, lineHeight: 1.25,
-      }}>
-        Excluir memorial?
-      </h2>
+      {/* Card */}
+      <div
+        style={{
+          position: 'relative', zIndex: 1,
+          background: 'rgba(255,255,255,0.92)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          border: '1px solid rgba(255,255,255,0.9)',
+          borderRadius: 28,
+          padding: 'clamp(28px, 5vw, 40px)',
+          maxWidth: 420, width: '100%',
+          boxShadow: '0 32px 80px rgba(15,25,50,0.18)',
+          animation: 'revealModal 0.35s cubic-bezier(.22,1,.36,1) both',
+          textAlign: 'center',
+        }}
+      >
+        {/* Ícone */}
+        <div style={{
+          width: 60, height: 60, borderRadius: '50%',
+          background: 'rgba(239,68,68,0.08)',
+          border: '1.5px solid rgba(239,68,68,0.2)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          margin: '0 auto 20px',
+        }}>
+          <AlertTriangle size={26} style={{ color: '#ef4444' }} />
+        </div>
 
-      <p style={{
-        fontFamily: '"Georgia", serif',
-        fontSize: '0.9rem', color: '#3a5070',
-        lineHeight: 1.7, marginBottom: 6,
-      }}>
-        Você está prestes a excluir o memorial de
-      </p>
-      <p style={{
-        fontFamily: '"Georgia", serif',
-        fontSize: '1rem', fontWeight: 700,
-        color: '#1a2744', marginBottom: 24,
-      }}>
-        "{memorial.person_data.full_name}"
-      </p>
+        <h2 style={{
+          fontFamily: '"Georgia", serif',
+          fontSize: '1.25rem', fontWeight: 700,
+          color: '#1a2744', marginBottom: 10, lineHeight: 1.25,
+        }}>
+          {t('userPages.myMemorials.deleteModal.title')}
+        </h2>
 
-      <div style={{
-        background: 'rgba(239,68,68,0.05)',
-        border: '1px solid rgba(239,68,68,0.15)',
-        borderRadius: 12, padding: '12px 16px',
-        marginBottom: 28,
-      }}>
         <p style={{
           fontFamily: '"Georgia", serif',
-          fontSize: '0.8rem', color: '#b91c1c',
-          lineHeight: 1.6, margin: 0,
+          fontSize: '0.9rem', color: '#3a5070',
+          lineHeight: 1.7, marginBottom: 6,
         }}>
-          Esta ação é permanente e não pode ser desfeita. Todas as fotos, textos e configurações serão apagados.
+          {t('userPages.myMemorials.deleteModal.about')}
         </p>
-      </div>
+        <p style={{
+          fontFamily: '"Georgia", serif',
+          fontSize: '1rem', fontWeight: 700,
+          color: '#1a2744', marginBottom: 24,
+        }}>
+          "{memorial.person_data.full_name}"
+        </p>
 
-      <div style={{ display: 'flex', gap: 10 }}>
-        <button
-          onClick={onCancel}
-          disabled={deleting}
-          style={{
-            flex: 1, padding: '12px 20px', borderRadius: 999,
-            background: 'transparent', color: '#3a5070',
-            fontFamily: '"Georgia", serif', fontSize: '0.88rem', fontWeight: 700,
-            border: '1.5px solid rgba(26,39,68,0.15)', cursor: 'pointer',
-            transition: 'all .2s', minHeight: 48,
-          }}
-        >
-          Cancelar
-        </button>
-        <button
-          onClick={onConfirm}
-          disabled={deleting}
-          style={{
-            flex: 1, padding: '12px 20px', borderRadius: 999,
-            background: deleting ? 'rgba(239,68,68,0.6)' : '#ef4444',
-            color: 'white',
-            fontFamily: '"Georgia", serif', fontSize: '0.88rem', fontWeight: 700,
-            border: 'none', cursor: deleting ? 'not-allowed' : 'pointer',
-            transition: 'all .2s', minHeight: 48,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-          }}
-        >
-          {deleting
-            ? <><Loader2 size={15} style={{ animation: 'spin 0.8s linear infinite' }} /> Excluindo...</>
-            : <><Trash2 size={15} /> Excluir</>
-          }
-        </button>
+        <div style={{
+          background: 'rgba(239,68,68,0.05)',
+          border: '1px solid rgba(239,68,68,0.15)',
+          borderRadius: 12, padding: '12px 16px',
+          marginBottom: 28,
+        }}>
+          <p style={{
+            fontFamily: '"Georgia", serif',
+            fontSize: '0.8rem', color: '#b91c1c',
+            lineHeight: 1.6, margin: 0,
+          }}>
+            {t('userPages.myMemorials.deleteModal.warning')}
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button
+            onClick={onCancel}
+            disabled={deleting}
+            style={{
+              flex: 1, padding: '12px 20px', borderRadius: 999,
+              background: 'transparent', color: '#3a5070',
+              fontFamily: '"Georgia", serif', fontSize: '0.88rem', fontWeight: 700,
+              border: '1.5px solid rgba(26,39,68,0.15)', cursor: 'pointer',
+              transition: 'all .2s', minHeight: 48,
+            }}
+          >
+            {t('userPages.myMemorials.deleteModal.cancel')}
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={deleting}
+            style={{
+              flex: 1, padding: '12px 20px', borderRadius: 999,
+              background: deleting ? 'rgba(239,68,68,0.6)' : '#ef4444',
+              color: 'white',
+              fontFamily: '"Georgia", serif', fontSize: '0.88rem', fontWeight: 700,
+              border: 'none', cursor: deleting ? 'not-allowed' : 'pointer',
+              transition: 'all .2s', minHeight: 48,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            }}
+          >
+            {deleting
+              ? <><Loader2 size={15} style={{ animation: 'spin 0.8s linear infinite' }} /> {t('userPages.myMemorials.deleteModal.deleting')}</>
+              : <><Trash2 size={15} /> {t('userPages.myMemorials.deleteModal.confirm')}</>
+            }
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+}
 
 // ─── Componente principal ─────────────────────────────────────────────────────
 const MyMemorials = () => {
@@ -141,6 +145,7 @@ const MyMemorials = () => {
   const [qrModal, setQrModal] = useState(null);
   const [deleteModal, setDeleteModal] = useState(null); 
   const [deleting, setDeleting] = useState(false);
+  const {t} = useTranslation();
 
   useEffect(() => {
     const fetchMemorials = async () => {
@@ -160,6 +165,7 @@ const MyMemorials = () => {
 
   // ─── Excluir memorial ───────────────────────────────────────────────────────
   const handleDelete = async () => {
+    const {t} = useTranslation;
     if (!deleteModal) return;
     setDeleting(true);
     try {
@@ -167,10 +173,10 @@ const MyMemorials = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMemorials(prev => prev.filter(m => m.id !== deleteModal.id));
-      toast.success('Memorial excluído com sucesso.');
+      toast.success(t('userPages.myMemorials.toastSuccess'));
       setDeleteModal(null);
     } catch {
-      toast.error('Erro ao excluir memorial. Tente novamente.');
+      toast.error(t('userPages.myMemorials.toastError'));
     } finally {
       setDeleting(false);
     }
@@ -252,7 +258,7 @@ const MyMemorials = () => {
                   textTransform: 'uppercase', letterSpacing: '0.22em',
                   fontSize: '0.62rem', fontWeight: 700, color: '#2a3d5e',
                 }}>
-                  Painel do usuário
+                  {t('userPages.myMemorials.eyebrow')}
                 </span>
               </div>
               <h1
@@ -263,12 +269,12 @@ const MyMemorials = () => {
                   fontWeight: 700, color: '#1a2744', lineHeight: 1.1,
                 }}
               >
-                Meus Memoriais
+                {t('userPages.myMemorials.title')}
               </h1>
             </div>
 
             <Link to="/create-memorial" className="mm-btn-primary" data-testid="button-create-new">
-              + Criar Novo Memorial
+              {t('userPages.myMemorials.createBtn')}
             </Link>
           </div>
 
@@ -298,17 +304,17 @@ const MyMemorials = () => {
                 fontSize: 'clamp(1.2rem, 3vw, 1.6rem)',
                 fontWeight: 700, color: '#1a2744', marginBottom: 10,
               }}>
-                Nenhum memorial ainda
+                {t('userPages.myMemorials.emptyTitle')}
               </h2>
               <p style={{
                 fontFamily: '"Georgia", serif',
                 fontSize: '0.9rem', color: '#3a5070',
                 lineHeight: 1.7, maxWidth: 320, marginBottom: 28,
               }}>
-                Você ainda não criou nenhum memorial. Comece agora a preservar memórias.
+                {t('userPages.myMemorials.emptyDesc')}
               </p>
               <Link to="/create-memorial" className="mm-btn-primary">
-                Criar Primeiro Memorial
+                {t('userPages.myMemorials.emptyBtn')}
               </Link>
             </div>
 
@@ -417,7 +423,7 @@ const MyMemorials = () => {
                         <>
                           <Link to={`/memorial/${memorial.slug || memorial.id}`} style={{ flex: 1 }}>
                             <button className="mm-btn-outline" style={{ width: '100%' }} data-testid="button-view">
-                              <Eye size={14} /> Ver
+                              <Eye size={14} /> {t('userPages.myMemorials.actionView')}
                             </button>
                           </Link>
 
@@ -435,7 +441,7 @@ const MyMemorials = () => {
 
                           <Link to={`/edit-memorial/${memorial.id}`} style={{ flex: 1 }}>
                             <button className="mm-btn-outline" style={{ width: '100%' }}>
-                              ✏️ Editar
+                              {t('userPages.myMemorials.actionEdit')}
                             </button>
                           </Link>
                         </>
@@ -447,14 +453,14 @@ const MyMemorials = () => {
                           {/* Editar rascunho */}
                           <Link to={`/edit-memorial/${memorial.id}`} style={{ flex: 1 }}>
                             <button className="mm-btn-outline" style={{ width: '100%' }} data-testid="button-edit-draft">
-                              ✏️ Editar
+                              {t('userPages.myMemorials.actionEdit')}
                             </button>
                           </Link>
 
                           {/* Publicar */}
                           <Link to={`/select-plan/${memorial.id}`} style={{ flex: 1 }}>
                             <button className="mm-btn-primary" style={{ width: '100%' }} data-testid="button-publish">
-                              Publicar
+                              {t('userPages.myMemorials.actionPublish')}
                             </button>
                           </Link>
 
@@ -466,7 +472,7 @@ const MyMemorials = () => {
                               onClick={() => setDeleteModal(memorial)}
                               data-testid="button-delete-draft"
                             >
-                              <Trash2 size={13} /> Excluir rascunho
+                              <Trash2 size={13} /> {t('userPages.myMemorials.actionDelete')}
                             </button>
                           </div>
                         </>

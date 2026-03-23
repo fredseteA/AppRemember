@@ -1,82 +1,74 @@
+import { useTranslation } from 'react-i18next';
 import { PageHero, ContentSection, H2, P, Li, Ul, Divider, sharedStyles } from './InstitutionalComponents';
 
 export default function ReturnPolicyPage() {
+  const { t } = useTranslation();
+  const s2Items = t('institutional.returns.s2Items', { returnObjects: true });
+  const s3Items = t('institutional.returns.s3Items', { returnObjects: true });
+  const s4Items = t('institutional.returns.s4Items', { returnObjects: true });
+  const s5Items = t('institutional.returns.s5Items', { returnObjects: true });
+
   return (
     <div style={{ background: 'linear-gradient(180deg, #c8e8f5 0%, #a8d8f0 18%, #7bbde8 32%, #b8e0f5 55%, #eef8fb 100%)', minHeight: '100vh', fontFamily: '"Georgia", serif' }}>
       <style>{sharedStyles}</style>
 
       <PageHero
-        tag="Trocas e Devoluções"
-        title="Política de Troca, Devolução e Reembolso"
-        subtitle="Transparência total sobre seus direitos e nossos procedimentos em casos de cancelamento, defeito ou insatisfação."
+        tag={t('institutional.returns.heroTag')}
+        title={t('institutional.returns.heroTitle')}
+        subtitle={t('institutional.returns.heroSubtitle')}
       />
 
       <ContentSection>
 
-        <H2>1. Direito de arrependimento</H2>
-        <P>
-          Conforme o Código de Defesa do Consumidor (Art. 49), o cliente tem o direito de cancelar a compra em até <strong>7 dias corridos</strong> a partir da data de confirmação do pagamento, sem necessidade de justificativa.
-        </P>
-        <P>
-          O cancelamento dentro deste prazo garante o reembolso integral do valor pago, desde que o produto físico (placa) não tenha sido entregue ao cliente.
-        </P>
+        <H2>{t('institutional.returns.s1Title')}</H2>
+        <P dangerouslySetInnerHTML={{ __html: t('institutional.returns.s1a') }} />
+        <P>{t('institutional.returns.s1b')}</P>
 
         <Divider />
-        <H2>2. Como solicitar o cancelamento</H2>
-        <P>Para solicitar o cancelamento dentro do prazo legal, entre em contato pelos canais oficiais:</P>
+        <H2>{t('institutional.returns.s2Title')}</H2>
+        <P>{t('institutional.returns.s2Intro')}</P>
         <Ul>
-          <Li>WhatsApp: +55 22 99208-0811</Li>
-          <Li>E-mail: rememberqrcode@gmail.com</Li>
+          {Array.isArray(s2Items) && s2Items.map((item, i) => (
+            <Li key={i}>{item}</Li>
+          ))}
         </Ul>
-        <P>
-          Informe o número do pedido, o e-mail cadastrado e o motivo do cancelamento. Nossa equipe confirmará o recebimento da solicitação em até 1 dia útil.
-        </P>
+        <P>{t('institutional.returns.s2Footer')}</P>
 
         <Divider />
-        <H2>3. Prazo de reembolso</H2>
-        <P>
-          Após a confirmação do cancelamento, o reembolso será processado em até <strong>10 dias úteis</strong>, pela mesma forma de pagamento utilizada na compra:
-        </P>
+        <H2>{t('institutional.returns.s3Title')}</H2>
+        <P dangerouslySetInnerHTML={{ __html: t('institutional.returns.s3Intro') }} />
         <Ul>
-          <Li><strong>Cartão de crédito:</strong> estorno na fatura em até 2 ciclos de cobrança (conforme a operadora).</Li>
-          <Li><strong>PIX ou boleto:</strong> transferência para a conta indicada pelo cliente em até 5 dias úteis.</Li>
+          {Array.isArray(s3Items) && s3Items.map((item, i) => (
+            <Li key={i}><span dangerouslySetInnerHTML={{ __html: item }} /></Li>
+          ))}
         </Ul>
 
         <Divider />
-        <H2>4. Troca por defeito de fabricação</H2>
-        <P>
-          Caso a placa física chegue com defeito visível, dano causado pelo transporte ou divergência em relação ao memorial aprovado, o cliente deverá entrar em contato em até <strong>7 dias após o recebimento</strong>, informando:
-        </P>
+        <H2>{t('institutional.returns.s4Title')}</H2>
+        <P dangerouslySetInnerHTML={{ __html: t('institutional.returns.s4Intro') }} />
         <Ul>
-          <Li>Número do pedido.</Li>
-          <Li>Foto ou vídeo do defeito.</Li>
-          <Li>Descrição do problema.</Li>
+          {Array.isArray(s4Items) && s4Items.map((item, i) => (
+            <Li key={i}>{item}</Li>
+          ))}
         </Ul>
-        <P>
-          Após a análise, realizaremos a produção e envio de uma nova placa sem nenhum custo adicional ao cliente.
-        </P>
+        <P>{t('institutional.returns.s4Footer')}</P>
 
         <Divider />
-        <H2>5. Casos não cobertos pela política de troca</H2>
-        <P>Não realizamos trocas ou reembolsos nos seguintes casos:</P>
+        <H2>{t('institutional.returns.s5Title')}</H2>
+        <P>{t('institutional.returns.s5Intro')}</P>
         <Ul>
-          <Li>Danos causados por uso inadequado ou instalação incorreta da placa.</Li>
-          <Li>Arrependimento após a entrega do produto físico.</Li>
-          <Li>Erros nas informações do memorial inseridas pelo próprio cliente (conferência é de responsabilidade do cliente antes da aprovação).</Li>
-          <Li>Cancelamentos solicitados após o prazo legal de 7 dias.</Li>
+          {Array.isArray(s5Items) && s5Items.map((item, i) => (
+            <Li key={i}>{item}</Li>
+          ))}
         </Ul>
 
         <Divider />
-        <H2>6. Plano Digital — cancelamento</H2>
-        <P>
-          Para o Plano Digital, o cancelamento com reembolso é aceito dentro do prazo de 7 dias corridos, desde que o link do memorial não tenha sido amplamente divulgado ou utilizado publicamente de forma irreversível.
-        </P>
+        <H2>{t('institutional.returns.s6Title')}</H2>
+        <P>{t('institutional.returns.s6')}</P>
 
         <Divider />
-        <H2>7. Dúvidas</H2>
-        <P>
-          Nossa equipe está disponível para esclarecer qualquer dúvida relacionada a esta política. Entre em contato pelo WhatsApp ou e-mail disponíveis no rodapé do site.
-        </P>
+        <H2>{t('institutional.returns.s7Title')}</H2>
+        <P>{t('institutional.returns.s7')}</P>
 
       </ContentSection>
     </div>

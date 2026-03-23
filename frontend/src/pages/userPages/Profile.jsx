@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { API } from '@/config';
 import { profileStyles, pageBackground } from './shared/userPageStyles.js'
+import { useTranslation } from 'react-i18next';
 
 const Profile = () => {
   const { user, token } = useAuth();
@@ -23,6 +24,7 @@ const Profile = () => {
     birth_date: '',
     photo_url: ''
   });
+  const { t } = useTranslation();
 
   const fetchUserData = useCallback(async () => {
     setLoading(true);
@@ -42,11 +44,11 @@ const Profile = () => {
       });
       if (addrRes.data.has_address) setDeliveryAddress(addrRes.data.address);
     } catch {
-      toast.error('Erro ao carregar dados do perfil');
+      toast.error(t('userPages.profile.toastLoadError'));
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, t]);
 
   useEffect(() => {
     if (user) fetchUserData();
@@ -69,12 +71,12 @@ const Profile = () => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) {
-      toast.error('Por favor, selecione uma imagem');
+      toast.error(t('userPageStyles.profile.photoErrorType'));
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('A imagem deve ter no máximo 5MB');
+      toast.error(t('userPageStyles.profile.photoErrorSize'));
       return;
     }
 
@@ -95,10 +97,10 @@ const Profile = () => {
           }, {
             headers: { Authorization: `Bearer ${token}` }
           });
-          toast.success('Foto atualizada com sucesso!');
+          toast.success(t('userPages.profile.toastPhotoSuccess'));
         } catch (error) {
           console.error('Error uploading photo:', error);
-          toast.error('Erro ao salvar foto');
+          toast.error(t('userPages.profile.toastPhotoError'));
         }
         
         setUploadingPhoto(false);
@@ -151,10 +153,10 @@ const Profile = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      toast.success('Perfil atualizado com sucesso!');
+      toast.success(t('userPages.profile.toastSuccess'));
     } catch (error) {
       console.error('Error updating profile:', error);
-      toast.error('Erro ao atualizar perfil');
+      toast.error(t('userPages.profile.toastError'));
     } finally {
       setSaving(false);
     }
@@ -167,9 +169,9 @@ const Profile = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setDeliveryAddress(addressData);
-      toast.success('Endereço de entrega salvo!');
+      toast.success(t('userPages.profile.addressSaved'));
     } catch (error) {
-      toast.error('Erro ao salvar endereço de entrega');
+      toast.error(t('userPages.profile.addressError'));
       throw error;
     } finally {
       setSavingDelivery(false);
@@ -243,7 +245,7 @@ const Profile = () => {
         <div style={{ animation: 'revealPR 0.75s cubic-bezier(.22,1,.36,1) both', marginBottom: 'clamp(28px, 5vw, 44px)' }}>
           <Link to="/dashboard" className="pr-btn-outline" style={{ marginBottom: 20, display: 'inline-flex' }}>
             <ArrowLeft size={14} />
-            Voltar ao Dashboard
+            {t('userPages.profile.backBtn')}
           </Link>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, marginTop: 8 }}>
@@ -252,7 +254,7 @@ const Profile = () => {
               textTransform: 'uppercase', letterSpacing: '0.22em',
               fontSize: '0.62rem', fontWeight: 700, color: '#2a3d5e',
             }}>
-              Painel do usuário
+              {t('userPages.profile.eyebrow')}
             </span>
           </div>
 
@@ -264,10 +266,10 @@ const Profile = () => {
               fontWeight: 700, color: '#1a2744', lineHeight: 1.1, marginBottom: 8,
             }}
           >
-            Minha Conta
+            {t('userPages.profile.title')}
           </h1>
           <p style={{ fontFamily: '"Georgia", serif', fontSize: '0.9rem', color: '#3a5070', lineHeight: 1.6 }}>
-            Gerencie suas informações pessoais
+            {t('userPages.profile.subtitle')}
           </p>
         </div>
 
@@ -285,7 +287,7 @@ const Profile = () => {
                 <Camera size={16} style={{ color: '#5aa8e0' }} />
               </div>
               <h2 style={{ fontFamily: '"Georgia", serif', fontSize: 'clamp(0.95rem, 2vw, 1.1rem)', fontWeight: 700, color: '#1a2744' }}>
-                Foto de Perfil
+                {t('userPages.profile.photoCard')}
               </h2>
             </div>
 
@@ -305,7 +307,7 @@ const Profile = () => {
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
                     {formData.photo_url ? (
-                      <img src={formData.photo_url} alt="Foto de perfil"
+                      <img src={formData.photo_url} alt={t('userPages.profile.photoCard')}
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
                       <User size={36} style={{ color: 'rgba(90,168,224,0.6)' }} />
@@ -328,13 +330,13 @@ const Profile = () => {
                     style={{ marginBottom: 8 }}
                   >
                     {uploadingPhoto ? (
-                      <><Loader2 size={13} style={{ animation: 'spin 0.8s linear infinite' }} /> Enviando...</>
+                      <><Loader2 size={13} style={{ animation: 'spin 0.8s linear infinite' }} /> {t('userPages.profile.photoUploading')}</>
                     ) : (
-                      <><Camera size={13} /> {formData.photo_url ? 'Alterar foto' : 'Adicionar foto'}</>
+                      <><Camera size={13} /> {formData.photo_url ? t('userPages.profile.photoChange') : t('userPages.profile.photoAdd')}</>
                     )}
                   </button>
                   <p style={{ fontFamily: '"Georgia", serif', fontSize: '0.72rem', color: 'rgba(58,80,112,0.55)' }}>
-                    JPG, PNG ou GIF. Máximo 5MB.
+                    {t('userPages.profile.photoHint')}
                   </p>
                 </div>
 
@@ -356,34 +358,34 @@ const Profile = () => {
                 <User size={16} style={{ color: '#5aa8e0' }} />
               </div>
               <h2 style={{ fontFamily: '"Georgia", serif', fontSize: 'clamp(0.95rem, 2vw, 1.1rem)', fontWeight: 700, color: '#1a2744' }}>
-                Informações Básicas
+                {t('userPages.profile.infoCard')}
               </h2>
             </div>
 
             <div className="pr-card-body">
               <div className="pr-grid-2">
                 <div>
-                  <label className="pr-label" htmlFor="name">Nome Completo</label>
+                  <label className="pr-label" htmlFor="name">{t('userPages.profile.fieldName')}</label>
                   <input id="name" name="name" className="pr-input"
                     value={formData.name} onChange={handleChange}
                     placeholder="Seu nome completo" data-testid="input-name" />
                 </div>
                 <div>
-                  <label className="pr-label" htmlFor="email">E-mail</label>
+                  <label className="pr-label" htmlFor="email">{t('userPages.profile.fieldEmail')}</label>
                   <div className="pr-input-icon">
                     <Mail size={15} />
                     <input id="email" className="pr-input"
                       value={user?.email || ''} disabled data-testid="input-email" />
                   </div>
                   <p style={{ fontFamily: '"Georgia", serif', fontSize: '0.7rem', color: 'rgba(58,80,112,0.5)', marginTop: 5 }}>
-                    O e-mail não pode ser alterado
+                    {t('userPages.profile.fieldEmailHint')}
                   </p>
                 </div>
               </div>
 
               <div className="pr-grid-2">
                 <div>
-                  <label className="pr-label" htmlFor="phone">Telefone / WhatsApp</label>
+                  <label className="pr-label" htmlFor="phone">{t('userPages.profile.fieldPhone')}</label>
                   <div className="pr-input-icon">
                     <Phone size={15} />
                     <input id="phone" name="phone" className="pr-input"
@@ -392,7 +394,7 @@ const Profile = () => {
                   </div>
                 </div>
                 <div>
-                  <label className="pr-label" htmlFor="birth_date">Data de Nascimento</label>
+                  <label className="pr-label" htmlFor="birth_date">{t('userPages.profile.dateBirth')}</label>
                   <div className="pr-input-icon">
                     <Calendar size={15} />
                     <input id="birth_date" name="birth_date" type="date" className="pr-input"
@@ -402,7 +404,7 @@ const Profile = () => {
               </div>
 
               <div>
-                <label className="pr-label" htmlFor="cpf">CPF</label>
+                <label className="pr-label" htmlFor="cpf">{t('userPages.profile.fieldCpf')}</label>
                 <div className="pr-input-icon">
                   <CreditCard size={15} />
                   <input id="cpf" name="cpf" className="pr-input"
@@ -426,10 +428,10 @@ const Profile = () => {
               </div>
               <div>
                 <h2 style={{ fontFamily: '"Georgia", serif', fontSize: 'clamp(0.95rem, 2vw, 1.1rem)', fontWeight: 700, color: '#1a2744' }}>
-                  Endereço de Entrega
+                  {t('userPages.profile.addressCard')}
                 </h2>
                 <p style={{ fontFamily: '"Georgia", serif', fontSize: '0.72rem', color: 'rgba(58,80,112,0.55)', marginTop: 2 }}>
-                  Usado para entrega de placas físicas
+                  {t('userPages.profile.addressSubtitle')}
                 </p>
               </div>
               {isAddressComplete(deliveryAddress) ? (
@@ -438,7 +440,7 @@ const Profile = () => {
                   background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)',
                   fontSize: '0.7rem', fontWeight: 700, color: '#15803d',
                 }}>
-                  ✅ Completo
+                  {t('userPages.profile.addressComplete')}
                 </span>
               ) : (
                 <span style={{
@@ -446,7 +448,7 @@ const Profile = () => {
                   background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)',
                   fontSize: '0.7rem', fontWeight: 700, color: '#92400e',
                 }}>
-                  ⚠️ Não preenchido
+                  {t('userPages.profile.addressMissing')}
                 </span>
               )}
             </div>
@@ -456,7 +458,7 @@ const Profile = () => {
                 initialData={deliveryAddress}
                 onSave={handleSaveDeliveryAddress}
                 loading={savingDelivery}
-                submitLabel="Salvar endereço de entrega"
+                submitLabel={t('userPages.profile.addressSaveBtn')}
                 title=""
               />
             </div>
@@ -466,9 +468,9 @@ const Profile = () => {
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <button type="submit" className="pr-btn-save" disabled={saving} data-testid="button-save">
               {saving ? (
-                <><Loader2 size={16} style={{ animation: 'spin 0.8s linear infinite' }} /> Salvando...</>
+                <><Loader2 size={16} style={{ animation: 'spin 0.8s linear infinite' }} />{t('userPages.profile.saving')}</>
               ) : (
-                <><Save size={16} /> Salvar Alterações</>
+                <><Save size={16} /> {t('userPages.profile.saveBtn')}</>
               )}
             </button>
           </div>

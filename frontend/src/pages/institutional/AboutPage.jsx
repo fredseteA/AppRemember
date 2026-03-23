@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const pageStyle = {
   background: 'linear-gradient(180deg, #c8e8f5 0%, #a8d8f0 18%, #7bbde8 32%, #b8e0f5 55%, #eef8fb 100%)',
@@ -87,6 +88,9 @@ const ValueCard = ({ icon, title, text }) => (
 );
 
 export default function AboutPage() {
+  const { t } = useTranslation();
+  const values = t('institutional.about.values', { returnObjects: true });
+
   return (
     <div style={pageStyle}>
       <style>{`
@@ -100,7 +104,7 @@ export default function AboutPage() {
         }
       `}</style>
 
-      {/* Hero — fundo transparente para herdar o gradiente da página */}
+      {/* Hero */}
       <section style={{
         background: 'transparent',
         padding: 'clamp(80px, 12vw, 140px) clamp(20px, 5vw, 40px) clamp(48px, 8vw, 80px)',
@@ -120,66 +124,49 @@ export default function AboutPage() {
         </div>
 
         <div className="sobre-hero" style={{ position: 'relative', zIndex: 1, maxWidth: 680, margin: '0 auto' }}>
-          <Tag>Sobre nós</Tag>
-          <H1>Nascemos para preservar o que mais importa.</H1>
+          <Tag>{t('institutional.about.heroTag')}</Tag>
+          <H1>{t('institutional.about.heroTitle')}</H1>
           <p style={{
             color: '#2a3d5e',
             fontSize: 'clamp(0.95rem, 3vw, 1.1rem)',
             lineHeight: 1.72,
             marginTop: '16px',
           }}>
-            A Remember QRCode é uma plataforma brasileira dedicada à criação de memoriais digitais permanentes, conectando histórias de vida ao presente por meio da tecnologia.
+            {t('institutional.about.heroSubtitle')}
           </p>
         </div>
       </section>
 
-      {/* Conteúdo */}
+      {/* Content */}
       <Section>
-
-        <H2>Quem somos</H2>
-        <P>
-          A Remember QRCode é uma empresa brasileira criada com o propósito de transformar a forma como honramos e lembramos as pessoas que amamos. Acreditamos que toda vida merece ser contada, celebrada e preservada para as gerações futuras.
-        </P>
-        <P>
-          Combinamos tecnologia acessível com um produto físico de alta qualidade — a placa de aço inoxidável com QR Code — para criar uma ponte permanente entre o mundo físico e o digital.
-        </P>
+        <H2>{t('institutional.about.whoWeAreTitle')}</H2>
+        <P>{t('institutional.about.whoWeAre1')}</P>
+        <P>{t('institutional.about.whoWeAre2')}</P>
 
         <Divider />
-        <H2>Nossa missão</H2>
-        <P>
-          Oferecer às famílias uma forma digna, acessível e duradoura de preservar a memória de seus entes queridos, com respeito, simplicidade e cuidado em cada etapa do processo.
-        </P>
+        <H2>{t('institutional.about.missionTitle')}</H2>
+        <P>{t('institutional.about.mission')}</P>
 
         <Divider />
-        <H2>Nossa visão</H2>
-        <P>
-          Ser a principal plataforma de memoriais digitais do Brasil, reconhecida pela qualidade dos produtos, pelo atendimento humanizado e pelo impacto positivo que geramos nas famílias brasileiras.
-        </P>
+        <H2>{t('institutional.about.visionTitle')}</H2>
+        <P>{t('institutional.about.vision')}</P>
 
         <Divider />
-        <H2>Nossos valores</H2>
-
+        <H2>{t('institutional.about.valuesTitle')}</H2>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginTop: '20px' }}>
-          <ValueCard icon="🤍" title="Respeito e empatia" text="Cada memorial é único. Tratamos cada história com o cuidado e a sensibilidade que ela merece." />
-          <ValueCard icon="🔒" title="Confiança e segurança" text="Seus dados e o memorial criado são armazenados com segurança e permanecem disponíveis permanentemente." />
-          <ValueCard icon="✨" title="Simplicidade" text="Criamos uma experiência simples e intuitiva para que qualquer pessoa possa criar um memorial bonito." />
-          <ValueCard icon="🌐" title="Tecnologia com propósito" text="Usamos tecnologia não por tendência, mas para criar algo com significado real para as famílias." />
+          {Array.isArray(values) && values.map((v, i) => (
+            <ValueCard key={i} icon={v.icon} title={v.title} text={v.text} />
+          ))}
         </div>
 
         <Divider />
-        <H2>Como funciona</H2>
-        <P>
-          Qualquer pessoa pode criar um memorial digital gratuitamente em nossa plataforma. Após a criação, o memorial fica salvo como rascunho, permitindo revisões antes da publicação.
-        </P>
-        <P>
-          Quando o cliente estiver satisfeito, pode escolher entre o <strong>Plano Digital</strong> — que publica o memorial online com link e QR Code exclusivos — ou o <strong>Plano Placa QR Code</strong>, que inclui a produção e entrega de uma placa física em aço inox para fixação em túmulos, jazigos ou locais de homenagem.
-        </P>
+        <H2>{t('institutional.about.howItWorksTitle')}</H2>
+        <P>{t('institutional.about.howItWorks1')}</P>
+        <P dangerouslySetInnerHTML={{ __html: t('institutional.about.howItWorks2') }} />
 
         <Divider />
-        <H2>Parceria com funerárias e cemitérios</H2>
-        <P>
-          Contamos com um programa de affiliatees voltado a funerárias e cemitérios. Parceiros recebem um código exclusivo que oferece desconto aos clientes e gera comissão progressiva sobre as vendas realizadas. Entre em contato para saber mais.
-        </P>
+        <H2>{t('institutional.about.affiliatesTitle')}</H2>
+        <P>{t('institutional.about.affiliates')}</P>
 
         <div style={{ marginTop: '36px', textAlign: 'center' }}>
           <Link to="/create-memorial">
@@ -196,7 +183,7 @@ export default function AboutPage() {
               letterSpacing: '0.05em',
               boxShadow: '0 4px 18px rgba(26,39,68,0.18)',
             }}>
-              Criar memorial gratuito
+              {t('institutional.about.cta')}
             </button>
           </Link>
         </div>

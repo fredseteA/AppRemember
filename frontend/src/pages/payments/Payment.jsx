@@ -1,57 +1,59 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import QRCode from 'react-qr-code';
-import { CheckCircle2} from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const Payment = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [paymentStatus, setPaymentStatus] = useState('pending');
   const { qrCode, qrCodeBase64, amount } = location.state || {};
+
   const payStyles = `
-          @keyframes floatPay1 {
-            0%,100% { transform: translateY(0) translateX(0); }
-            45%     { transform: translateY(-14px) translateX(8px); }
-          }
-          @keyframes floatPay2 {
-            0%,100% { transform: translateY(0) translateX(0); }
-            55%     { transform: translateY(-9px) translateX(-6px); }
-          }
-          @keyframes successPop {
-            0%   { opacity: 0; transform: scale(0.85) translateY(20px); }
-            60%  { transform: scale(1.03) translateY(-4px); }
-            100% { opacity: 1; transform: scale(1) translateY(0); }
-          }
-          .pay-btn-primary {
-            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-            padding: 13px 28px; border-radius: 999px; background: #1a2744; color: white;
-            font-family: "Georgia", serif; font-size: 0.88rem; font-weight: 700;
-            letter-spacing: 0.06em; border: none; cursor: pointer;
-            transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
-            box-shadow: 0 6px 20px rgba(26,39,68,0.18); min-height: 48px;
-            -webkit-tap-highlight-color: transparent;
-          }
-          .pay-btn-primary:hover { background: #2a3d5e; transform: translateY(-2px); }
-          .pay-btn-outline {
-            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-            padding: 13px 28px; border-radius: 999px; background: transparent; color: #2a3d5e;
-            font-family: "Georgia", serif; font-size: 0.88rem; font-weight: 700;
-            letter-spacing: 0.06em; border: 1.5px solid rgba(26,39,68,0.18); cursor: pointer;
-            transition: all 0.25s ease; min-height: 48px;
-            -webkit-tap-highlight-color: transparent;
-          }
-          .pay-btn-outline:hover { border-color: rgba(90,168,224,0.5); background: rgba(90,168,224,0.06); color: #1a2744; }
-          @media (max-width: 480px) {
-            .pay-success-btns { flex-direction: column !important; }
-            .pay-btn-primary, .pay-btn-outline { width: 100%; }
-          }
-        `;
+    @keyframes floatPay1 {
+      0%,100% { transform: translateY(0) translateX(0); }
+      45%     { transform: translateY(-14px) translateX(8px); }
+    }
+    @keyframes floatPay2 {
+      0%,100% { transform: translateY(0) translateX(0); }
+      55%     { transform: translateY(-9px) translateX(-6px); }
+    }
+    @keyframes successPop {
+      0%   { opacity: 0; transform: scale(0.85) translateY(20px); }
+      60%  { transform: scale(1.03) translateY(-4px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .pay-btn-primary {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 13px 28px; border-radius: 999px; background: #1a2744; color: white;
+      font-family: "Georgia", serif; font-size: 0.88rem; font-weight: 700;
+      letter-spacing: 0.06em; border: none; cursor: pointer;
+      transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+      box-shadow: 0 6px 20px rgba(26,39,68,0.18); min-height: 48px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .pay-btn-primary:hover { background: #2a3d5e; transform: translateY(-2px); }
+    .pay-btn-outline {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 13px 28px; border-radius: 999px; background: transparent; color: #2a3d5e;
+      font-family: "Georgia", serif; font-size: 0.88rem; font-weight: 700;
+      letter-spacing: 0.06em; border: 1.5px solid rgba(26,39,68,0.18); cursor: pointer;
+      transition: all 0.25s ease; min-height: 48px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .pay-btn-outline:hover { border-color: rgba(90,168,224,0.5); background: rgba(90,168,224,0.06); color: #1a2744; }
+    @media (max-width: 480px) {
+      .pay-success-btns { flex-direction: column !important; }
+      .pay-btn-primary, .pay-btn-outline { width: 100%; }
+    }
+  `;
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setPaymentStatus('approved');
     }, 10000);
-
     return () => clearTimeout(timer);
   }, []);
 
@@ -71,7 +73,6 @@ const Payment = () => {
       >
         <style>{payStyles}</style>
 
-        {/* Nuvem esquerda */}
         <div className="absolute top-[60px] left-[-50px] w-44 md:w-64 opacity-50 pointer-events-none select-none z-0"
           style={{ animation: 'floatPay1 11s ease-in-out infinite' }}>
           <img src="/clouds/cloud1.png" alt="" draggable={false} style={{ width: '100%', height: 'auto', display: 'block' }} />
@@ -96,7 +97,6 @@ const Payment = () => {
             animation: 'successPop 0.7s cubic-bezier(.22,1,.36,1) both',
           }}
         >
-          {/* Ícone de sucesso */}
           <div style={{
             width: 80, height: 80, borderRadius: '50%',
             background: 'rgba(34,197,94,0.12)',
@@ -115,22 +115,22 @@ const Payment = () => {
               fontWeight: 700, color: '#1a2744', lineHeight: 1.15, marginBottom: 14,
             }}
           >
-            Pagamento Aprovado!
+            {t('paymentSuccess.title')}
           </h1>
           <p style={{
             fontFamily: '"Georgia", serif',
             fontSize: '0.95rem', color: '#3a5070', lineHeight: 1.7,
             marginBottom: 36, maxWidth: 340, margin: '0 auto 36px',
           }}>
-            Seu memorial foi publicado com sucesso e já está disponível.
+            {t('paymentSuccess.description')}
           </p>
 
           <div className="pay-success-btns" style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
             <button className="pay-btn-primary" onClick={() => navigate('/my-memorials')} data-testid="button-view-memorials">
-              Ver Meus Memoriais
+              {t('paymentSuccess.btnMemorials')}
             </button>
             <button className="pay-btn-outline" onClick={() => navigate('/')} data-testid="button-home">
-              Voltar ao Início
+              {t('paymentSuccess.btnHome')}
             </button>
           </div>
         </div>
@@ -152,7 +152,6 @@ const Payment = () => {
     >
       <style>{payStyles}</style>
 
-      {/* Nuvem esquerda */}
       <div className="fixed top-[60px] left-[-50px] w-44 md:w-64 opacity-50 pointer-events-none select-none z-0"
         style={{ animation: 'floatPay1 11s ease-in-out infinite' }}>
         <img src="/clouds/cloud1.png" alt="" draggable={false} style={{ width: '100%', height: 'auto', display: 'block' }} />
@@ -166,13 +165,12 @@ const Payment = () => {
         className="relative z-10"
         style={{ maxWidth: 560, margin: '0 auto', padding: '0 20px' }}
       >
-
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 28, animation: 'revealPay 0.7s cubic-bezier(.22,1,.36,1) both' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 12 }}>
             <div style={{ height: 1, width: 28, background: 'rgba(42,61,94,0.3)' }} />
             <span style={{ textTransform: 'uppercase', letterSpacing: '0.22em', fontSize: '0.62rem', fontWeight: 700, color: '#2a3d5e' }}>
-              Pagamento
+              {t('payment.eyebrow')}
             </span>
             <div style={{ height: 1, width: 28, background: 'rgba(42,61,94,0.3)' }} />
           </div>
@@ -184,10 +182,10 @@ const Payment = () => {
               fontWeight: 700, color: '#1a2744', lineHeight: 1.1, marginBottom: 10,
             }}
           >
-            Finalize seu Pagamento
+            {t('payment.title')}
           </h1>
           <p style={{ fontFamily: '"Georgia", serif', fontSize: '0.95rem', color: '#3a5070', lineHeight: 1.6 }}>
-            Escaneie o QR Code do Pix para pagar
+            {t('payment.subtitle')}
           </p>
         </div>
 
@@ -234,7 +232,7 @@ const Payment = () => {
                   color: 'rgba(58,80,112,0.4)', fontSize: '0.85rem',
                   fontFamily: '"Georgia", serif',
                 }}>
-                  QR Code não disponível
+                  {t('payment.qrUnavailable')}
                 </div>
               )}
             </div>
@@ -261,7 +259,7 @@ const Payment = () => {
                 flexShrink: 0,
               }} />
               <span style={{ fontFamily: '"Georgia", serif', fontSize: '0.82rem', color: '#3a5070' }}>
-                Aguardando confirmação do pagamento...
+                {t('payment.waitingConfirmation')}
               </span>
             </div>
           </div>
@@ -274,15 +272,10 @@ const Payment = () => {
               letterSpacing: '0.18em', textTransform: 'uppercase',
               color: '#2a3d5e', marginBottom: 14,
             }}>
-              Instruções
+              {t('payment.instructionsLabel')}
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {[
-                'Abra o aplicativo do seu banco',
-                'Escolha a opção Pix',
-                'Escaneie o QR Code acima',
-                'Confirme o pagamento',
-              ].map((step, i) => (
+              {t('payment.instructions', { returnObjects: true }).map((step, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div style={{
                     width: 26, height: 26, borderRadius: '50%', flexShrink: 0,

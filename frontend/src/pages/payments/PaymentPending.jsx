@@ -4,10 +4,12 @@ import { Clock } from 'lucide-react';
 import axios from 'axios';
 import { API } from '@/config';
 import { paymentSharedStyles } from './shared/paymentSharedStyles';
+import { useTranslation } from 'react-i18next';
 
 const PaymentPending = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const paymentId = searchParams.get('payment_id');
   const collectionId = searchParams.get('collection_id');
 
@@ -72,18 +74,20 @@ const PaymentPending = () => {
         }}>
           <Clock size={38} style={{ color: '#d97706' }} />
         </div>
+
         <h1 data-testid="pending-title" style={{
           fontFamily: '"Georgia", serif', fontSize: 'clamp(1.5rem, 5vw, 2.2rem)',
           fontWeight: 700, color: '#1a2744', lineHeight: 1.15, marginBottom: 14,
         }}>
-          Pagamento Pendente
+          {t('paymentPending.title')}
         </h1>
         <p style={{
           fontFamily: '"Georgia", serif', fontSize: '0.95rem', color: '#3a5070',
           lineHeight: 1.7, maxWidth: 340, margin: '0 auto 24px',
         }}>
-          Estamos aguardando a confirmação do seu pagamento. Assim que for aprovado, seu memorial será publicado automaticamente.
+          {t('paymentPending.description')}
         </p>
+
         <div style={{
           borderRadius: 16, padding: '14px 18px', marginBottom: 32,
           background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)',
@@ -94,15 +98,16 @@ const PaymentPending = () => {
             flexShrink: 0, marginTop: 7,
           }} />
           <p style={{ fontFamily: '"Georgia", serif', fontSize: '0.82rem', color: '#92400e', lineHeight: 1.6, margin: 0 }}>
-            Você receberá uma notificação quando o pagamento for confirmado. Isso pode levar alguns minutos.
+            {t('paymentPending.notice')}
           </p>
         </div>
+
         <div className="pr-btns" style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
           <button className="pr-btn-primary" onClick={() => navigate('/my-memorials')} data-testid="button-view-memorials">
-            Ver Meus Memoriais
+            {t('paymentPending.btnMemorials')}
           </button>
           <button className="pr-btn-outline" onClick={() => navigate('/')} data-testid="button-home">
-            Voltar ao Início
+            {t('paymentPending.btnHome')}
           </button>
         </div>
       </div>

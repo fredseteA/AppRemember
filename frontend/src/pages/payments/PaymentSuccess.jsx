@@ -4,12 +4,14 @@ import { CheckCircle2 } from 'lucide-react';
 import axios from 'axios';
 import { API } from '@/config';
 import { paymentSharedStyles } from './shared/paymentSharedStyles';
+import { useTranslation } from 'react-i18next';
 
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const paymentId = searchParams.get('payment_id');           
-  const collectionId = searchParams.get('collection_id');     
+  const { t } = useTranslation();
+  const paymentId = searchParams.get('payment_id');
+  const collectionId = searchParams.get('collection_id');
   const collectionStatus = searchParams.get('collection_status');
 
   useEffect(() => {
@@ -18,7 +20,6 @@ const PaymentSuccess = () => {
     console.log('Collection ID (MP):', collectionId);
     console.log('Status:', collectionStatus);
 
-    // Chama o backend para confirmar e publicar o memorial
     if (paymentId) {
       axios.post(`${API}/payments/confirm`, {
         payment_id: paymentId,
@@ -75,32 +76,35 @@ const PaymentSuccess = () => {
         }}>
           <CheckCircle2 size={38} style={{ color: '#15803d' }} />
         </div>
+
         <h1 data-testid="success-title" style={{
           fontFamily: '"Georgia", serif', fontSize: 'clamp(1.5rem, 5vw, 2.2rem)',
           fontWeight: 700, color: '#1a2744', lineHeight: 1.15, marginBottom: 14,
         }}>
-          Pagamento Aprovado!
+          {t('paymentSuccess.title')}
         </h1>
         <p style={{
           fontFamily: '"Georgia", serif', fontSize: '0.95rem', color: '#3a5070',
           lineHeight: 1.7, maxWidth: 320, margin: '0 auto 20px',
         }}>
-          Seu memorial foi publicado com sucesso e já está disponível.
+          {t('paymentSuccess.description')}
         </p>
+
         {collectionId && (
           <p style={{
             fontFamily: '"Georgia", serif', fontSize: '0.72rem',
             color: 'rgba(58,80,112,0.5)', marginBottom: 28, letterSpacing: '0.05em',
           }}>
-            ID do Pagamento: {collectionId}
+            {t('paymentSuccess.paymentId', { id: collectionId })}
           </p>
         )}
+
         <div className="pr-btns" style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
           <button className="pr-btn-primary" onClick={() => navigate('/my-memorials')} data-testid="button-view-memorials">
-            Ver Meus Memoriais
+            {t('paymentSuccess.btnMemorials')}
           </button>
           <button className="pr-btn-outline" onClick={() => navigate('/')} data-testid="button-home">
-            Voltar ao Início
+            {t('paymentSuccess.btnHome')}
           </button>
         </div>
       </div>

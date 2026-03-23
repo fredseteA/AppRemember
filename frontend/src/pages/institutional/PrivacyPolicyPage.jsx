@@ -1,92 +1,79 @@
+import { useTranslation } from 'react-i18next';
 import { PageHero, ContentSection, H2, P, Li, Ul, Divider, sharedStyles } from './InstitutionalComponents';
 
 export default function PrivacyPolicyPage() {
+  const { t } = useTranslation();
+  const s1Items = t('institutional.privacy.s1Items', { returnObjects: true });
+  const s2Items = t('institutional.privacy.s2Items', { returnObjects: true });
+  const s4Items = t('institutional.privacy.s4Items', { returnObjects: true });
+  const s5Items = t('institutional.privacy.s5Items', { returnObjects: true });
+
   return (
     <div style={{ background: 'linear-gradient(180deg, #c8e8f5 0%, #a8d8f0 18%, #7bbde8 32%, #b8e0f5 55%, #eef8fb 100%)', minHeight: '100vh', fontFamily: '"Georgia", serif' }}>
       <style>{sharedStyles}</style>
 
       <PageHero
-        tag="Privacidade"
-        title="Política de Privacidade"
-        subtitle="Saiba como coletamos, usamos e protegemos suas informações pessoais na Remember QRCode."
+        tag={t('institutional.privacy.heroTag')}
+        title={t('institutional.privacy.heroTitle')}
+        subtitle={t('institutional.privacy.heroSubtitle')}
       />
 
       <ContentSection>
 
-        <H2>1. Quais dados coletamos</H2>
-        <P>Ao utilizar nossa plataforma, podemos coletar as seguintes informações:</P>
+        <H2>{t('institutional.privacy.s1Title')}</H2>
+        <P>{t('institutional.privacy.s1Intro')}</P>
         <Ul>
-          <Li><strong>Dados de cadastro:</strong> nome, e-mail e senha (criptografada).</Li>
-          <Li><strong>Dados do memorial:</strong> nome, foto, biografia, datas e demais informações inseridas voluntariamente pelo usuário.</Li>
-          <Li><strong>Dados de pagamento:</strong> processados integralmente por gateways certificados (não armazenamos dados de cartão).</Li>
-          <Li><strong>Dados de entrega:</strong> endereço fornecido para envio da placa física.</Li>
-          <Li><strong>Dados de navegação:</strong> cookies e dados técnicos de acesso (IP, navegador, dispositivo), utilizados exclusivamente para melhoria da plataforma.</Li>
+          {Array.isArray(s1Items) && s1Items.map((item, i) => (
+            <Li key={i}><span dangerouslySetInnerHTML={{ __html: item }} /></Li>
+          ))}
         </Ul>
 
         <Divider />
-        <H2>2. Como utilizamos seus dados</H2>
-        <P>Os dados coletados são utilizados exclusivamente para:</P>
+        <H2>{t('institutional.privacy.s2Title')}</H2>
+        <P>{t('institutional.privacy.s2Intro')}</P>
         <Ul>
-          <Li>Criar e gerenciar sua conta e os memoriais associados.</Li>
-          <Li>Processar pagamentos e emitir confirmações de compra.</Li>
-          <Li>Enviar atualizações sobre o pedido por e-mail (produção, despacho, entrega).</Li>
-          <Li>Prestar suporte ao cliente quando solicitado.</Li>
-          <Li>Melhorar continuamente a experiência na plataforma.</Li>
+          {Array.isArray(s2Items) && s2Items.map((item, i) => (
+            <Li key={i}>{item}</Li>
+          ))}
         </Ul>
-        <P>
-          <strong>Não vendemos, alugamos nem compartilhamos seus dados pessoais com terceiros</strong> para fins comerciais ou publicitários.
-        </P>
+        <P dangerouslySetInnerHTML={{ __html: t('institutional.privacy.s2Footer') }} />
 
         <Divider />
-        <H2>3. Armazenamento e segurança</H2>
-        <P>
-          Todos os dados são armazenados em servidores seguros com criptografia. Adotamos medidas técnicas e administrativas adequadas para proteger suas informações contra acesso não autorizado, perda ou vazamento.
-        </P>
-        <P>
-          As senhas dos usuários são armazenadas com hash criptográfico e nunca podem ser acessadas diretamente por nenhum colaborador da empresa.
-        </P>
+        <H2>{t('institutional.privacy.s3Title')}</H2>
+        <P>{t('institutional.privacy.s3a')}</P>
+        <P>{t('institutional.privacy.s3b')}</P>
 
         <Divider />
-        <H2>4. Compartilhamento de dados</H2>
-        <P>Seus dados podem ser compartilhados apenas nas seguintes situações:</P>
+        <H2>{t('institutional.privacy.s4Title')}</H2>
+        <P>{t('institutional.privacy.s4Intro')}</P>
         <Ul>
-          <Li><strong>Transportadoras:</strong> nome e endereço de entrega, exclusivamente para entrega da placa física.</Li>
-          <Li><strong>Gateway de pagamento:</strong> dados necessários para processamento da transação.</Li>
-          <Li><strong>Obrigações legais:</strong> quando exigido por lei ou autoridade competente.</Li>
+          {Array.isArray(s4Items) && s4Items.map((item, i) => (
+            <Li key={i}><span dangerouslySetInnerHTML={{ __html: item }} /></Li>
+          ))}
         </Ul>
 
         <Divider />
-        <H2>5. Seus direitos (LGPD)</H2>
-        <P>Em conformidade com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018), você tem direito a:</P>
+        <H2>{t('institutional.privacy.s5Title')}</H2>
+        <P>{t('institutional.privacy.s5Intro')}</P>
         <Ul>
-          <Li>Confirmar a existência de tratamento de seus dados.</Li>
-          <Li>Acessar os dados que temos sobre você.</Li>
-          <Li>Corrigir dados incompletos ou desatualizados.</Li>
-          <Li>Solicitar a exclusão de seus dados pessoais.</Li>
-          <Li>Revogar o consentimento dado anteriormente.</Li>
+          {Array.isArray(s5Items) && s5Items.map((item, i) => (
+            <Li key={i}>{item}</Li>
+          ))}
         </Ul>
-        <P>
-          Para exercer qualquer um desses direitos, entre em contato com nossa equipe pelo e-mail ou WhatsApp disponíveis no rodapé do site.
-        </P>
+        <P>{t('institutional.privacy.s5Footer')}</P>
 
         <Divider />
-        <H2>6. Cookies</H2>
-        <P>
-          Utilizamos cookies estritamente necessários para o funcionamento da plataforma e cookies analíticos para entender como os usuários navegam no site. Você pode desativar os cookies no seu navegador, porém isso pode afetar algumas funcionalidades.
-        </P>
+        <H2>{t('institutional.privacy.s6Title')}</H2>
+        <P>{t('institutional.privacy.s6')}</P>
 
         <Divider />
-        <H2>7. Retenção de dados</H2>
-        <P>
-          Os dados são mantidos enquanto sua conta estiver ativa. Após a exclusão da conta, os dados pessoais são removidos em até 30 dias, exceto aqueles exigidos por obrigações legais ou fiscais.
-        </P>
+        <H2>{t('institutional.privacy.s7Title')}</H2>
+        <P>{t('institutional.privacy.s7')}</P>
 
         <Divider />
-        <H2>8. Atualizações desta política</H2>
-        <P>
-          Esta política pode ser atualizada periodicamente. Em caso de alterações relevantes, notificaremos os usuários cadastrados por e-mail. A data da última atualização estará sempre indicada no final desta página.
-        </P>
-        <P style={{ color: '#7a9bb5', fontSize: '0.82rem' }}>Última atualização: junho de 2025.</P>
+        <H2>{t('institutional.privacy.s8Title')}</H2>
+        <P>{t('institutional.privacy.s8a')}</P>
+        <P style={{ color: '#7a9bb5', fontSize: '0.82rem' }}>{t('institutional.privacy.s8Date')}</P>
 
       </ContentSection>
     </div>

@@ -10,6 +10,8 @@
 
 **English** | [Versão em Português](README.pt-BR.md)
 
+🌐 **Production**: [rememberqr.online](https://rememberqr.online)
+
 ---
 
 ## 📋 Table of Contents
@@ -22,13 +24,10 @@
 - [Architecture](#-architecture)
 - [Installation](#-installation)
 - [Configuration](#-configuration)
-- [Usage](#-usage)
 - [API](#-api)
 - [Business Flows](#-business-flows)
 - [Cancellation Policy](#-cancellation-policy)
-- [Security](#-security)
 - [Roadmap](#-roadmap)
-- [Contributing](#-contributing)
 - [License](#-license)
 - [Contact](#-contact)
 
@@ -53,13 +52,14 @@
 ### ✨ Technical Differentiators
 
 - 🔐 **Firebase Authentication**: Robust system with custom claims (user/supporter/admin)
-- 💳 **Automated Payments**: Mercado Pago integration + idempotent webhooks
+- 💳 **Automated Payments**: Mercado Pago integration with idempotent webhooks
 - 📊 **Complete Analytics**: Real-time dashboard with financial and operational metrics
 - 🤝 **Affiliate System**: Automatic commissions for partners with 3 tiers (10%/15%/20%)
-- 📧 **Transactional Emails**: HTML templates personalized for each order stage
+- 📧 **Transactional Emails**: HTML templates via Resend for each order stage
 - 🔄 **Idempotent Processing**: Webhooks can be received multiple times without duplicating data
 - 📝 **Complete Auditing**: Detailed logs of all administrative actions
 - 🎯 **Prioritized Notifications**: Alert system with urgency levels (critical/high/normal/low)
+- 🌐 **Bilingual**: Full PT/EN support via react-i18next with animated flag switcher
 
 ---
 
@@ -67,173 +67,90 @@
 
 ### For Users
 
-- ✅ **Memorial Creation**
-  - Intuitive interface for creating memorials
-  - Draft system for editing before publication
-  - Complete content customization
-  - Photo and video uploads
-  - Life timeline
-  
-- ✅ **Memorial Management**
-  - Preview before publication
-  - Draft memorial editing
-  - Privacy controls
-  
-- ✅ **Email Notifications**
-  - Memorial created
-  - Order confirmed
-  - Order in production
-  - Product completed
-  - Order shipped (with tracking)
-  - Order delivered
+- ✅ **Memorial Creation** — Intuitive 3-step form with photo crop, gallery and audio upload
+- ✅ **Draft System** — Edit freely before publishing
+- ✅ **Preview** — See the full memorial before choosing a plan
+- ✅ **Memorial Management** — Edit, visibility controls, gallery management
+- ✅ **Condolences** — Leave and view condolence messages with preset or custom text
+- ✅ **Email Notifications** — Order confirmed, in production, shipped (with tracking), delivered
 
 ### For Administrators
 
-- 🎛️ **Complete Admin Panel**
-  - Memorial management
-  - Order control and status
-  - Production tracking
-  - Shipping and logistics management
-  - User administration
-  - Plans and payments control
-  - Reports and analytics
-  - Supporter program management
+- ✅ **Complete Admin Panel** — Memorial, order, production, shipping and user management
+- ✅ **Financial Dashboard** — Revenue, profit, cost tracking in real time
+- ✅ **Supporter Management** — Approve partners, view performance, configure commission tiers
+- ✅ **QR Code Generator** — PNG (high-res), PDF (print-ready 50×50mm), SVG (vectorized)
+- ✅ **Prioritized Notifications** — Critical alerts for payments, orders and system events
+- ✅ **Audit Logs** — Full history of all administrative actions
 
 ### For Supporters (Partners)
 
-- 🤝 **Partnership System**
-  - Exclusive support code
-  - Sales tracking dashboard
-  - Commission management
-  - Performance reports
+- ✅ **Exclusive Affiliate Code** — Share code for client discounts
+- ✅ **Sales Dashboard** — Track commissions and performance
+- ✅ **Tiered Commissions** — Automatic tier upgrades based on volume
 
 ---
 
 ## 💎 Publishing Plans
 
-### 📱 Digital Plan
+### 📱 Digital Plan — R$ 29,90
 
-**Benefits:**
-- Official publication of the memorial on the platform
-- Exclusive and permanent link
+- Official publication with permanent link
 - Personalized QR Code
-- Unlimited access to the memorial
-- Future updates and edits
+- Unlimited access and future edits
+- Ideal for online-only memorials
 
-**Ideal for:**
-- Exclusively digital memorials
-- Social media sharing
-- Geographically distributed families
+### 🏛️ Physical Plan — R$ 149,90
 
----
-
-### 🏛️ Physical Plan
-
-**All Digital Plan benefits +**
-- High-quality stainless steel physical plaque
+- Everything in the Digital Plan
+- High-quality stainless steel plaque
 - Permanently engraved QR Code
-- Installation at chosen location (grave, memorial, tomb, etc.)
-- Weather-resistant material
-- Elegant and discreet design
-
-**Ideal for:**
-- Graves and tombs
-- Physical memorials
-- Cemeteries and memorial gardens
-- Permanent tribute locations
+- Shipping across Brazil with tracking
+- Ideal for graves, tombs and memorial gardens
 
 ---
 
 ## 🤝 Supporter Program
 
-Strategic partnership system designed for **funeral homes, cemeteries, and funeral service providers**.
-
-### How It Works
-
-1. **Register as a Supporter**
-   - Platform registration as a partner
-   - Receive exclusive support code
-
-2. **Benefits for Clients**
-   - Client uses the supporter's code
-   - Receives **5% discount** on purchase
-
-3. **Tiered Commission System**
+Strategic partnership system for **funeral homes, cemeteries, and funeral service providers**.
 
 | Monthly Volume | Commission |
 |---------------|-----------|
-| Initial standard | 10% |
+| Standard | 10% |
 | High volume | 15% |
 | Premium volume | 20% |
 
-### Program Advantages
-
-**For Supporters:**
-- 💰 Additional revenue source
-- 🎯 Value addition to services offered
-- 📊 Control panel and reports
-- 🏆 Progressive commissions
-
-**For the Platform:**
-- 🌐 Expanded reach
-- 🤝 Strategic partnerships
-- 📈 Sustainable growth
-- 🎓 Collaborative ecosystem
+- Clients using a supporter code receive **5% discount**
+- Supporters access a dedicated dashboard with sales and commission reports
 
 ---
 
 ## 🛠️ Technologies
 
 ### Frontend
-
 ```
-- React.js / Next.js
-- TypeScript
-- Tailwind CSS
-- React Query
-- Zustand (State Management)
-- React Hook Form
-- Zod (Validation)
+React.js · Vite · Tailwind CSS · React Router · Axios
+react-i18next · Firebase SDK · Radix UI · Sonner
 ```
 
 ### Backend
-
 ```
-- Node.js
-- Express.js / Nest.js
-- TypeScript
-- Prisma ORM
-- PostgreSQL
-- Redis (Cache)
-- JWT (Authentication)
+Python 3.11 · FastAPI · Firebase Admin SDK · Firestore
+Mercado Pago API · Resend (emails) · Pydantic
 ```
 
 ### Infrastructure
-
 ```
-- Docker
-- AWS S3 (Media Storage)
-- AWS SES (Emails)
-- AWS CloudFront (CDN)
-- GitHub Actions (CI/CD)
-```
-
-### External Services
-
-```
-- Stripe / MercadoPago (Payments)
-- Postal Service API (Tracking)
-- QR Code Generator
-- Email sending system
+Vercel (frontend) · Fly.io (backend) · Firebase (auth + database)
+Firebase Storage (media) · GitHub Actions (CI/CD)
 ```
 
 ---
 
 ## 🏗️ Architecture
-
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                      FRONTEND (Next.js)                  │
+│              FRONTEND — React + Vite (Vercel)           │
 │  ┌─────────────┐  ┌──────────────┐  ┌───────────────┐  │
 │  │   Public    │  │     User     │  │     Admin     │  │
 │  │  (Landing)  │  │  (Dashboard) │  │    (Panel)    │  │
@@ -242,24 +159,24 @@ Strategic partnership system designed for **funeral homes, cemeteries, and funer
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────┐
-│                    API REST / GraphQL                    │
+│           BACKEND — FastAPI (Fly.io · GRU region)       │
+│   Routers: auth · memorials · payments · admin          │
+│            reviews · affiliate                          │
 └─────────────────────────────────────────────────────────┘
                             │
-                ┌───────────┴───────────┐
-                ▼                       ▼
-┌──────────────────────┐    ┌──────────────────────┐
-│   Business Logic     │    │   Authentication     │
-│   - Memorials        │    │   - JWT              │
-│   - Orders           │    │   - OAuth            │
-│   - Supporters       │    │   - Permissions      │
-└──────────────────────┘    └──────────────────────┘
-                │
-    ┌───────────┼───────────┬───────────┐
-    ▼           ▼           ▼           ▼
-┌────────┐ ┌────────┐ ┌─────────┐ ┌──────────┐
-│PostgreSQL Redis  │ │   AWS   │ │ Payment  │
-│  (DB)  │ (Cache)│ │   S3    │ │ Gateway  │
-└────────┘ └────────┘ └─────────┘ └──────────┘
+          ┌─────────────────┼─────────────────┐
+          ▼                 ▼                 ▼
+┌──────────────┐  ┌──────────────────┐  ┌──────────────┐
+│   Firestore  │  │  Firebase Auth   │  │   Firebase   │
+│  (Database)  │  │  (custom claims) │  │   Storage    │
+└──────────────┘  └──────────────────┘  └──────────────┘
+          │                                    │
+          ▼                                    ▼
+┌──────────────┐                    ┌──────────────────┐
+│ Mercado Pago │                    │  Resend (email)  │
+│  (payments   │                    │  HTML templates  │
+│  + webhooks) │                    └──────────────────┘
+└──────────────┘
 ```
 
 ---
@@ -268,391 +185,158 @@ Strategic partnership system designed for **funeral homes, cemeteries, and funer
 
 ### Prerequisites
 
-- Node.js >= 18.0.0
-- PostgreSQL >= 14
-- Redis >= 6.0
-- Docker (optional)
-- Yarn or npm
+- Node.js >= 18
+- Python >= 3.11
+- Firebase project with Firestore enabled
+- Mercado Pago account
+- Resend account
 
 ### Clone the Repository
-
 ```bash
-git clone https://github.com/your-username/digital-memorials-platform.git
-cd digital-memorials-platform
+git clone https://github.com/fredseteA/remember-platform.git
+cd remember-platform
 ```
 
-### Docker Installation (Recommended)
-
-```bash
-# Build and start containers
-docker-compose up -d
-
-# Run migrations
-docker-compose exec api npm run migrate
-
-# Seed the database
-docker-compose exec api npm run seed
-```
-
-### Manual Installation
-
-#### Backend
-
-```bash
-cd backend
-npm install
-
-# Configure environment variables
-cp .env.example .env
-
-# Run migrations
-npm run migrate
-
-# Start the server
-npm run dev
-```
-
-#### Frontend
-
+### Frontend
 ```bash
 cd frontend
 npm install
-
-# Configure environment variables
 cp .env.example .env
-
-# Start development server
 npm run dev
+```
+
+### Backend
+```bash
+cd backend
+pip install -r requirements.txt
+cp .env.example .env
+uvicorn main:app --reload
 ```
 
 ---
 
 ## ⚙️ Configuration
 
-### Backend Environment Variables
-
+### Frontend `.env`
 ```env
-# Database
-DATABASE_URL="postgresql://user:password@localhost:5432/memorials"
-
-# Redis
-REDIS_URL="redis://localhost:6379"
-
-# JWT
-JWT_SECRET="your-secret-key"
-JWT_EXPIRES_IN="7d"
-
-# AWS
-AWS_ACCESS_KEY_ID="your-access-key"
-AWS_SECRET_ACCESS_KEY="your-secret-key"
-AWS_S3_BUCKET="memorials-bucket"
-AWS_REGION="us-east-1"
-
-# Email
-SMTP_HOST="smtp.gmail.com"
-SMTP_PORT=587
-SMTP_USER="your-email@gmail.com"
-SMTP_PASSWORD="your-password"
-
-# Payment
-STRIPE_SECRET_KEY="sk_test_..."
-STRIPE_WEBHOOK_SECRET="whsec_..."
-
-# App
-APP_URL="http://localhost:3000"
-API_URL="http://localhost:4000"
+VITE_API_URL=https://remember-qrcode-api.fly.dev
+VITE_FIREBASE_API_KEY=...
+VITE_FIREBASE_AUTH_DOMAIN=...
+VITE_FIREBASE_PROJECT_ID=...
+VITE_FIREBASE_STORAGE_BUCKET=...
+VITE_FIREBASE_MESSAGING_SENDER_ID=...
+VITE_FIREBASE_APP_ID=...
 ```
 
-### Frontend Environment Variables
-
+### Backend `.env`
 ```env
-NEXT_PUBLIC_API_URL="http://localhost:4000"
-NEXT_PUBLIC_APP_URL="http://localhost:3000"
-NEXT_PUBLIC_STRIPE_PUBLIC_KEY="pk_test_..."
+FIREBASE_CREDENTIALS=...
+MERCADOPAGO_ACCESS_TOKEN=...
+RESEND_API_KEY=...
+FRONTEND_URL=https://rememberqr.online
 ```
-
----
-
-## 🎯 Usage
-
-### For Users
-
-1. **Create a Memorial**
-   ```
-   - Access the platform
-   - Click "Create Memorial"
-   - Fill in the information
-   - Add photos and videos
-   - Save as draft
-   ```
-
-2. **Publish Memorial**
-   ```
-   - Review the memorial in preview mode
-   - Choose a plan (Digital or Physical)
-   - Complete payment
-   - Receive permanent link and QR Code
-   ```
-
-3. **Track Order**
-   ```
-   - Check email for updates
-   - Access "My Orders" in the panel
-   - Use tracking code (physical plan)
-   ```
-
-### For Administrators
-
-1. **Access Admin Panel**
-   ```
-   https://yoursite.com/admin
-   ```
-
-2. **Manage Orders**
-   ```
-   - View pending orders
-   - Update production status
-   - Generate shipping labels
-   - Register tracking
-   ```
-
-3. **Manage Supporters**
-   ```
-   - Approve new supporters
-   - View performance
-   - Configure commission levels
-   ```
 
 ---
 
 ## 📡 API
 
+Base URL: `https://remember-qrcode-api.fly.dev`
+
 ### Main Endpoints
-
-#### Authentication
-
 ```http
-POST /api/auth/register
-POST /api/auth/login
-POST /api/auth/logout
-POST /api/auth/refresh
-```
+# Auth
+POST   /auth/verify
 
-#### Memorials
+# Memorials
+GET    /memorials/explore
+POST   /memorials
+GET    /memorials/:id
+PUT    /memorials/:id
+GET    /memorials/by-slug/:slug
 
-```http
-GET    /api/memorials
-POST   /api/memorials
-GET    /api/memorials/:id
-PUT    /api/memorials/:id
-DELETE /api/memorials/:id
-POST   /api/memorials/:id/publish
-```
+# Payments
+POST   /payments/create-checkout
+POST   /webhooks/mercadopago
 
-#### Orders
+# Admin
+GET    /admin/dashboard
+GET    /admin/orders
+PUT    /admin/orders/:id/status
 
-```http
-GET    /api/orders
-POST   /api/orders
-GET    /api/orders/:id
-PUT    /api/orders/:id/status
-GET    /api/orders/:id/tracking
-```
+# Supporters
+GET    /supporters/validate/:code
+GET    /affiliate/dashboard
 
-#### Supporters
-
-```http
-GET    /api/supporters
-POST   /api/supporters/register
-GET    /api/supporters/:code/stats
-POST   /api/supporters/:code/validate
-```
-
-### Request Example
-
-```javascript
-// Create a memorial
-const response = await fetch('/api/memorials', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`
-  },
-  body: JSON.stringify({
-    name: 'John Smith',
-    birthDate: '1950-01-15',
-    deathDate: '2024-03-10',
-    biography: 'A life dedicated to family...',
-    photos: ['url1', 'url2']
-  })
-});
+# Reviews & Condolences
+GET    /reviews
+POST   /reviews
+GET    /memorials/:id/condolences
+POST   /memorials/:id/condolences
 ```
 
 ---
 
 ## 🔒 Cancellation Policy
 
-### Right of Withdrawal
-
-In accordance with Consumer Protection Code:
-
-- ✅ Users have **7 calendar days** to cancel the purchase
-- ✅ Counted from the order confirmation date
-- ✅ Full refund of amount paid
-- ❌ **Exception**: Physical products already delivered cannot be cancelled
-
-### How to Request Cancellation
-
-1. Access "My Orders" in the user panel
-2. Select the desired order
-3. Click "Request Cancellation"
-4. Confirm the request
-5. Wait for email confirmation (up to 48h)
-
-### Refund Processing
-
-- 💳 Credit card: 5-10 business days
-- 🏦 Other methods: according to payment gateway policy
+- ✅ **7 calendar days** right of withdrawal from order confirmation
+- ✅ Full refund processed via Mercado Pago
+- ❌ Physical products already shipped cannot be cancelled
 
 ---
 
 ## 🗺️ Roadmap
 
-### Phase 1 - MVP ✅
-- [x] Memorial creation system
-- [x] User and authentication system
-- [x] Publishing plans
-- [x] Payment integration
-- [x] Basic admin panel
+### Phase 1 - Core Platform ✅
+- [x] Memorial creation with 3-step form and photo crop
+- [x] Draft and preview system
+- [x] Firebase authentication with custom claims
+- [x] Mercado Pago payment integration with webhooks
+- [x] Digital and physical publishing plans
+- [x] QR Code generation (PNG, PDF, SVG)
 
-### Phase 2 - In Development 🚧
-- [ ] Complete supporter program
-- [ ] Email notification system
-- [ ] Postal service integration
-- [ ] QR Code generator and customization
-- [ ] Plaque production system
+### Phase 2 - Operations & Partnerships ✅
+- [x] Complete admin panel with financial dashboard
+- [x] Production and shipping order management
+- [x] Transactional email system via Resend
+- [x] Affiliate/supporter program with tiered commissions
+- [x] Condolences system with preset messages
+- [x] Reviews and testimonials system
+- [x] Prioritized notification system
+- [x] Complete audit logs
 
-### Phase 3 - Planned 📋
+### Phase 3 - Bilingual & Polish ✅
+- [x] Full PT/EN bilingual system via react-i18next
+- [x] Animated flag language switcher
+- [x] All pages and components translated
+
+### Phase 4 - Planned 📋
 - [ ] Mobile app (iOS/Android)
-- [ ] Comments and tributes system
-- [ ] Social media integration
-- [ ] Expanded photo gallery
-- [ ] Interactive timeline
-- [ ] Virtual donations and flowers system
-
-### Phase 4 - Future 🔮
-- [ ] AI for biography generation
-- [ ] Augmented reality in memorials
-- [ ] Blockchain for authenticity certification
-- [ ] Related services marketplace
-- [ ] Public API for integrations
-
----
-
-## 🤝 Contributing
-
-Contributions are always welcome! This project follows open source best practices.
-
-### How to Contribute
-
-1. **Fork the project**
-2. **Create a branch for your feature**
-   ```bash
-   git checkout -b feature/MyNewFeature
-   ```
-3. **Commit your changes**
-   ```bash
-   git commit -m 'Add new feature X'
-   ```
-4. **Push to the branch**
-   ```bash
-   git push origin feature/MyNewFeature
-   ```
-5. **Open a Pull Request**
-
-### Guidelines
-
-- Follow the project's style guide
-- Write tests for new features
-- Update documentation when necessary
-- Keep commits small and descriptive
-- Use [Conventional Commits](https://www.conventionalcommits.org/)
-
-### Code of Conduct
-
-This project adopts the [Contributor Covenant](https://www.contributor-covenant.org/). By participating, you agree to follow its terms.
+- [ ] AI-assisted biography generation
+- [ ] Interactive life timeline
+- [ ] Virtual donations and flowers
+- [ ] Augmented reality memorial viewer
 
 ---
 
 ## 📄 License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
-```
-MIT License
-
-Copyright (c) 2024 Digital Memorials Platform
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-```
+MIT License — see [LICENSE](LICENSE) for details.
 
 ---
 
 ## 📞 Contact
 
-### Project Team
-
-- **Website**: [https://yoursite.com](https://yoursite.com)
-- **Email**: contact@yoursite.com
-- **Support**: support@yoursite.com
-
-### Useful Links
-
-- 📚 [Documentation](https://docs.yoursite.com)
-- 🐛 [Report Bug](https://github.com/your-username/digital-memorials-platform/issues)
-- 💡 [Request Feature](https://github.com/your-username/digital-memorials-platform/issues)
-- 💬 [Discussions](https://github.com/your-username/digital-memorials-platform/discussions)
-
-### Social Media
-
-- [LinkedIn](https://linkedin.com/company/yoursite)
-- [Instagram](https://instagram.com/yoursite)
-- [Facebook](https://facebook.com/yoursite)
-
----
-
-## 🙏 Acknowledgments
-
-We thank everyone who contributed to this project:
-
-- Families who trusted the platform to preserve memories
-- Partner funeral homes and cemeteries
-- Developers and open-source contributors
-- Feedback and testing community
-
----
-
-## 📊 Project Status
-
-![GitHub stars](https://img.shields.io/github/stars/your-username/digital-memorials-platform?style=social)
-![GitHub forks](https://img.shields.io/github/forks/your-username/digital-memorials-platform?style=social)
-![GitHub issues](https://img.shields.io/github/issues/your-username/digital-memorials-platform)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/your-username/digital-memorials-platform)
+- 🌐 **Website**: [rememberqr.online](https://rememberqr.online)
+- 📧 **Email**: [rememberqrcode@gmail.com](mailto:rememberqrcode@gmail.com)
+- 💬 **WhatsApp**: [(22) 99208-0811](https://wa.me/5522992080811)
+- 🐙 **GitHub**: [fredseteA](https://github.com/fredseteA)
 
 ---
 
 <div align="center">
 
-**Made with ❤️ to preserve memories**
+**Made with ❤️ to preserve memories forever**
 
-[⬆ Back to top](#-digital-memorials-platform)
+[⬆ Back to top](#-remember-qrcode---digital-memorials-platform)
 
 </div>

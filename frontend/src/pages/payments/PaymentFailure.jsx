@@ -4,10 +4,12 @@ import { XCircle } from 'lucide-react';
 import axios from 'axios';
 import { API } from '@/config';
 import { paymentSharedStyles } from './shared/paymentSharedStyles';
+import { useTranslation } from 'react-i18next';
 
 const PaymentFailure = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const paymentId = searchParams.get('payment_id');
   const collectionId = searchParams.get('collection_id');
 
@@ -72,24 +74,26 @@ const PaymentFailure = () => {
         }}>
           <XCircle size={38} style={{ color: '#dc2626' }} />
         </div>
+
         <h1 data-testid="failure-title" style={{
           fontFamily: '"Georgia", serif', fontSize: 'clamp(1.5rem, 5vw, 2.2rem)',
           fontWeight: 700, color: '#1a2744', lineHeight: 1.15, marginBottom: 14,
         }}>
-          Pagamento Não Realizado
+          {t('paymentFailure.title')}
         </h1>
         <p style={{
           fontFamily: '"Georgia", serif', fontSize: '0.95rem', color: '#3a5070',
           lineHeight: 1.7, maxWidth: 320, margin: '0 auto 32px',
         }}>
-          O pagamento não foi concluído. Você pode tentar novamente.
+          {t('paymentFailure.description')}
         </p>
+
         <div className="pr-btns" style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
           <button className="pr-btn-primary" onClick={() => navigate('/my-memorials')} data-testid="button-try-again">
-            Tentar Novamente
+            {t('paymentFailure.btnTryAgain')}
           </button>
           <button className="pr-btn-outline" onClick={() => navigate('/')} data-testid="button-home">
-            Voltar ao Início
+            {t('paymentFailure.btnHome')}
           </button>
         </div>
       </div>

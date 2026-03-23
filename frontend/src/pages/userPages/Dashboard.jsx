@@ -2,9 +2,12 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Heart, ShoppingCart, User, MessageCircle } from 'lucide-react';
 import { userPageStyles, pageBackground } from './shared/userPageStyles.js'
+import { useTranslation } from 'react-i18next';
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { t } = useTranslation();
+
 
   const openWhatsApp = () => {
     window.open('https://wa.me/5522992080811', '_blank');
@@ -84,7 +87,7 @@ const Dashboard = () => {
             color: 'rgba(26,39,68,0.55)',
             marginBottom: 12,
           }}>
-            Painel do usuário
+            {t('userPages.dashboard.eyebrow')}
           </p>
           <h1
             data-testid="page-title"
@@ -97,7 +100,7 @@ const Dashboard = () => {
               marginBottom: 10,
             }}
           >
-            Bem-vindo,<br className="hidden sm:block" /> {user?.displayName || user?.name || 'Usuário'}
+            {t('userPages.dashboard.title', { name: user?.displayName || user?.name || 'Usuário' })}
           </h1>
           <p style={{
             fontFamily: '"Georgia", serif',
@@ -105,7 +108,7 @@ const Dashboard = () => {
             color: '#2a3d5e',
             lineHeight: 1.65,
           }}>
-            Gerencie seus memoriais e homenagens
+            {t('userPages.dashboard.subtitle')}
           </p>
         </div>
 
@@ -209,7 +212,7 @@ const Dashboard = () => {
                   color: 'white',
                   marginBottom: 4,
                 }}>
-                  Precisa de Ajuda?
+                  {t('userPages.dashboard.support.title')}
                 </h3>
                 <p style={{
                   fontFamily: '"Georgia", serif',
@@ -217,7 +220,7 @@ const Dashboard = () => {
                   color: 'rgba(255,255,255,0.65)',
                   lineHeight: 1.55,
                 }}>
-                  Entre em contato com nosso suporte via WhatsApp
+                  {t('userPages.dashboard.support.subtitle')}
                 </p>
               </div>
             </div>
@@ -245,7 +248,7 @@ const Dashboard = () => {
                 e.currentTarget.style.transform = 'translateY(0)';
               }}
             >
-              Falar no WhatsApp
+              {t('userPages.dashboard.support.cta')}
             </button>
           </div>
         </div>

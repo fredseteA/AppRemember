@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 const REQUIRED_FIELDS = [
   "recipient_name",
@@ -55,23 +56,11 @@ function formatPhone(value) {
   return digits;
 }
 
-/**
- * AddressForm
- *
- * Props:
- *   initialData   — objeto de endereço pré-preenchido (pode ser null/undefined)
- *   onSave        — async (addressData) => void   chamado ao confirmar
- *   onCancel      — () => void                     chamado ao cancelar (opcional)
- *   loading       — bool   desabilita formulário durante operação externa
- *   submitLabel   — string  texto do botão de confirmação (padrão: "Salvar endereço")
- *   title         — string  título do card (padrão: "Endereço de entrega")
- */
 export default function AddressForm({
   initialData = null,
   onSave,
   onCancel,
   loading = false,
-  submitLabel = "Salvar endereço",
   title = "Endereço de entrega",
 }) {
   const [form, setForm] = useState({ ...EMPTY_ADDRESS, ...(initialData || {}) });
@@ -79,8 +68,8 @@ export default function AddressForm({
   const [fetchingCep, setFetchingCep] = useState(false);
   const [cepError, setCepError] = useState("");
   const [saving, setSaving] = useState(false);
-
-  // Atualização genérica de campo
+  const {t} = useTranslation()
+  
   const set = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) setErrors((prev) => ({ ...prev, [field]: "" }));
@@ -98,8 +87,9 @@ export default function AddressForm({
       try {
         const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
         const data = await res.json();
+
         if (data.erro) {
-          setCepError("CEP não encontrado.");
+          setCepError(t('userPages.profile.cepNotFound'));
         } else {
           setForm((prev) => ({
             ...prev,
@@ -109,13 +99,17 @@ export default function AddressForm({
             state:        data.uf         || prev.state,
             complement:   data.complemento || prev.complement,
           }));
+
           setErrors((prev) => ({
             ...prev,
-            street: "", neighborhood: "", city: "", state: "",
+            street: "",
+            neighborhood: "",
+            city: "",
+            state: "",
           }));
         }
       } catch {
-        setCepError("Erro ao buscar CEP. Preencha manualmente.");
+        setCepError(t('userPages.profile.cepFetchError'));
       } finally {
         setFetchingCep(false);
       }
@@ -125,21 +119,13 @@ export default function AddressForm({
   // Validação local
   const validate = () => {
     const errs = {};
+
     REQUIRED_FIELDS.forEach((f) => {
       if (!form[f] || String(form[f]).trim() === "") {
-        const labels = {
-          recipient_name: "Nome do destinatário",
-          phone:          "Telefone",
-          zip_code:       "CEP",
-          street:         "Rua",
-          number:         "Número",
-          neighborhood:   "Bairro",
-          city:           "Cidade",
-          state:          "Estado",
-        };
-        errs[f] = `${labels[f] || f} é obrigatório.`;
+        errs[f] = t(`userPages.profile.validation.${f}`);
       }
     });
+
     return errs;
   };
 
@@ -166,15 +152,17 @@ export default function AddressForm({
         <span style={styles.headerIcon}>📦</span>
         <div>
           <h3 style={styles.headerTitle}>{title}</h3>
-          <p style={styles.headerSub}>Informe onde sua placa deve ser entregue</p>
+          <p style={styles.headerSub}>
+            {t('userPages.profile.addressForm.sectionTitle')}
+          </p>
         </div>
       </div>
 
       {/* Destinatário + Telefone */}
       <div style={styles.row}>
         <Field
-          label="Nome do destinatário *"
-          placeholder="Nome completo de quem receberá"
+          label={t('userPages.profile.addressForm.recipientNameLabel')}
+          placeholder={t('userPages.profile.addressForm.recipientNamePlaceholder')}
           value={form.recipient_name}
           onChange={(v) => set("recipient_name", v)}
           error={errors.recipient_name}
@@ -182,8 +170,8 @@ export default function AddressForm({
           flex={2}
         />
         <Field
-          label="Telefone *"
-          placeholder="(00) 00000-0000"
+          label={t('userPages.profile.addressForm.phoneLabel')}
+          placeholder={t('userPages.profile.addressForm.phonePlaceholder')}
           value={form.phone}
           onChange={(v) => set("phone", formatPhone(v))}
           error={errors.phone}
@@ -196,25 +184,27 @@ export default function AddressForm({
       <div style={styles.row}>
         <div style={{ flex: 1, position: "relative" }}>
           <Field
-            label="CEP *"
-            placeholder="00000-000"
+            label={t('userPages.profile.addressForm.zipLabel')}
+            placeholder={t('userPages.profile.addressForm.zipPlaceholder')}
             value={form.zip_code}
             onChange={handleZipChange}
             error={errors.zip_code || cepError}
             disabled={isDisabled}
           />
           {fetchingCep && (
-            <span style={styles.cepLoading}>🔍 Buscando...</span>
+            <span style={styles.cepLoading}>
+              🔍 {t('userPages.profile.addressForm.searchingCep')}
+            </span>
           )}
         </div>
-        <div style={{ flex: 2 }} /> {/* espaço vazio para alinhar */}
+        <div style={{ flex: 2 }} />
       </div>
 
-      {/* Rua + Número + Complemento */}
+      {/* Rua + Número */}
       <div style={styles.row}>
         <Field
-          label="Rua / Logradouro *"
-          placeholder="Nome da rua, avenida..."
+          label={t('userPages.profile.addressForm.streetLabel')}
+          placeholder={t('userPages.profile.addressForm.streetPlaceholder')}
           value={form.street}
           onChange={(v) => set("street", v)}
           error={errors.street}
@@ -222,8 +212,8 @@ export default function AddressForm({
           flex={3}
         />
         <Field
-          label="Número *"
-          placeholder="123"
+          label={t('userPages.profile.addressForm.numberLabel')}
+          placeholder={t('userPages.profile.addressForm.numberPlaceholder')}
           value={form.number}
           onChange={(v) => set("number", v)}
           error={errors.number}
@@ -234,16 +224,16 @@ export default function AddressForm({
 
       <div style={styles.row}>
         <Field
-          label="Complemento"
-          placeholder="Apto, bloco, sala... (opcional)"
+          label={t('userPages.profile.addressForm.complementLabel')}
+          placeholder={t('userPages.profile.addressForm.complementPlaceholder')}
           value={form.complement}
           onChange={(v) => set("complement", v)}
           disabled={isDisabled}
           flex={2}
         />
         <Field
-          label="Bairro *"
-          placeholder="Nome do bairro"
+          label={t('userPages.profile.addressForm.neighborhoodLabel')}
+          placeholder={t('userPages.profile.addressForm.neighborhoodPlaceholder')}
           value={form.neighborhood}
           onChange={(v) => set("neighborhood", v)}
           error={errors.neighborhood}
@@ -255,8 +245,8 @@ export default function AddressForm({
       {/* Cidade + Estado */}
       <div style={styles.row}>
         <Field
-          label="Cidade *"
-          placeholder="Nome da cidade"
+          label={t('userPages.profile.addressForm.cityLabel')}
+          placeholder={t('userPages.profile.addressForm.cityPlaceholder')}
           value={form.city}
           onChange={(v) => set("city", v)}
           error={errors.city}
@@ -264,7 +254,9 @@ export default function AddressForm({
           flex={3}
         />
         <div style={{ flex: 1 }}>
-          <label style={styles.label}>Estado *</label>
+          <label style={styles.label}>
+            {t('userPages.profile.addressForm.stateLabel')}
+          </label>
           <select
             value={form.state}
             onChange={(e) => set("state", e.target.value)}
@@ -275,7 +267,9 @@ export default function AddressForm({
               background: "#fff",
             }}
           >
-            <option value="">UF</option>
+            <option value="">
+              {t('userPages.profile.addressForm.statePlaceholder')}
+            </option>
             {STATES.map((s) => (
               <option key={s} value={s}>{s}</option>
             ))}
@@ -292,7 +286,7 @@ export default function AddressForm({
             disabled={isDisabled}
             style={styles.btnSecondary}
           >
-            Cancelar
+            {t('userPages.profile.addressForm.cancel')}
           </button>
         )}
         <button
@@ -304,7 +298,9 @@ export default function AddressForm({
             cursor: isDisabled ? "not-allowed" : "pointer",
           }}
         >
-          {saving ? "Salvando..." : submitLabel}
+          {saving
+            ? t('userPages.profile.saving')
+            : t('userPages.profile.addressForm.saveAddressBtn')}
         </button>
       </div>
     </div>

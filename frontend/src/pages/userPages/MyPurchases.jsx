@@ -4,11 +4,13 @@ import axios from 'axios';
 import { ShoppingCart } from 'lucide-react';
 import { API } from '@/config';
 import { userPageStyles, pageBackground } from './shared/userPageStyles.js'
+import { useTranslation } from 'react-i18next';
 
 const MyPurchases = () => {
   const { token } = useAuth();
   const [purchases, setPurchases] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useTranslation()
 
   useEffect(() => {
     const fetchPurchases = async () => {
@@ -97,7 +99,7 @@ const MyPurchases = () => {
               textTransform: 'uppercase', letterSpacing: '0.22em',
               fontSize: '0.62rem', fontWeight: 700, color: '#2a3d5e',
             }}>
-              Painel do usuário
+              {t('userPages.myPurchases.eyebrow')}
             </span>
           </div>
           <h1
@@ -108,7 +110,7 @@ const MyPurchases = () => {
               fontWeight: 700, color: '#1a2744', lineHeight: 1.1,
             }}
           >
-            Minhas Compras
+            {t('userPages.myPurchases.title')}
           </h1>
         </div>
 
@@ -138,13 +140,13 @@ const MyPurchases = () => {
               fontSize: 'clamp(1.2rem, 3vw, 1.6rem)',
               fontWeight: 700, color: '#1a2744', marginBottom: 10,
             }}>
-              Nenhuma compra ainda
+              {t('userPages.myPurchases.emptyTitle')}
             </h2>
             <p style={{
               fontFamily: '"Georgia", serif',
               fontSize: '0.9rem', color: '#3a5070', lineHeight: 1.7, maxWidth: 300,
             }}>
-              Você ainda não realizou nenhuma compra
+              {t('userPages.myPurchases.emptyDesc')}
             </p>
           </div>
 
@@ -190,7 +192,7 @@ const MyPurchases = () => {
                           fontSize: 'clamp(0.95rem, 2vw, 1.1rem)',
                           fontWeight: 700, color: '#1a2744',
                         }}>
-                          Plano {purchase.plan_type}
+                          {t('userPages.myPurchases.plan')} {purchase.plan_type}
                         </h3>
 
                         {/* Badge de status */}
@@ -229,7 +231,7 @@ const MyPurchases = () => {
                             background: 'rgba(239,68,68,0.1)', color: '#ef4444',
                             border: '1px solid rgba(239,68,68,0.25)',
                           }}>
-                            Cancelamento Solicitado
+                            {t('userPages.myPurchases.cancelRequested')} 
                           </span>
                         )}
                       </div>
@@ -239,7 +241,7 @@ const MyPurchases = () => {
                         fontSize: '0.78rem', color: 'rgba(58,80,112,0.65)',
                         marginBottom: purchase.mercadopago_payment_id ? 4 : 0,
                       }}>
-                        Pedido #{purchase.id.substring(0, 8)}
+                        {t('userPages.myPurchases.order')}  #{purchase.id.substring(0, 8)}
                       </p>
 
                       {purchase.mercadopago_payment_id && (
@@ -247,7 +249,7 @@ const MyPurchases = () => {
                           fontFamily: '"Georgia", serif',
                           fontSize: '0.72rem', color: 'rgba(58,80,112,0.5)',
                         }}>
-                          ID Mercado Pago: {purchase.mercadopago_payment_id}
+                          {t('userPages.myPurchases.mpId')} {purchase.mercadopago_payment_id}
                         </p>
                       )}
 
@@ -256,7 +258,7 @@ const MyPurchases = () => {
                           fontSize: '0.72rem', color: '#ef4444',
                           fontFamily: '"Georgia", serif', marginTop: 8,
                         }}>
-                          Reembolso em até 7 dias úteis
+                          {t('userPages.myPurchases.refund')}
                         </p>
                       )}
                     </div>

@@ -1,70 +1,59 @@
+import { useTranslation } from 'react-i18next';
 import { PageHero, ContentSection, H2, P, Li, Ul, Divider, sharedStyles } from './InstitutionalComponents';
 
 export default function ResponsibilityPolicyPage() {
+  const { t } = useTranslation();
+  const s2Items = t('institutional.responsibility.s2Items', { returnObjects: true });
+  const s3Items = t('institutional.responsibility.s3Items', { returnObjects: true });
+
   return (
     <div style={{ background: 'linear-gradient(180deg, #c8e8f5 0%, #a8d8f0 18%, #7bbde8 32%, #b8e0f5 55%, #eef8fb 100%)', minHeight: '100vh', fontFamily: '"Georgia", serif' }}>
       <style>{sharedStyles}</style>
 
       <PageHero
-        tag="Política"
-        title="Política de Responsabilidade"
-        subtitle="Conheça nossos compromissos com você, com os memoriais criados e com a conduta ética da nossa plataforma."
+        tag={t('institutional.responsibility.heroTag')}
+        title={t('institutional.responsibility.heroTitle')}
+        subtitle={t('institutional.responsibility.heroSubtitle')}
       />
 
       <ContentSection>
 
-        <H2>1. Nosso compromisso</H2>
-        <P>
-          A Remember QRCode assume plena responsabilidade pela qualidade dos serviços oferecidos, pela segurança das informações armazenadas e pelo respeito ao cliente em todas as etapas da jornada — desde a criação do memorial até a entrega do produto físico.
-        </P>
+        <H2>{t('institutional.responsibility.s1Title')}</H2>
+        <P>{t('institutional.responsibility.s1')}</P>
 
         <Divider />
-        <H2>2. Responsabilidade sobre o conteúdo dos memoriais</H2>
-        <P>
-          O conteúdo inserido nos memoriais — textos, fotos, áudios e demais informações — é de exclusiva responsabilidade do usuário que o criou. A Remember QRCode não produz, edita nem valida o conteúdo publicado pelos clientes.
-        </P>
-        <P>Ao utilizar a plataforma, o usuário declara que:</P>
+        <H2>{t('institutional.responsibility.s2Title')}</H2>
+        <P>{t('institutional.responsibility.s2a')}</P>
+        <P>{t('institutional.responsibility.s2Intro')}</P>
         <Ul>
-          <Li>Possui os direitos sobre as imagens e informações inseridas.</Li>
-          <Li>O conteúdo não viola direitos de terceiros, leis vigentes ou normas de conduta.</Li>
-          <Li>As informações são verídicas e referem-se a pessoa real.</Li>
+          {Array.isArray(s2Items) && s2Items.map((item, i) => (
+            <Li key={i}>{item}</Li>
+          ))}
         </Ul>
-        <P>
-          A Remember QRCode reserva-se o direito de remover, sem aviso prévio, qualquer memorial que contenha conteúdo ofensivo, ilegal ou que viole os Termos e Condições da plataforma.
-        </P>
+        <P>{t('institutional.responsibility.s2Footer')}</P>
 
         <Divider />
-        <H2>3. Responsabilidade sobre o produto físico</H2>
-        <P>
-          A Remember QRCode é responsável pela produção e envio das placas físicas dentro do prazo estabelecido (7 a 15 dias úteis após a confirmação do pagamento). Em caso de defeito de fabricação ou dano no transporte, nos comprometemos a realizar a substituição do produto sem custo adicional ao cliente.
-        </P>
-        <P>Não nos responsabilizamos por:</P>
+        <H2>{t('institutional.responsibility.s3Title')}</H2>
+        <P>{t('institutional.responsibility.s3a')}</P>
+        <P>{t('institutional.responsibility.s3Intro')}</P>
         <Ul>
-          <Li>Atrasos causados por transportadoras ou fatores externos.</Li>
-          <Li>Danos ocasionados por uso inadequado ou instalação incorreta da placa.</Li>
-          <Li>Endereço de entrega incorreto informado pelo cliente.</Li>
+          {Array.isArray(s3Items) && s3Items.map((item, i) => (
+            <Li key={i}>{item}</Li>
+          ))}
         </Ul>
 
         <Divider />
-        <H2>4. Responsabilidade sobre o serviço digital</H2>
-        <P>
-          Nos comprometemos a manter os memoriais publicados disponíveis de forma contínua. Em casos de manutenção programada ou ocorrências técnicas, comunicaremos os clientes com antecedência sempre que possível.
-        </P>
-        <P>
-          A plataforma não se responsabiliza por indisponibilidades causadas por falhas de terceiros (provedores de internet, servidores externos, etc.).
-        </P>
+        <H2>{t('institutional.responsibility.s4Title')}</H2>
+        <P>{t('institutional.responsibility.s4a')}</P>
+        <P>{t('institutional.responsibility.s4b')}</P>
 
         <Divider />
-        <H2>5. Conduta ética</H2>
-        <P>
-          A Remember QRCode não utiliza as informações dos memoriais para fins comerciais, publicitários ou de análise de dados pessoais. Todas as informações são tratadas com sigilo, respeito e em conformidade com a Lei Geral de Proteção de Dados (LGPD).
-        </P>
+        <H2>{t('institutional.responsibility.s5Title')}</H2>
+        <P>{t('institutional.responsibility.s5')}</P>
 
         <Divider />
-        <H2>6. Canal de comunicação</H2>
-        <P>
-          Em caso de dúvidas, reclamações ou solicitações relacionadas a esta política, entre em contato com nossa equipe pelo WhatsApp ou e-mail disponíveis no rodapé do site. Respondemos em até 2 dias úteis.
-        </P>
+        <H2>{t('institutional.responsibility.s6Title')}</H2>
+        <P>{t('institutional.responsibility.s6')}</P>
 
       </ContentSection>
     </div>
