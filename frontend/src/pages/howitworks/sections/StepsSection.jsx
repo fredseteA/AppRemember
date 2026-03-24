@@ -113,14 +113,14 @@ const StepsSection = () => {
         <div className="steps-header-mobile" style={{ display: 'none', textAlign: 'center', marginBottom: 24 }}>
           <p style={{ textTransform: 'uppercase', letterSpacing: '0.22em', fontSize: '0.63rem', fontWeight: 700, color: '#2a3d5e', marginBottom: 10 }}>{t('stepsSection.eyebrow')}</p>
           <h2 style={{ fontFamily: '"Georgia", serif', fontSize: '1.4rem', fontWeight: 700, color: '#1a2744', lineHeight: 1.2, marginBottom: 8 }}>{t('stepsSection.title')}</h2>
-          <p style={{ color: '#3a5070', fontSize: '0.78rem', lineHeight: 1.6, fontFamily: '"Georgia", serif', maxWidth: 260, margin: '0 auto' }}>{t('stepsSection.descriptionMobile')}</p>
+          <p style={{ color: '#3a5070', fontSize: '0.78rem', lineHeight: 1.6, fontFamily: '"Georgia", serif', maxWidth: 260, margin: '0 auto', whiteSpace: 'pre-line' }}>{t('stepsSection.descriptionMobile')}</p>
         </div>
 
         <div className="flex flex-col md:flex-row gap-12 md:gap-16 items-start">
           <div className="steps-sidebar md:w-64 lg:w-80 flex-shrink-0 md:sticky md:top-32">
             <p style={{ textTransform: 'uppercase', letterSpacing: '0.22em', fontSize: '0.65rem', fontWeight: 700, color: '#2a3d5e', marginBottom: '14px' }}>{t('stepsSection.eyebrow')}</p>
             <h2 style={{ fontFamily: '"Georgia", serif', fontSize: 'clamp(1.6rem, 3.5vw, 2.4rem)', fontWeight: 700, color: '#1a2744', lineHeight: 1.18, marginBottom: '14px' }}>{t('stepsSection.title')}</h2>
-            <p style={{ color: '#3a5070', fontSize: '0.88rem', lineHeight: 1.68, fontFamily: '"Georgia", serif' }}>{t('stepsSection.description')}</p>
+            <p style={{ color: '#3a5070', fontSize: '0.88rem', lineHeight: 1.68, fontFamily: '"Georgia", serif', whiteSpace: 'pre-line' }}>{t('stepsSection.description')}</p>
           </div>
 
           <div className="steps-timeline flex-1" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>

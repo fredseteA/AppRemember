@@ -520,15 +520,17 @@ const resources = {
       stepsSection: {
         eyebrow: 'O Processo',
         title: 'Criar, visualizar e publicar.',
-        description: 'Preencha, veja o resultado e escolha um plano. Simples, rápido e feito com respeito.',
-        descriptionMobile: 'Preencha, veja o resultado e escolha um plano.',
+        description: `Preencha, veja o resultado e escolha um plano.
+        Se não terminar no momento, salve como rascunho e continue depois.`,
+        descriptionMobile: `Crie no seu tempo.
+        Salve e continue quando quiser.`,
         stepLabel: 'STEP',
         steps: [
           {
             number: '01',
             title: 'Crie o Memorial',
             description: 'Preencha as informações da pessoa homenageada com carinho: dados pessoais, uma frase especial, biografia, galeria de fotos e até um áudio de homenagem. Tudo de forma simples e guiada, para que você possa expressar todo o amor que sente.',
-            highlight: 'Salve como rascunho e volte quando quiser',
+            highlight: 'Criar é gratuito!',
             cta: 'Começar agora',
           },
           {
@@ -1575,15 +1577,17 @@ const resources = {
       stepsSection: {
         eyebrow: 'The Process',
         title: 'Create, preview and publish.',
-        description: 'Fill it in, see the result and choose a plan. Simple, fast and made with care.',
-        descriptionMobile: 'Fill it in, see the result and choose a plan.',
+        description: `Fill it out, see the result, and choose a plan.
+        If you're not finished right now, save it as a draft and continue later.`,
+        descriptionMobile: `Create at your own pace.
+        Save and continue whenever you want.`,
         stepLabel: 'STEP',
         steps: [
           {
             number: '01',
             title: 'Create the Memorial',
             description: 'Fill in the information about the honored person with care: personal details, a special phrase, biography, photo gallery and even a tribute audio. All in a simple and guided way, so you can express all the love you feel.',
-            highlight: 'Save as draft and come back whenever you want',
+            highlight: 'Creating is free',
             cta: 'Start now',
           },
           {
