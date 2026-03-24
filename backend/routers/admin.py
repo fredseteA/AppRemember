@@ -173,6 +173,32 @@ async def get_all_memorials(user: dict = Depends(verify_admin)):
     docs = db.collection("memorials").order_by("created_at", direction=firestore.Query.DESCENDING).stream()
     return [deserialize_datetime(doc.to_dict(), ["created_at", "updated_at"]) for doc in docs]
 
+@router.delete("/admin/memorials/{memorial_id}")
+async def delete_memorial_admin(
+    memorial_id: str,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(verify_admin)
+):
+    memorial_ref = db.collection("memorials").document(memorial_id)
+    if not memorial_ref.get().exists:
+        raise HTTPException(status_code=404, detail="Memorial não encontrado")
+    background_tasks.add_task(
+        create_admin_log, user.get("uid"), user.get("email"),
+        "delete_memorial", "memorial", memorial_id, {}
+    )
+    memorial_ref.delete()
+    return {"message": "Memorial deletado com sucesso"}
+
+@router.get("/admin/memorials/{memorial_id}")
+async def get_memorial_admin(
+    memorial_id: str,
+    user: dict = Depends(verify_admin)
+):
+    doc = db.collection("memorials").document(memorial_id).get()
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="Memorial não encontrado")
+    return deserialize_datetime(doc.to_dict(), ["created_at", "updated_at"])
+
 
 # ── Partners ──────────────────────────────────────────────────────────────────
 
