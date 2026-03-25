@@ -164,7 +164,7 @@ const Header = () => {
                 {[
                   { to: '/',                      label: t('nav.home'),           testId: 'nav-home' },
                   { to: '/how-it-works',           label: t('nav.howItWorks'),     testId: 'nav-how-it-works' },
-                  { to: '/why-preserve-memories',  label: t('nav.whyPreserve'),    testId: 'nav-por-que-preservar' },
+                  { to: '/why-preserve-memories',  label: t('nav.whyPreserve'),    testId: 'nav-why-preserve-memories' },
                   { to: '/explore',                label: t('nav.explore'),        testId: 'nav-explore' },
                   { to: '/create-memorial',        label: t('nav.createMemorial'), testId: 'nav-create-memorial' },
                 ].map(({ to, label, testId }) => (
@@ -247,7 +247,7 @@ const Header = () => {
             <nav style={{ marginBottom: 8 }}>
               <Link to="/" className="mobile-nav-link" onClick={closeMobile}>{t('nav.home')}</Link>
               <Link to="/how-it-works" className="mobile-nav-link" onClick={closeMobile}>{t('nav.howItWorks')}</Link>
-              <Link to="/por-que-preservar-memorias" className="mobile-nav-link" onClick={closeMobile}>{t('nav.whyPreserve')}</Link>
+              <Link to="/why-preserve-memories" className="mobile-nav-link" onClick={closeMobile}>{t('nav.whyPreserve')}</Link>
               <Link to="/explore" className="mobile-nav-link" onClick={closeMobile}>{t('nav.explore')}</Link>
               <Link to="/create-memorial" className="mobile-nav-link" onClick={closeMobile}>{t('nav.createMemorial')}</Link>
             </nav>

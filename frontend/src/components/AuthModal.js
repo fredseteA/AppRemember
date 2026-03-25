@@ -50,7 +50,7 @@ const AuthModal = ({ open, onClose }) => {
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent
-        className="sm:max-w-md p-0 overflow-hidden border-0"
+        className="sm:max-w-md p-0 overflow-hidden border-0 rounded-3xl"
         data-testid="auth-modal"
         style={{
           background: 'linear-gradient(160deg, #ddf0f7 0%, #eef8fb 50%, #c8e8f5 100%)',
@@ -157,7 +157,7 @@ const AuthModal = ({ open, onClose }) => {
         <div
           className="relative z-10"
           style={{
-            padding: 'clamp(28px, 6vw, 40px)',
+            padding: 'clamp(20px, 5vw, 40px)',
             animation: 'authReveal 0.5s cubic-bezier(.22,1,.36,1) both',
           }}
         >

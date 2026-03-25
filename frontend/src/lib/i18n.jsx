@@ -92,7 +92,7 @@ const resources = {
         eyebrow: 'Como Funciona',
         title: 'Em apenas 3 passos simples,\ncrie uma homenagem eterna.',
         description: 'Do início ao memorial publicado, tudo pensado para ser simples, bonito e significativo.',
-        footer: '✨ Criar o memorial é gratuito · Você só paga se quiser publicar',
+        footer: 'Criar o memorial é gratuito · Você só paga se quiser publicar',
         step: 'Passo',
         steps: [
           {
@@ -610,14 +610,14 @@ const resources = {
           title: 'Pense em todos os momentos\nque compõem uma vida.',
           description: 'Cada um deles é único. Cada um deles merece ser lembrado. E agora, todos podem ser preservados.',
           items: [
-            { label: 'Infância', desc: 'As primeiras memórias, brincadeiras e descobertas que formaram quem ela era.' },
-            { label: 'Amor', desc: 'Encontros, casamentos e os laços que definiram uma vida inteira.' },
-            { label: 'Conquistas', desc: 'Formatura, carreira e os sonhos que um dia se tornaram realidade.' },
-            { label: 'Família', desc: 'Os filhos, netos e gerações que vieram depois e carregam seu legado.' },
-            { label: 'Aventuras', desc: 'Viagens, novas descobertas e experiências que ela escolheu vivenciar.' },
-            { label: 'Fé', desc: 'As crenças e valores espirituais que guiaram cada passo da vida.' },
-            { label: 'Amizades', desc: 'Os amigos verdadeiros que estiveram ao lado nos momentos mais importantes.' },
-            { label: 'Legado', desc: 'O que ela deixou no mundo: amor, inspiração e diferença.' },
+            { key: 'infancia', label: 'Infância', desc: 'As primeiras memórias, brincadeiras e descobertas que formaram quem ela era.' },
+            { key: 'amor', label: 'Amor', desc: 'Encontros, casamentos e os laços que definiram uma vida inteira.' },
+            { key: 'conquistas', label: 'Conquistas', desc: 'Formatura, carreira e os sonhos que um dia se tornaram realidade.' },
+            { key: 'familia', label: 'Família', desc: 'Os filhos, netos e gerações que vieram depois e carregam seu legado.' },
+            { key: 'aventuras', label: 'Aventuras', desc: 'Viagens, novas descobertas e experiências que ela escolheu vivenciar.' },
+            { key: 'fe', label: 'Fé', desc: 'As crenças e valores espirituais que guiaram cada passo da vida.' },
+            { key: 'amizades', label: 'Amizades', desc: 'Os amigos verdadeiros que estiveram ao lado nos momentos mais importantes.' },
+            { key: 'legado', label: 'Legado', desc: 'O que ela deixou no mundo: amor, inspiração e diferença.' },
           ],
         },
         howItWorks: {
@@ -1159,7 +1159,7 @@ const resources = {
         eyebrow: 'How It Works',
         title: 'In just 3 simple steps,\ncreate an eternal tribute.',
         description: 'From start to published memorial, everything designed to be simple, beautiful and meaningful.',
-        footer: '✨ Creating the memorial is free · You only pay if you want to publish',
+        footer: 'Creating the memorial is free · You only pay if you want to publish',
         step: 'Step',
         steps: [
           {
@@ -1666,14 +1666,14 @@ const resources = {
           title: 'Think of all the moments\nthat make up a life.',
           description: 'Each one is unique. Each one deserves to be remembered. And now, all of them can be preserved.',
           items: [
-            { label: 'Childhood', desc: 'The first memories, games and discoveries that shaped who they were.' },
-            { label: 'Love', desc: 'Encounters, marriages and the bonds that defined an entire lifetime.' },
-            { label: 'Achievements', desc: 'Graduation, career and the dreams that one day became reality.' },
-            { label: 'Family', desc: 'The children, grandchildren and generations that came after and carry their legacy.' },
-            { label: 'Adventures', desc: 'Travels, new discoveries and experiences they chose to live.' },
-            { label: 'Faith', desc: 'The beliefs and spiritual values that guided every step of life.' },
-            { label: 'Friendships', desc: 'The true friends who stood by their side in the most important moments.' },
-            { label: 'Legacy', desc: 'What they left in the world: love, inspiration and difference.' },
+            { key: 'infancia', label: 'Childhood', desc: 'The first memories, games and discoveries that shaped who they were.' },
+            { key: 'amor', label: 'Love', desc: 'Encounters, marriages and the bonds that defined an entire lifetime.' },
+            { key: 'conquistas', label: 'Achievements', desc: 'Graduation, career and the dreams that one day became reality.' },
+            { key: 'familia', label: 'Family', desc: 'The children, grandchildren and generations that came after and carry their legacy.' },
+            { key: 'aventuras', label: 'Adventures', desc: 'Travels, new discoveries and experiences they chose to live.' },
+            { key: 'fe', label: 'Faith', desc: 'The beliefs and spiritual values that guided every step of life.' },
+            { key: 'amizade', label: 'Friendships', desc: 'The true friends who stood by their side in the most important moments.' },
+            { key: 'legado', label: 'Legacy', desc: 'What they left in the world: love, inspiration and difference.' },
           ],
         },
         howItWorks: {

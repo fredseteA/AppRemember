@@ -5,6 +5,7 @@ import { ShoppingCart } from 'lucide-react';
 import { API } from '@/config';
 import { userPageStyles, pageBackground } from './shared/userPageStyles.js'
 import { useTranslation } from 'react-i18next';
+import BackButton from './shared/BackButton';
 
 const MyPurchases = () => {
   const { token } = useAuth();
@@ -62,6 +63,9 @@ const MyPurchases = () => {
       }}
     >
       <style>{userPageStyles}</style>
+
+      {/* ── Botão de voltar ── */}
+      <BackButton/>
 
       {/* Nuvem esquerda */}
       <div

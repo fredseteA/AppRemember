@@ -313,16 +313,27 @@ async def confirm_payment(
     payment_data = payment_doc.to_dict()
     if payment_data.get("user_id") != token_data["uid"]:
         raise HTTPException(status_code=http_status.HTTP_403_FORBIDDEN, detail="Sem permissão")
-
-    mp_status = "approved"
+ 
+    mp_status = None
+ 
     if body.mp_payment_id:
         try:
             result = mp_sdk.payment().get(body.mp_payment_id)
             if result["status"] == 200:
-                mp_status = result["response"].get("status", "approved")
+                mp_status = result["response"].get("status")
+            else:
+                logger.warning(f"MP retornou status HTTP {result['status']} para payment {body.mp_payment_id}")
         except Exception as e:
             logger.warning(f"Não foi possível verificar MP: {e}.")
-
+ 
+    if mp_status is None:
+        logger.warning(f"Confirmação do pagamento {body.payment_id} adiada — aguardando webhook do MP.")
+        return {
+            "status": "pending",
+            "memorial_published": False,
+            "message": "Não foi possível confirmar o pagamento agora. Aguarde — você receberá um e-mail assim que confirmado."
+        }
+ 
     if mp_status != "approved":
         payment_ref.update({
             "status": mp_status,
@@ -330,7 +341,7 @@ async def confirm_payment(
             "updated_at": datetime.now(timezone.utc).isoformat()
         })
         return {"status": mp_status, "memorial_published": False}
-
+ 
     payment_ref.update({
         "mercadopago_payment_id": body.mp_payment_id or payment_data.get("mercadopago_payment_id"),
         "updated_at": datetime.now(timezone.utc).isoformat()
@@ -338,7 +349,7 @@ async def confirm_payment(
     payment_data = payment_ref.get().to_dict()
     processed = await _process_approved_payment(payment_ref, payment_data, background_tasks, source="confirm_payment")
     return {"status": "approved", "memorial_published": processed}
-
+ 
 
 @router.post("/payments/{payment_id}/request-cancel")
 async def request_cancel_payment(

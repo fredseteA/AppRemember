@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { API } from '@/config';
 import { myMemorialsStyles, pageBackground } from './shared/userPageStyles.js'
 import { useTranslation } from 'react-i18next';
+import BackButton from './shared/BackButton';
 
 // ─── Modal de confirmação de exclusão ────────────────────────────────────────
 const DeleteConfirmModal = ({ memorial, onConfirm, onCancel, deleting }) => {
@@ -215,6 +216,9 @@ const MyMemorials = () => {
       >
         <style>{myMemorialsStyles}</style>
 
+        {/* ── Botão de voltar ── */}
+        <BackButton/>
+
         {/* Nuvem esquerda */}
         <div
           className="absolute top-[60px] left-[-50px] w-44 md:w-64 opacity-55 pointer-events-none select-none z-0"
@@ -324,7 +328,7 @@ const MyMemorials = () => {
               data-testid="memorials-grid"
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(min(300px, 45%), 1fr))',
                 gap: 'clamp(14px, 2vw, 22px)',
               }}
             >
