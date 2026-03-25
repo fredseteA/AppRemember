@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Heart, ShoppingCart, User, MessageCircle } from 'lucide-react';
-import { userPageStyles, pageBackground } from './shared/userPageStyles.js'
+import { userPageStyles, pageBackground, dashboardStyles } from './shared/userPageStyles.js'
 import { useTranslation } from 'react-i18next';
 
 const Dashboard = () => {
@@ -49,6 +49,8 @@ const Dashboard = () => {
       }}
     >
       <style>{userPageStyles}</style>
+      {/*mobile*/ }
+      <style>{dashboardStyles}</style>
 
       {/* Nuvens decorativas */}
       <div className="dash-cloud-left absolute top-0 left-[-40px] w-52 md:w-72 opacity-90 pointer-events-none select-none"
@@ -118,7 +120,7 @@ const Dashboard = () => {
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: 'clamp(12px, 2vw, 20px)',
+            gap: 'clamp(10px, 2vw, 20px)',
             marginBottom: 'clamp(16px, 3vw, 24px)',
           }}
         >

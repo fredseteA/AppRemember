@@ -92,7 +92,7 @@ const resources = {
         eyebrow: 'Como Funciona',
         title: 'Em apenas 3 passos simples,\ncrie uma homenagem eterna.',
         description: 'Do início ao memorial publicado, tudo pensado para ser simples, bonito e significativo.',
-        footer: '✨ Criar o memorial é gratuito · Você só paga se quiser publicar',
+        footer: 'Criar o memorial é gratuito · Você só paga se quiser publicar',
         step: 'Passo',
         steps: [
           {
@@ -1159,7 +1159,7 @@ const resources = {
         eyebrow: 'How It Works',
         title: 'In just 3 simple steps,\ncreate an eternal tribute.',
         description: 'From start to published memorial, everything designed to be simple, beautiful and meaningful.',
-        footer: '✨ Creating the memorial is free · You only pay if you want to publish',
+        footer: 'Creating the memorial is free · You only pay if you want to publish',
         step: 'Step',
         steps: [
           {

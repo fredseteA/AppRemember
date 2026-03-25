@@ -328,7 +328,7 @@ const MyMemorials = () => {
               data-testid="memorials-grid"
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(min(300px, 45%), 1fr))',
                 gap: 'clamp(14px, 2vw, 22px)',
               }}
             >

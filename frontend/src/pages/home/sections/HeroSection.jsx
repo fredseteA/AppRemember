@@ -37,7 +37,7 @@ const HeroSection = () => {
                 justify-content: center;
                 gap: 6px;
                 border-radius: 999px;
-                padding: 12px 28px;
+                padding: 8px 20px;
                 font-family: "Georgia", serif;
                 font-size: clamp(0.82rem, 3.5vw, 1rem);
                 font-weight: 600;
@@ -123,7 +123,7 @@ const HeroSection = () => {
                             size="lg"
                             className="rounded-full px-10 py-5 font-semibold shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl"
                             data-testid="hero-cta-button"
-                            style={{ fontSize: 'clamp(0.82rem, 3.5vw, 1rem)', background: '#1a2744', color: 'white', letterSpacing: '0.05em' }}
+                            style={{ fontSize: 'clamp(0.82rem, 3.5vw, 1rem)', background: '#1a2744', color: 'white', letterSpacing: '0.05em', padding:'20px' }}
                             >
                                 {t('hero.cta')}
                             </Button>

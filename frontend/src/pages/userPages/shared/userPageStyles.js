@@ -130,6 +130,32 @@ export const profileStyles = `
   .pr-btn-save:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 `;
 
+export const dashboardStyles = `
+  @media (max-width: 640px) {
+    .dash-grid {
+      grid-template-columns: repeat(3, 1fr) !important;
+      gap: 8px !important;
+    }
+    .dash-card {
+      padding: 14px 10px !important;
+      border-radius: 16px !important;
+    }
+    /* Ícone menor */
+    .dash-card > div:first-child {
+      width: 38px !important;
+      height: 38px !important;
+      margin-bottom: 10px !important;
+    }
+    .dash-card h3 {
+      font-size: 0.72rem !important;
+      margin-bottom: 4px !important;
+    }
+    .dash-card p {
+      display: none !important;
+    }
+  }
+`;
+
 export const myMemorialsStyles = `
   @keyframes revealMM { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
   @keyframes floatSt1 { 0%,100% { transform:translateY(0) translateX(0); } 45% { transform:translateY(-14px) translateX(8px); } }
@@ -174,5 +200,30 @@ export const myMemorialsStyles = `
   @media (max-width: 600px) {
     .mm-header { flex-direction: column; align-items: flex-start; gap: 16px; }
     .mm-card-actions { flex-wrap: wrap; }
+  }
+  @media (max-width: 640px) {
+    [data-testid="memorials-grid"] {
+      grid-template-columns: repeat(2, 1fr) !important;
+      gap: 10px !important;
+    }
+    .mm-card > div:first-child {
+      height: 120px !important;
+    }
+    .mm-card h3 {
+      font-size: 0.78rem !important;
+    }
+    .mm-card p {
+      font-size: 0.65rem !important;
+    }
+    /* Botões de ação empilham melhor */
+    .mm-card-actions {
+      flex-direction: column !important;
+      gap: 6px !important;
+    }
+    .mm-card-actions a,
+    .mm-card-actions > div {
+      flex: unset !important;
+      width: 100% !important;
+    }
   }
 `;

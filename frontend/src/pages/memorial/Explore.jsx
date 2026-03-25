@@ -226,6 +226,26 @@ const Explore = () => {
           transition: transform 0.6s cubic-bezier(.22,1,.36,1);
           will-change: transform;
         }
+        @media (max-width: 767px) {
+          .exp-card .relative.overflow-hidden {
+            height: 130px !important;
+          }
+          .exp-card .p-6 {
+            padding: 10px 10px 12px !important;
+          }
+          .exp-card h3 {
+            font-size: 0.78rem !important;
+            margin-bottom: 2px !important;
+          }
+          .exp-card p {
+            font-size: 0.62rem !important;
+            margin-bottom: 6px !important;
+          }
+          .exp-card .mt-auto,
+          .exp-card .mt-5 {
+            display: none !important;
+          }
+        }
       `}</style>
 
       {/* ── Nuvem esquerda ── */}
