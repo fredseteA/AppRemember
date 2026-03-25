@@ -14,7 +14,8 @@ const BeforeAfterSection = () => {
 
   return (
     <section ref={ref} className="relative py-16 md:py-24 overflow-hidden"
-      style={{ background: 'linear-gradient(180deg, #ddf0f7 0%, #c8e8f5 35%, #b8e0f0 65%, #a8d8f0 100%)' }}>
+      style={{ background: 'linear-gradient(180deg, #c8e8f5 0%, #b8d8e8 35%, #8ec8e0 65%, #6ab4d8 100%)' }}
+    >
       <style>{`
         .ba-left  { animation: wpm-fadeLeft  0.8s cubic-bezier(.22,1,.36,1) 0.2s  both; }
         .ba-right { animation: wpm-fadeRight 0.8s cubic-bezier(.22,1,.36,1) 0.35s both; }

@@ -1,12 +1,8 @@
 import { GLOBAL_STYLES } from './shared/styles.jsx'
 import {
   HeroSection,
-  ProblemSection,
   BeforeAfterSection,
-  WhatIsSection,
   MomentsSection,
-  HowItWorksSection,
-  TestimonialsSection,
   MeaningSection,
   FinalCTASection,
 } from './sections/index.js';
@@ -19,12 +15,8 @@ const WhyPreserveMemories = () => (
   >
     <style>{GLOBAL_STYLES}</style>
     <HeroSection />
-    <ProblemSection />
     <BeforeAfterSection />
-    <WhatIsSection />
     <MomentsSection />
-    <HowItWorksSection />
-    <TestimonialsSection />
     <MeaningSection />
     <FinalCTASection />
   </div>
