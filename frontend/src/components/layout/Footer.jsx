@@ -132,7 +132,7 @@ const Footer = ({ startColor = '#eef8fb' }) => {
     <footer
       data-testid="main-footer"
       style={{
-        background: `linear-gradient(180deg, ${startColor} 0%, #ddf0f7 30%, #c8e8f5 60%, #a8d8f0 100%)`,
+        background: 'transparent',
         marginTop: 0, borderTop: 'none', position: 'relative', overflow: 'hidden',
       }}
     >
