@@ -23,14 +23,6 @@ const FinalCTASection = () => {
       <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 text-center"
         style={{ opacity: visible ? 1 : 0, animation: visible ? 'wpm-reveal 0.8s cubic-bezier(.22,1,.36,1) both' : 'none' }}>
 
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
-          <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(26,39,68,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1a2744', animation: 'wpm-heartbeat 3s ease-in-out infinite' }}>
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-            </svg>
-          </div>
-        </div>
-
         <span className="wpm-label" style={{ display: 'block', marginBottom: 20 }}>{t('whyPreservePage.finalCta.eyebrow')}</span>
 
         <h2 style={{ fontFamily: '"Georgia", serif', fontSize: 'clamp(1.8rem, 7vw, 3.6rem)', fontWeight: 700, color: '#1a2744', lineHeight: 1.12, marginBottom: 22, whiteSpace: 'pre-line' }}>

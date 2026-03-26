@@ -9,7 +9,7 @@ const HeroSection = () => {
   return (
     <section
       className="relative flex items-center justify-center overflow-hidden px-4"
-      style={{ background: 'linear-gradient(180deg, #c8e8f5 0%, #a8d8f0 30%, #7bbde8 60%, #5aa8e0 100%)', minHeight: 'clamp(520px, 75vh, 720px)', paddingTop: 'clamp(96px, 15vw, 136px)', paddingBottom: 'clamp(56px, 9vw, 88px)' }}
+      style={{ background: 'linear-gradient(180deg, #5aa8e0 0%, #7bbde8 40%, #a8d8f0 70%, #c8e8f5 100%)', minHeight: 'clamp(520px, 75vh, 720px)', paddingTop: 'clamp(96px, 15vw, 136px)', paddingBottom: 'clamp(56px, 9vw, 88px)' }}
     >
       <style>{`
         .hero-af1 { animation: wpm-fadeDown 0.7s ease 0.1s  both; }

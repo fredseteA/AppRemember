@@ -117,12 +117,17 @@ const Header = () => {
         .header-floating    .mobile-toggle { color: #1a2744; }
         @media (max-width: 767px) {
           .header-floating {
-            margin: 0 !important; border-radius: 0 !important;
-            border-left: none !important; border-right: none !important;
-            border-top: none !important; border-bottom: 1px solid rgba(255,255,255,0.25) !important;
+            margin: 8px 16px !important;
+            border-radius: 999px !important;
+            border: 1px solid rgba(255,255,255,0.55) !important;
           }
-          .header-bar { height: 52px !important; }
-          .header-logo { height: 36px !important; }
+          .header-bar { height: 52px !important; position: relative; }
+          .header-logo {
+            height: 32px !important;
+            position: absolute !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+          }
         }
         .mobile-overlay {
           position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 49;
@@ -156,7 +161,8 @@ const Header = () => {
           <div className="max-w-7xl mx-auto px-4 md:px-10">
             <div className="header-bar flex items-center justify-between h-16">
 
-              <Link to="/" className="flex items-center" data-testid="logo-link" onClick={closeMobile}>
+              <Link to="/" className="flex items-center" onClick={closeMobile}
+                style={{ position: undefined }}>
                 <img src="/logo-transparent.svg" alt="Remember QRCode" className="header-logo h-11 w-auto" />
               </Link>
 
@@ -226,15 +232,24 @@ const Header = () => {
               </div>
 
               {/* Mobile */}
-              <div className="flex md:hidden items-center gap-1">
-                <FlagButton language={currentLang} onClick={toggleLanguage} className="mobile-toggle" />
-                <button className="mobile-toggle p-2 transition-colors duration-300"
+              <div className="flex md:hidden items-center justify-between w-full">
+                <button
                   onClick={() => setMobileMenuOpen(prev => !prev)}
                   data-testid="mobile-menu-toggle"
                   aria-label={mobileMenuOpen ? t('nav.closeMenu') : t('nav.openMenu')}
-                  style={{ background: 'transparent', border: 'none' }}>
-                  {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                  style={{
+                    width: 36, height: 36, borderRadius: '50%',
+                    background: '#1a2744', border: 'none',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer', flexShrink: 0,
+                    boxShadow: '0 2px 8px rgba(26,39,68,0.22)',
+                  }}>
+                  {mobileMenuOpen
+                    ? <X className="h-4 w-4" style={{ color: 'white' }} />
+                    : <Menu className="h-4 w-4" style={{ color: 'white' }} />}
                 </button>
+
+                <FlagButton language={currentLang} onClick={toggleLanguage} className="mobile-toggle" />
               </div>
             </div>
           </div>

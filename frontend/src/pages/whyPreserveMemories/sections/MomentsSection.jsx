@@ -201,7 +201,7 @@ const MomentsSection = () => {
     <section
       ref={ref}
       className="relative py-16 md:py-24 overflow-hidden"
-      style={{ background: 'linear-gradient(180deg, #a8d8f0 0%, #c8e8f5 30%, #ddf0f7 65%, #eef8fb 100%)' }}
+      style={{ background: 'linear-gradient(180deg, #6ab4d8 0%, #85c4e0 30%, #a8d8f0 65%, #c8e8f5 100%)' }}
     >
       <Clouds />
       <div
