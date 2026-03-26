@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { AuthProvider } from './contexts/AuthContext';
 import { Toaster } from '@/components/ui/sonner';
 import { Analytics } from '@vercel/analytics/react';
@@ -53,6 +53,8 @@ import AdminMemorials from '@/pages/admin/adminMemorials/index.jsx';
 import AdminReviews from '@/pages/admin/adminReviews/index.jsx';
 import AdminNotifications from '@/pages/admin/adminNotification/index.jsx';
 import AdminLogs from '@/pages/admin/adminLogs/index.jsx';
+//Load Screen
+import LoadingScreen from './components/LoadingScreen';
 
 import './lib/i18n';
 
@@ -83,6 +85,7 @@ const AppLayout = ({ children }) => {
   const isMemorialPage  = location.pathname.startsWith('/memorial/');
   const isAdminPage     = location.pathname.startsWith('/admin');
   const isAffiliatePage = location.pathname.startsWith('/affiliate');
+  
 
   if (isAdminPage || isAffiliatePage) {
     return (
@@ -108,9 +111,12 @@ const AppLayout = ({ children }) => {
 };
 
 function App() {
+  const [loading, setLoading] = useState(true);
+  
   return (
     <AuthProvider>
       <ErrorBoundary>
+        {loading && <LoadingScreen onComplete={() => setLoading(false)} />}
         <BrowserRouter>
           <AppLayout>
             <ScrollToTop />
