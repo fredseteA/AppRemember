@@ -94,7 +94,7 @@ const footerStyles = `
   }
 `;
 
-const Footer = ({ startColor = '#eef8fb' }) => {
+const Footer = () => {
   const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
 

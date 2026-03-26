@@ -1,17 +1,14 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-
-
+import { usePageReveal } from '@/hooks/usePageReveal';
 
 function PanelContent({ step, onScrollToPlans, t }) {
   const [imgLoaded, setImgLoaded] = useState(false);
- 
   const isScrollLink = step.ctaLink.startsWith('/#');
- 
+
   return (
     <>
-      {/* ── Card de texto ── */}
       <div
         className="howit-pill"
         style={{
@@ -22,7 +19,6 @@ function PanelContent({ step, onScrollToPlans, t }) {
           boxShadow: "0 12px 36px rgba(26,39,68,0.1), 0 2px 6px rgba(26,39,68,0.05), inset 0 1px 0 rgba(255,255,255,0.9)",
         }}
       >
-        {/* Número + label */}
         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
           <div style={{
             width: 32, height: 32, borderRadius: "50%",
@@ -37,35 +33,24 @@ function PanelContent({ step, onScrollToPlans, t }) {
             {t('howItWorks.step')} {step.num}
           </span>
         </div>
- 
-        {/* Título */}
+
         <h3 style={{ fontFamily: '"Georgia", serif', fontSize: "clamp(1rem, 4vw, 1.5rem)", fontWeight: 700, color: "#1a2744", lineHeight: 1.22, marginBottom: "3px" }}>
           {step.title}
         </h3>
- 
-        {/* Subtítulo */}
         <h4 className="howit-subtitle" style={{ fontFamily: '"Georgia", serif', fontSize: "clamp(0.78rem, 3vw, 0.9rem)", fontWeight: 400, color: "#5aa8e0", marginBottom: "10px" }}>
           {step.subtitle}
         </h4>
- 
-        {/* Descrição */}
         <p style={{ color: "#3a5070", fontSize: "clamp(0.8rem, 3vw, 0.88rem)", lineHeight: 1.65, marginBottom: "18px" }}>
           {step.description}
         </p>
- 
-        {/* CTA corrigido */}
+
         {isScrollLink ? (
-          <button className="howit-cta-btn" onClick={onScrollToPlans}>
-            {step.cta}
-          </button>
+          <button className="howit-cta-btn" onClick={onScrollToPlans}>{step.cta}</button>
         ) : (
-          <Link to={step.ctaLink} className="howit-cta-btn" style={{ display: 'inline-block', textDecoration: 'none' }}>
-            {step.cta}
-          </Link>
+          <Link to={step.ctaLink} className="howit-cta-btn" style={{ display: 'inline-block', textDecoration: 'none' }}>{step.cta}</Link>
         )}
       </div>
- 
-      {/* ── Imagem ── */}
+
       <div
         className={`howit-img-wrap${!imgLoaded ? " howit-img-shimmer" : ""}`}
         style={{
@@ -87,7 +72,7 @@ function PanelContent({ step, onScrollToPlans, t }) {
 }
 
 const HowItWorksSection = () => {
- const [activeStep, setActiveStep]       = useState(0);
+  const [activeStep, setActiveStep]       = useState(0);
   const [prevStep, setPrevStep]           = useState(null);
   const [isVisible, setIsVisible]         = useState(false);
   const [transitioning, setTransitioning] = useState(false);
@@ -95,6 +80,7 @@ const HowItWorksSection = () => {
   const timerRef                          = useRef(null);
   const transitionTimerRef                = useRef(null);
   const { t }                             = useTranslation();
+  const revealed                          = usePageReveal(); // ← novo
 
   const STEPS = useMemo(() =>
     t('howItWorks.steps', { returnObjects: true }).map((s, i) => ({
@@ -110,13 +96,16 @@ const HowItWorksSection = () => {
   }, [STEPS]);
 
   useEffect(() => {
+    // Só observa após o loading ter terminado
+    if (!revealed) return;
+
     const observer = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) setIsVisible(true); },
       { threshold: 0.1 }
     );
     if (sectionRef.current) observer.observe(sectionRef.current);
     return () => observer.disconnect();
-  }, []);
+  }, [revealed]); // ← depende de revealed
 
   const triggerTransition = useCallback((from, to) => {
     clearTimeout(transitionTimerRef.current);
@@ -133,7 +122,7 @@ const HowItWorksSection = () => {
     setActiveStep(current => {
       if (idx === current || transitioning) return current;
       triggerTransition(current, idx);
-      return current; 
+      return current;
     });
   }, [transitioning, triggerTransition]);
 
@@ -143,7 +132,7 @@ const HowItWorksSection = () => {
       setActiveStep(prev => {
         const next = (prev + 1) % STEPS.length;
         triggerTransition(prev, next);
-        return prev; 
+        return prev;
       });
     }, 4000);
   }, [STEPS.length, triggerTransition]);
@@ -274,7 +263,6 @@ const HowItWorksSection = () => {
         .howit-cta-btn:hover { background: #1a2744; color: white; }
         .howit-panel-wrap {
           position: relative;
-          /* Desktop: altura fixa para o absolute funcionar */
           min-height: clamp(280px, 35vw, 340px);
         }
         .howit-panel {
@@ -297,59 +285,41 @@ const HowItWorksSection = () => {
         }
         .howit-panel.is-idle { opacity: 1; transform: translateY(0); }
 
-        /* ── MOBILE ── */
         @media (max-width: 767px) {
-          /* Nuvens */
           .howit-cloud-left  { width: 110px !important; left: -10px !important; top: -5px !important; opacity: 0.65 !important; }
           .howit-cloud-right { display: none !important; }
           .howit-cloud-base  { display: none !important; }
-
-          /* Tabs mais compactas */
           .howit-tabs        { gap: 0 !important; justify-content: space-between !important; }
           .howit-tab-btn     { min-width: 0 !important; flex: 1; padding-bottom: 10px !important; }
-
-          /* Subtitle escondida no mobile */
           .howit-subtitle    { display: none !important; }
-
-          /* Panel em flow normal (não absolute) no mobile */
           .howit-panel-wrap  { min-height: 0 !important; }
-          .howit-panel       {
+          .howit-panel {
             position: relative !important;
             top: auto !important; left: auto !important; right: auto !important;
-            /* Layout 50/50 lado a lado no mobile */
             flex-wrap: nowrap !important;
             align-items: stretch !important;
             gap: 10px !important;
           }
           .howit-panel.is-leaving { display: none !important; }
-
-          /* Card ocupa metade, sem maxWidth fixo */
           .howit-pill {
             max-width: none !important;
             flex: 1 1 0 !important;
             min-width: 0 !important;
-            /* Padding menor no mobile para caber tudo */
             padding: 14px 12px !important;
           }
-
-          /* Imagem ocupa metade — VISÍVEL no mobile */
           .howit-img-wrap {
             display: flex !important;
             flex: 1 1 0 !important;
             max-width: none !important;
             min-width: 0 !important;
-            /* Altura proporcional no mobile */
             height: auto !important;
             min-height: 180px !important;
             aspect-ratio: 3/4;
             border-radius: 14px !important;
           }
-
-          /* Footer pill menor */
           .howit-footer-pill { font-size: 0.72rem !important; padding: 8px 14px !important; }
         }
 
-        /* Extra-small phones */
         @media (max-width: 400px) {
           .howit-pill { padding: 10px 8px !important; }
           .howit-img-wrap { min-height: 150px !important; }
@@ -426,7 +396,7 @@ const HowItWorksSection = () => {
         <div className="howit-panel-wrap">
           {previous && transitioning && (
             <div className="howit-panel is-leaving" data-testid={previous.testId} aria-hidden="true">
-              <PanelContent step={previous} onScrollToPlans={scrollToPlans} t={t}/>
+              <PanelContent step={previous} onScrollToPlans={scrollToPlans} t={t} />
             </div>
           )}
           <div className={`howit-panel ${transitioning ? "is-entering" : "is-idle"}`} data-testid={current.testId}>
@@ -449,6 +419,6 @@ const HowItWorksSection = () => {
       </div>
     </section>
   );
-}
+};
 
 export default HowItWorksSection;

@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { AuthProvider } from './contexts/AuthContext';
 import { Toaster } from '@/components/ui/sonner';
 import { Analytics } from '@vercel/analytics/react';
@@ -53,39 +53,17 @@ import AdminMemorials from '@/pages/admin/adminMemorials/index.jsx';
 import AdminReviews from '@/pages/admin/adminReviews/index.jsx';
 import AdminNotifications from '@/pages/admin/adminNotification/index.jsx';
 import AdminLogs from '@/pages/admin/adminLogs/index.jsx';
-//Load Screen
-import LoadingScreen from './components/LoadingScreen';
+//Load Page
+import LoadingScreen, { useRevealContent } from './components/LoadingScreen';
 
 import './lib/i18n';
-
-const FOOTER_START_COLOR = {
-  '/':                  '#eef8fb',
-  '/how-it-works':      '#eef8fb',
-  '/explore':           '#eef8fb',
-  '/create-memorial':   '#eef8fb',
-  '/dashboard':         '#eef8fb',
-  '/my-memorials':      '#eef8fb',
-  '/my-purchases':      '#eef8fb',
-  '/profile':           '#eef8fb',
-  '/payment/:id':       '#eef8fb',
-  '/select-plan/:id':   '#eef8fb',
-};
-
-const DEFAULT_FOOTER_COLOR = '#ffffff';
 
 const AppLayout = ({ children }) => {
   const location = useLocation();
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const apoio = params.get('apoio');
-    if (apoio) sessionStorage.setItem('apoio_code', apoio.toUpperCase());
-  }, []);
-
   const isMemorialPage  = location.pathname.startsWith('/memorial/');
   const isAdminPage     = location.pathname.startsWith('/admin');
   const isAffiliatePage = location.pathname.startsWith('/affiliate');
-  
 
   if (isAdminPage || isAffiliatePage) {
     return (
@@ -96,28 +74,33 @@ const AppLayout = ({ children }) => {
     );
   }
 
-  const footerStartColor = FOOTER_START_COLOR[location.pathname] ?? DEFAULT_FOOTER_COLOR;
-
   return (
     <div className="App min-h-screen flex flex-col">
-      {!isMemorialPage && <Header />}
-      <main className="flex-1">
+      {!isMemorialPage && <Header className="ls-reveal" />}
+      <main className="flex-1 ls-reveal-main">   {/* ← troca aqui */}
         {children}
       </main>
-      {!isMemorialPage && <Footer startColor={footerStartColor} />}
+      {!isMemorialPage && <Footer className="ls-reveal" />}
       <Toaster position="top-right" />
     </div>
   );
 };
 
 function App() {
+  const { triggerReveal } = useRevealContent();
   const [loading, setLoading] = useState(true);
-  
+
   return (
     <AuthProvider>
       <ErrorBoundary>
-        {loading && <LoadingScreen onComplete={() => setLoading(false)} />}
         <BrowserRouter>
+          {loading && (
+            <LoadingScreen onComplete={() => {
+              setLoading(false);
+              // Aguarda React montar os elementos no DOM antes do reveal
+              setTimeout(() => triggerReveal(), 50);
+            }} />
+          )}
           <AppLayout>
             <ScrollToTop />
             <Routes>

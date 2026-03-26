@@ -123,7 +123,7 @@ const Header = () => {
           }
           .header-bar { height: 52px !important; position: relative; }
           .header-logo {
-            height: 32px !important;
+            height: 60px !important;
             position: absolute !important;
             left: 50% !important;
             transform: translateX(-50%) !important;
@@ -163,7 +163,7 @@ const Header = () => {
 
               <Link to="/" className="flex items-center" onClick={closeMobile}
                 style={{ position: undefined }}>
-                <img src="/logo-transparent.svg" alt="Remember QRCode" className="header-logo h-11 w-auto" />
+                <img src="/logo-transparent.svg" alt="Remember QRCode" data-header-logo className="header-logo h-[60px] w-auto" />
               </Link>
 
               <nav className="hidden md:flex items-center space-x-7">
