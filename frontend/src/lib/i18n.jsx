@@ -3,10 +3,10 @@ import { initReactI18next } from 'react-i18next';
 
 export const FLAGS = {
   pt: (
-    <img src="/br-icon.jpeg" alt="Português" width="28" height="20" style={{ borderRadius: '4px' }} />
+    <img src="/flags/br-icon.jpeg" alt="Português" width="28" height="20" style={{ borderRadius: '4px' }} />
   ),
   en: (
-    <img src="/eua-icon.jpeg" alt="English" width="28" height="20" style={{ borderRadius: '4px' }} />
+    <img src="/flags/eua-icon.jpeg" alt="English" width="28" height="20" style={{ borderRadius: '4px' }} />
   ),
 };
 
@@ -142,6 +142,20 @@ const resources = {
         ctaFooter: 'Criar é gratuito · Salve como rascunho e complete no seu tempo · Você só paga ao publicar',
         imgSoon: 'Foto do produto real em breve',
         imgInsert: 'Inserir foto aqui',
+        products: [
+          {
+            name: 'Gravado para durar para sempre',
+            subtitle: 'Aço inox com laser de precisão',
+          },
+          {
+            name: 'Cada detalhe conta uma história',
+            subtitle: 'Acabamento premium, feito com cuidado',
+          },
+          {
+            name: 'Pronto para emocionar',
+            subtitle: 'Entregue com amor, do jeito certo',
+          },
+        ],
       },
 
       // ── Home — Trust Badges ──────────────────────────────────────────────────
@@ -1190,23 +1204,37 @@ const resources = {
       showcase: {
         eyebrow: 'Physical product',
         title: 'See how your tribute\ncomes to life',
-        description: 'After telling the story of your loved one, we create a unique physical tribute — crafted with care to eternalize memories.',
+        description: 'After sharing your loved one\'s story, we create a unique physical tribute — crafted with care to preserve memories forever.',
         badge1: 'Engraved stainless steel',
         badge2: 'QR Code',
         mainLabel: 'Final product photo',
         card1: 'Finish detail',
         card2: 'How it arrives packaged',
-        card3: 'Example of finished tribute',
+        card3: 'Example of a finished tribute',
         benefit1Title: 'Made with care and respect',
-        benefit1Desc: 'Each piece is made with attention to detail and what it represents.',
-        benefit2Title: 'High quality material',
-        benefit2Desc: 'Stainless steel resistant to time, preserving the memory for decades.',
+        benefit1Desc: 'Every piece is crafted with attention to detail and what it represents.',
+        benefit2Title: 'High-quality material',
+        benefit2Desc: 'Time-resistant stainless steel, preserving the memory for decades.',
         benefit3Title: 'An eternal keepsake for the family',
-        benefit3Desc: 'A physical gathering point to honor and remember those who passed.',
+        benefit3Desc: 'A physical place to honor and remember those who have passed.',
         cta: 'Start my tribute',
-        ctaFooter: ' Creating is free · Save as draft and complete at your own pace · You only pay when publishing',
+        ctaFooter: 'Creating is free · Save as draft and finish at your own pace · You only pay when you publish',
         imgSoon: 'Real product photo coming soon',
         imgInsert: 'Insert photo here',
+        products: [
+          {
+            name: 'Engraved to last forever',
+            subtitle: 'Stainless steel with precision laser',
+          },
+          {
+            name: 'Every detail tells a story',
+            subtitle: 'Premium finish, crafted with care',
+          },
+          {
+            name: 'Ready to move hearts',
+            subtitle: 'Delivered with love, done right',
+          },
+        ],
       },
 
       trust: {

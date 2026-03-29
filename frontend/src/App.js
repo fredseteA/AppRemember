@@ -55,6 +55,7 @@ import AdminNotifications from '@/pages/admin/adminNotification/index.jsx';
 import AdminLogs from '@/pages/admin/adminLogs/index.jsx';
 //Load Page
 import LoadingScreen, { useRevealContent } from './components/LoadingScreen';
+import skyBg from './assets/sky-bg.jpg'
 
 import './lib/i18n';
 
@@ -75,9 +76,18 @@ const AppLayout = ({ children }) => {
   }
 
   return (
-    <div className="App min-h-screen flex flex-col">
+    <div
+      className="App min-h-screen flex flex-col"
+      style={{
+        backgroundImage: `url(${skyBg})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+        backgroundRepeat: 'no-repeat',
+      }}
+    >
       {!isMemorialPage && <Header className="ls-reveal" />}
-      <main className="flex-1 ls-reveal-main">   {/* ← troca aqui */}
+      <main className="flex-1">
         {children}
       </main>
       {!isMemorialPage && <Footer className="ls-reveal" />}

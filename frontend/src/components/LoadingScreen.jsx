@@ -12,8 +12,10 @@ const LoadingScreen = ({ onComplete }) => {
 
   useEffect(() => {
     // Fase 1 — logo aparece, fundo ainda branco
-    const t1 = setTimeout(() => setPhase('float'), 100);
-
+    const t1 = setTimeout(() => {
+      document.getElementById('root').style.visibility = 'visible';
+      setPhase('float');
+    }, 100);
     // Fase 1.5 — fundo transiciona para sky-bg
     const t2 = setTimeout(() => setBgVisible(true), 700);
 

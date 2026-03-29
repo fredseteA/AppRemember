@@ -5,6 +5,7 @@ import { Skeleton } from '../../components/ui/skeleton';
 import { Heart } from 'lucide-react';
 import { API } from '@/config';
 import { useTranslation } from 'react-i18next';
+import skyCard from '@/assets/sky-card.jpg';
 
 const PAGE_SIZE = 12;
 
@@ -13,87 +14,155 @@ const MemorialCard = ({ memorial, index }) => (
     <div
       className="exp-card group relative rounded-3xl overflow-hidden h-full flex flex-col"
       style={{
-        background: 'rgba(255,255,255,0.58)',
+        background: 'rgba(255,255,255,0.92)',
         border: '1px solid rgba(255,255,255,0.82)',
-        boxShadow: '0 6px 28px rgba(26,39,68,0.07)',
+        boxShadow: '0 6px 28px rgba(26,39,68,0.10)',
         animation: `revealCard 0.5s cubic-bezier(.22,1,.36,1) ${Math.min(index * 0.06, 0.3)}s both`,
       }}
     >
-      {/* Image */}
-      <div className="relative overflow-hidden" style={{ height: '240px' }}>
-        {memorial.person_data.photo_url ? (
-          <img
-            src={memorial.person_data.photo_url}
-            alt={memorial.person_data.full_name}
-            className="exp-card-img w-full h-full object-cover"
-            loading="lazy"         
-            decoding="async"       
-          />
-        ) : (
-          <div
-            className="w-full h-full flex items-center justify-center"
-            style={{ background: 'linear-gradient(135deg, #b8e0f5 0%, #7bbde8 100%)' }}
-          >
-            <Heart className="h-12 w-12" style={{ color: 'rgba(255,255,255,0.6)' }} />
-          </div>
-        )}
-        {/* Gradient overlay */}
-        <div
-          className="absolute inset-0"
-          style={{ background: 'linear-gradient(to top, rgba(26,39,68,0.55) 0%, transparent 55%)' }}
-        />
-        {/* Index number */}
-        <div
-          className="absolute top-4 right-5 select-none"
+      {/* ── Banner topo com logo Remember ── */}
+      <div
+        className="relative flex-shrink-0"
+        style={{
+          height: '90px',
+          overflow: 'visible',
+        }}
+      >
+        {/* Background sky-card.jpg */}
+        <img
+          src={skyCard}
+          alt=""
+          aria-hidden
+          draggable={false}
           style={{
-            fontFamily: '"Georgia", serif',
-            fontSize: '2rem',
-            fontWeight: 700,
-            color: 'rgba(255,255,255,0.25)',
-            lineHeight: 1,
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center',
+            display: 'block',
+          }}
+        />
+
+        {/* Logo transparent.svg centralizada */}
+        <div
+          className="absolute inset-0 flex items-center justify-center"
+          style={{ paddingBottom: '30px', zIndex: 1 }}
+        >
+          <img
+            src="/logo-transparent.svg"
+            alt="Remember"
+            style={{
+              height: '60px',
+              width: 'auto',
+              opacity: 0.55,
+              objectFit: 'contain',
+              display: 'block',
+            }}
+          />
+        </div>
+
+        {/* Foto circular na divisa banner/card */}
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '-36px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 10,
           }}
         >
-          {String(index + 1).padStart(2, '0')}
+          <div
+            style={{
+              width: '72px',
+              height: '72px',
+              borderRadius: '50%',
+              border: '3px solid #fff',
+              boxShadow: '0 4px 16px rgba(26,39,68,0.18)',
+              overflow: 'hidden',
+              background: 'linear-gradient(135deg, #b8e0f5 0%, #7bbde8 100%)',
+            }}
+          >
+            {memorial.person_data.photo_url ? (
+              <img
+                src={memorial.person_data.photo_url}
+                alt={memorial.person_data.full_name}
+                className="exp-card-img"
+                loading="lazy"
+                decoding="async"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  objectPosition: 'center top',
+                  display: 'block',
+                }}
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <Heart style={{ width: '28px', height: '28px', color: 'rgba(255,255,255,0.7)' }} />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="p-6 flex flex-col flex-1">
-        <h3 style={{
-          fontFamily: '"Georgia", serif',
-          fontSize: 'clamp(1.1rem, 2vw, 1.35rem)',
-          fontWeight: 700,
-          color: '#1a2744',
-          marginBottom: '4px',
-          lineHeight: 1.2,
-        }}>
+      {/* ── Conteúdo ── */}
+      <div
+        className="flex flex-col flex-1 text-center"
+        style={{
+          paddingTop: '44px',
+          paddingBottom: '20px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
+        }}
+      >
+        {/* Nome */}
+        <h3
+          className="exp-card-name"
+          style={{
+            fontFamily: '"Georgia", serif',
+            fontSize: 'clamp(0.95rem, 1.8vw, 1.15rem)',
+            fontWeight: 700,
+            color: '#1a2744',
+            marginBottom: '4px',
+            lineHeight: 1.2,
+          }}
+        >
           {memorial.person_data.full_name}
         </h3>
 
-        <p style={{
-          fontSize: '0.68rem',
-          letterSpacing: '0.14em',
-          textTransform: 'uppercase',
-          color: '#5aa8e0',
-          fontFamily: '"Georgia", serif',
-          marginBottom: '14px',
-        }}>
+        {/* Cidade */}
+        <p
+          className="exp-card-city"
+          style={{
+            fontSize: '0.62rem',
+            letterSpacing: '0.14em',
+            textTransform: 'uppercase',
+            color: '#5aa8e0',
+            fontFamily: '"Georgia", serif',
+            marginBottom: '12px',
+          }}
+        >
           {memorial.person_data.birth_city}, {memorial.person_data.birth_state}
         </p>
 
+        {/* Frase */}
         {memorial.content?.main_phrase && (
           <p
-            className="mt-auto"
+            className="exp-card-phrase"
             style={{
               fontFamily: '"Georgia", serif',
-              fontSize: '0.92rem',
+              fontSize: '0.82rem',
               fontStyle: 'italic',
               color: '#3a5070',
-              lineHeight: 1.65,
+              lineHeight: 1.6,
               display: '-webkit-box',
               WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
+              marginBottom: '0',
             }}
           >
             "{memorial.content.main_phrase}"
@@ -102,11 +171,11 @@ const MemorialCard = ({ memorial, index }) => (
 
         {/* CTA */}
         <div
-          className="flex items-center gap-2 mt-5 pt-5"
-          style={{ borderTop: '1px solid rgba(26,39,68,0.08)' }}
+          className="exp-card-cta flex items-center gap-2 mt-auto pt-4"
+          style={{ borderTop: '1px solid rgba(26,39,68,0.08)', marginTop: '16px' }}
         >
           <span style={{
-            fontSize: '0.68rem',
+            fontSize: '0.62rem',
             letterSpacing: '0.16em',
             textTransform: 'uppercase',
             color: '#2a3d5e',
@@ -117,13 +186,13 @@ const MemorialCard = ({ memorial, index }) => (
           </span>
           <div style={{ height: 1, flex: 1, background: 'rgba(26,39,68,0.1)' }} />
           <div
-            className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+            className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
             style={{
               background: 'rgba(90,168,224,0.12)',
               border: '1px solid rgba(90,168,224,0.25)',
             }}
           >
-            <svg className="w-3 h-3" style={{ color: '#5aa8e0' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="w-2.5 h-2.5" style={{ color: '#5aa8e0' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
             </svg>
           </div>
@@ -217,32 +286,36 @@ const Explore = () => {
         }
         .exp-card:hover {
           transform: translateY(-6px);
-          box-shadow: 0 24px 60px rgba(26,39,68,0.13) !important;
+          box-shadow: 0 24px 60px rgba(26,39,68,0.15) !important;
         }
         .exp-card:hover .exp-card-img {
-          transform: scale(1.06);
+          transform: scale(1.08);
         }
         .exp-card-img {
           transition: transform 0.6s cubic-bezier(.22,1,.36,1);
           will-change: transform;
         }
+
+        /* ── MOBILE ── */
         @media (max-width: 767px) {
-          .exp-card .relative.overflow-hidden {
-            height: 130px !important;
+          .explore-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 10px !important;
           }
-          .exp-card .p-6 {
-            padding: 10px 10px 12px !important;
+          .exp-card {
+            border-radius: 16px !important;
           }
-          .exp-card h3 {
+          .exp-card-name {
             font-size: 0.78rem !important;
-            margin-bottom: 2px !important;
           }
-          .exp-card p {
-            font-size: 0.62rem !important;
+          .exp-card-city {
+            font-size: 0.58rem !important;
             margin-bottom: 6px !important;
           }
-          .exp-card .mt-auto,
-          .exp-card .mt-5 {
+          .exp-card-phrase {
+            display: none !important;
+          }
+          .exp-card-cta {
             display: none !important;
           }
         }
@@ -279,7 +352,7 @@ const Explore = () => {
               fontSize: '0.65rem', fontWeight: 700, color: '#2a3d5e',
               fontFamily: '"Georgia", serif',
             }}>
-              {t('explore.eyebrow')} 
+              {t('explore.eyebrow')}
             </span>
           </div>
 
@@ -290,7 +363,7 @@ const Explore = () => {
             lineHeight: 1.08, marginBottom: '20px',
             whiteSpace: 'pre-line',
           }}>
-            {t('explore.title')}   
+            {t('explore.title')}
           </h1>
 
           <p style={{
@@ -306,56 +379,6 @@ const Explore = () => {
 
       {/* ── CONTEÚDO ── */}
       <section className="relative z-10 pb-28 md:pb-36">
-        <style>{`
-          /* ── MOBILE: grid 2 colunas, cards compactos ── */
-          @media (max-width: 767px) {
-            .explore-grid {
-              grid-template-columns: repeat(2, 1fr) !important;
-              gap: 10px !important;
-            }
-            /* Card menor */
-            .memorial-card-root {
-              border-radius: 14px !important;
-            }
-            /* Imagem menor */
-            .memorial-card-img {
-              height: 110px !important;
-            }
-            /* Padding interno menor */
-            .memorial-card-body {
-              padding: 10px 10px 12px !important;
-            }
-            /* Nome menor */
-            .memorial-card-name {
-              font-size: 0.82rem !important;
-              margin-bottom: 3px !important;
-            }
-            /* Datas menores */
-            .memorial-card-dates {
-              font-size: 0.68rem !important;
-              margin-bottom: 6px !important;
-            }
-            /* Descrição oculta — libera muito espaço */
-            .memorial-card-desc {
-              display: none !important;
-            }
-            /* Footer do card compacto */
-            .memorial-card-footer {
-              padding: 8px 10px !important;
-              gap: 4px !important;
-            }
-            .memorial-card-footer span,
-            .memorial-card-footer p {
-              font-size: 0.66rem !important;
-            }
-            /* Avatar/ícone menor */
-            .memorial-card-avatar {
-              width: 28px !important;
-              height: 28px !important;
-            }
-          }
-        `}</style>
-
         <div className="max-w-6xl mx-auto px-6 sm:px-10 md:px-16">
 
           {allMemorials.length === 0 ? (
