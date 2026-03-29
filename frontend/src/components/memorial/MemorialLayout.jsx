@@ -349,11 +349,12 @@ const MemorialLayout = ({ memorial, isPreview = false, onShare }) => {
 
   const galleryImages = content.gallery_urls || [];
 
+  // ── Mudança 1: background transparente para herdar o sky-bg do html ──
   const wrapperStyle = isPreview ? {
     fontFamily: '"Georgia", serif', position: 'relative', outline: 'none',
   } : {
     minHeight: '100vh',
-    background: 'linear-gradient(180deg, #c8e8f5 0%, #ddf0f7 30%, #eef8fb 65%, #eef8fb 100%)',
+    background: 'transparent',
     fontFamily: '"Georgia", serif', position: 'relative', overflow: 'hidden', outline: 'none',
   };
 
@@ -363,6 +364,9 @@ const MemorialLayout = ({ memorial, isPreview = false, onShare }) => {
     { key: 'audio',       label: t('memorial.tab_audio',       { defaultValue: 'Áudio' }),       icon: Music },
     ...(!isPreview ? [{ key: 'condolencias', label: t('memorial.tab_condolencias', { defaultValue: 'Condolências' }), icon: Heart }] : []),
   ];
+
+  const BANNER_HEIGHT = 150;
+  const PHOTO_SIZE    = 110;
 
   return (
     <div onKeyDown={handleKeyDown} tabIndex={-1} style={wrapperStyle}>
@@ -435,20 +439,14 @@ const MemorialLayout = ({ memorial, isPreview = false, onShare }) => {
 
       <div className="relative z-10" style={{ maxWidth: 600, margin: '0 auto', padding: '0 16px', paddingTop: isPreview ? 'clamp(16px,3vw,24px)' : 'clamp(72px,12vw,100px)', paddingBottom: 'clamp(48px,8vw,80px)' }}>
 
-        {!isPreview && (
-          <div style={{ display:'flex', justifyContent:'center', marginBottom:28, animation:'revealML 0.6s cubic-bezier(.22,1,.36,1) both' }}>
-            <img src="/logo-transparent.svg" alt="Remember QRCode" style={{ height:60, width:'auto' }}/>
-          </div>
-        )}
-
         <div className="ml-card">
 
-          {/* ── Banner topo com sky + logo + foto circular ── */}
+          {/* ── Banner: sky-card + logo grande + foto no canto esquerdo ── */}
           <div
             className="relative flex-shrink-0"
-            style={{ height: '120px', overflow: 'visible' }}
+            style={{ height: `${BANNER_HEIGHT}px`, overflow: 'visible' }}
           >
-            {/* Background sky-card.jpg */}
+            {/* Background sky-card */}
             <img
               src={skyCard}
               alt=""
@@ -465,29 +463,35 @@ const MemorialLayout = ({ memorial, isPreview = false, onShare }) => {
               }}
             />
 
-            {/* Gradiente sutil para escurecer levemente as bordas */}
+            {/* Overlay sutil */}
             <div style={{
               position: 'absolute',
               inset: 0,
-              background: 'linear-gradient(to bottom, rgba(26,39,68,0.08) 0%, rgba(26,39,68,0.22) 100%)',
+              background: 'linear-gradient(to bottom, rgba(26,39,68,0.06) 0%, rgba(26,39,68,0.18) 100%)',
               pointerEvents: 'none',
             }} />
 
-            {/* Logo transparent.svg centralizada */}
+            {/* Logo grande centralizada no banner*/}
             <div
-              className="absolute inset-0 flex items-center justify-center"
-              style={{ paddingBottom: '28px', zIndex: 1 }}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1,
+              }}
             >
               <img
                 src="/logo-transparent.svg"
                 alt="Remember"
                 style={{
-                  height: '52px',
+                  height: '96px',
                   width: 'auto',
-                  opacity: 0.6,
+                  opacity: 0.55,
                   objectFit: 'contain',
                   display: 'block',
-                  filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.15))',
+                  filter: 'saturate(0.3) brightness(1.4) sepia(0.3) hue-rotate(180deg) drop-shadow(0 2px 8px rgba(90,168,224,0.2))',
                 }}
               />
             </div>
@@ -497,26 +501,25 @@ const MemorialLayout = ({ memorial, isPreview = false, onShare }) => {
               <Share2 size={17} style={{ color:'#2a3d5e' }}/>
             </button>
 
-            {/* Foto circular na divisa banner/card */}
+            {/* ── Foto no canto inferior esquerdo ── */}
             <div
               style={{
                 position: 'absolute',
-                bottom: '-52px',
-                left: '50%',
-                transform: 'translateX(-50%)',
+                bottom: `-${PHOTO_SIZE / 2}px`,
+                left: '20px',
                 zIndex: 10,
+                animation: 'photoReveal 0.7s cubic-bezier(.22,1,.36,1) 0.3s both',
               }}
             >
               <div
                 style={{
-                  width: '104px',
-                  height: '104px',
+                  width: `${PHOTO_SIZE}px`,
+                  height: `${PHOTO_SIZE}px`,
                   borderRadius: '50%',
-                  border: '4px solid rgba(255,255,255,0.95)',
-                  boxShadow: '0 8px 32px rgba(26,39,68,0.18)',
+                  border: '3.5px solid rgba(255,255,255,0.95)',
+                  boxShadow: '0 6px 24px rgba(26,39,68,0.18)',
                   overflow: 'hidden',
                   background: 'linear-gradient(135deg, #c8e8f5, #a8d8f0)',
-                  animation: 'photoReveal 0.7s cubic-bezier(.22,1,.36,1) 0.3s both',
                 }}
               >
                 {person_data.photo_url ? (
@@ -533,7 +536,7 @@ const MemorialLayout = ({ memorial, isPreview = false, onShare }) => {
                     }}
                   />
                 ) : (
-                  <div style={{ width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'"Georgia",serif', fontSize:'2.5rem', fontWeight:700, color:'rgba(26,39,68,0.35)' }}>
+                  <div style={{ width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'"Georgia",serif', fontSize:'2rem', fontWeight:700, color:'rgba(26,39,68,0.35)' }}>
                     {person_data.full_name?.charAt(0) || '?'}
                   </div>
                 )}
@@ -542,26 +545,29 @@ const MemorialLayout = ({ memorial, isPreview = false, onShare }) => {
           </div>
           {/* /banner */}
 
-          {/* ── Info do memorial ── */}
-          <div style={{ paddingTop: 68, paddingBottom: 24, paddingLeft: 'clamp(20px,5vw,36px)', paddingRight: 'clamp(20px,5vw,36px)', textAlign: 'center', animation: 'revealML 0.7s cubic-bezier(.22,1,.36,1) 0.2s both' }}>
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8, marginBottom:10 }}>
-              <div style={{ height:1, width:20, background:'rgba(42,61,94,0.25)' }}/>
-              <span style={{ textTransform:'uppercase', letterSpacing:'0.2em', fontSize:'0.58rem', fontWeight:700, color:'#5aa8e0' }}>
-                {t('memorial.inMemoryOf')}
-              </span>
-              <div style={{ height:1, width:20, background:'rgba(42,61,94,0.25)' }}/>
-            </div>
-            <h1 data-testid="memorial-name" style={{ fontFamily:'"Georgia",serif', fontSize:'clamp(1.5rem,5vw,2.2rem)', fontWeight:700, color:'#1a2744', lineHeight:1.15, marginBottom:10 }}>
+          {/* ── Info do memorial — alinhada à esquerda, respeitando a foto no canto ── */}
+          <div style={{
+            paddingTop: `${PHOTO_SIZE / 2 + 12}px`,
+            paddingBottom: 24,
+            paddingLeft: 'clamp(20px,5vw,36px)',
+            paddingRight: 'clamp(20px,5vw,36px)',
+            textAlign: 'left',
+            animation: 'revealML 0.7s cubic-bezier(.22,1,.36,1) 0.2s both',
+          }}>
+            <span style={{ textTransform:'uppercase', letterSpacing:'0.2em', fontSize:'0.58rem', fontWeight:700, color:'#5aa8e0', display:'block', marginBottom:8 }}>
+              {t('memorial.inMemoryOf')}
+            </span>
+            <h1 data-testid="memorial-name" style={{ fontFamily:'"Georgia",serif', fontSize:'clamp(1.4rem,5vw,2rem)', fontWeight:700, color:'#1a2744', lineHeight:1.15, marginBottom:8 }}>
               {person_data.full_name}
             </h1>
-            <p style={{ fontFamily:'"Georgia",serif', fontSize:'0.85rem', color:'rgba(58,80,112,0.65)', letterSpacing:'0.05em', marginBottom:16 }}>
+            <p style={{ fontFamily:'"Georgia",serif', fontSize:'0.85rem', color:'rgba(58,80,112,0.65)', letterSpacing:'0.05em', marginBottom: content.main_phrase ? 16 : 0 }}>
               {person_data.birth_date ? formatDateShort(person_data.birth_date) : '...'}
               <span style={{ margin:'0 10px', color:'rgba(90,168,224,0.6)' }}>✦</span>
               {person_data.death_date ? formatDateShort(person_data.death_date) : '...'}
             </p>
             {content.main_phrase && (
-              <div style={{ margin:'0 auto', maxWidth:380, padding:'14px 20px', borderRadius:14, background:'rgba(90,168,224,0.07)', border:'1px solid rgba(90,168,224,0.18)' }}>
-                <p style={{ fontFamily:'"Georgia",serif', fontSize:'clamp(0.85rem,2.5vw,0.95rem)', color:'#2a3d5e', fontStyle:'italic', lineHeight:1.7, margin:0 }}>
+              <div style={{ padding:'13px 18px', borderRadius:14, background:'rgba(90,168,224,0.07)', border:'1px solid rgba(90,168,224,0.18)' }}>
+                <p style={{ fontFamily:'"Georgia",serif', fontSize:'clamp(0.83rem,2.5vw,0.92rem)', color:'#2a3d5e', fontStyle:'italic', lineHeight:1.7, margin:0 }}>
                   "{content.main_phrase}"
                 </p>
               </div>
