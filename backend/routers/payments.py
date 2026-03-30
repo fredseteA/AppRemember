@@ -481,17 +481,11 @@ async def _handle_mp_payment(payment_id: str, background_tasks: BackgroundTasks)
         logger.error(f"Erro _handle_mp_payment({payment_id}): {e}")
 
 @router.get("/payments/{payment_id}/status")
-async def get_payment_status(
-    payment_id: str,
-    token_data: dict = Depends(verify_firebase_token)
-):
+async def get_payment_status(payment_id: str):
     doc = db.collection("payments").document(payment_id).get()
     if not doc.exists:
         raise HTTPException(status_code=404, detail="Pagamento não encontrado")
-    data = doc.to_dict()
-    if data.get("user_id") != token_data["uid"]:
-        raise HTTPException(status_code=403, detail="Sem permissão")
-    return {"status": data.get("status"), "payment_id": payment_id}
+    return {"status": doc.to_dict().get("status")}
 
 # ── Admin order endpoints ─────────────────────────────────────────────────────
 

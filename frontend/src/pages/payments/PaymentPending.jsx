@@ -34,10 +34,7 @@ const PaymentPending = () => {
         return;
       }
       try {
-        const token = await getToken();
-        const res   = await axios.get(`${API}/payments/${paymentId}/status`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await axios.get(`${API}/payments/${paymentId}/status`);
         if (res.data?.status === 'approved') {
           clearInterval(intervalRef.current);
           setApproved(true);
