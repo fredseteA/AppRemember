@@ -420,31 +420,78 @@ async def handle_mercadopago_webhook(request: Request, background_tasks: Backgro
         webhook_data = json.loads(body.decode('utf-8'))
         logger.info(f"Webhook received: {webhook_data}")
 
-        if webhook_data.get("type") == "payment":
+        topic = webhook_data.get("type") or webhook_data.get("topic", "")
+
+        # ── Pagamento direto ──
+        if topic == "payment":
             payment_id = webhook_data.get("data", {}).get("id")
             if payment_id:
+                await _handle_mp_payment(payment_id, background_tasks)
+
+        # ── Merchant order (agrupa pagamentos Pix, boleto, etc) ──
+        elif topic == "merchant_order":
+            order_id = webhook_data.get("data", {}).get("id")
+            if order_id:
                 try:
-                    payment_info = mp_sdk.payment().get(payment_id)
-                    if payment_info["status"] == 200:
-                        mp_payment   = payment_info["response"]
-                        external_ref = mp_payment.get("external_reference")
-                        new_status   = mp_payment.get("status")
-                        if external_ref:
-                            payment_ref = db.collection("payments").document(external_ref)
-                            payment_doc = payment_ref.get()
-                            if payment_doc.exists:
-                                payment_data = payment_doc.to_dict()
-                                if new_status == "approved":
-                                    await _process_approved_payment(payment_ref, payment_data, background_tasks, source="webhook")
-                                else:
-                                    payment_ref.update({"status": new_status, "updated_at": datetime.now(timezone.utc).isoformat()})
+                    order_info = mp_sdk.merchant_order().get(order_id)
+                    if order_info["status"] == 200:
+                        order = order_info["response"]
+                        # Só processa se o valor pago cobriu o total
+                        paid_amount = sum(
+                            p.get("transaction_amount", 0)
+                            for p in order.get("payments", [])
+                            if p.get("status") == "approved"
+                        )
+                        if paid_amount >= order.get("total_amount", 0):
+                            for p in order.get("payments", []):
+                                if p.get("status") == "approved":
+                                    await _handle_mp_payment(str(p["id"]), background_tasks)
                 except Exception as e:
-                    logger.error(f"Error processing payment webhook: {str(e)}")
+                    logger.error(f"Erro merchant_order webhook: {e}")
+
         return {"status": "success"}
     except Exception as e:
         logger.error(f"Webhook error: {str(e)}")
         return {"status": "error", "message": str(e)}
 
+
+async def _handle_mp_payment(payment_id: str, background_tasks: BackgroundTasks):
+    """Busca pagamento no MP e processa se aprovado."""
+    try:
+        payment_info = mp_sdk.payment().get(payment_id)
+        if payment_info["status"] == 200:
+            mp_payment   = payment_info["response"]
+            external_ref = mp_payment.get("external_reference")
+            new_status   = mp_payment.get("status")
+            if external_ref:
+                payment_ref = db.collection("payments").document(external_ref)
+                payment_doc = payment_ref.get()
+                if payment_doc.exists:
+                    payment_data = payment_doc.to_dict()
+                    if new_status == "approved":
+                        await _process_approved_payment(
+                            payment_ref, payment_data, background_tasks, source="webhook"
+                        )
+                    else:
+                        payment_ref.update({
+                            "status": new_status,
+                            "updated_at": datetime.now(timezone.utc).isoformat()
+                        })
+    except Exception as e:
+        logger.error(f"Erro _handle_mp_payment({payment_id}): {e}")
+
+@router.get("/payments/{payment_id}/status")
+async def get_payment_status(
+    payment_id: str,
+    token_data: dict = Depends(verify_firebase_token)
+):
+    doc = db.collection("payments").document(payment_id).get()
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="Pagamento não encontrado")
+    data = doc.to_dict()
+    if data.get("user_id") != token_data["uid"]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+    return {"status": data.get("status"), "payment_id": payment_id}
 
 # ── Admin order endpoints ─────────────────────────────────────────────────────
 
