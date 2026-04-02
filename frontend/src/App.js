@@ -76,7 +76,16 @@ const AppLayout = ({ children }) => {
   }
 
   return (
-    <div className="App app-bg min-h-screen flex flex-col">
+    <div
+      className="App min-h-screen flex flex-col"
+      style={{
+        backgroundImage: `url(${skyBg})`,
+        backgroundSize: '100% auto',   // ← largura 100%, altura proporcional
+        backgroundPosition: 'top center',
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'scroll',
+      }}
+    >
       {!isMemorialPage && <Header className="ls-reveal" />}
       <main className="flex-1">
         {children}
@@ -98,7 +107,6 @@ function App() {
           {loading && (
             <LoadingScreen onComplete={() => {
               setLoading(false);
-              // Aguarda React montar os elementos no DOM antes do reveal
               setTimeout(() => triggerReveal(), 50);
             }} />
           )}

@@ -4,29 +4,16 @@
 @tailwind components;
 @tailwind utilities;
 
+html, body {
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: auto;
+}
+
 html {
   padding-right: 0 !important;
   overflow-x: hidden;
   max-width: 100vw;
-  background-color: #bbdff3;
-}
-
-.app-bg::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100%;
-  height: 100%;
-  background-image: url('/src/assets/sky-bg.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  z-index: -1;
-  transform: translateZ(0);
-  will-change: transform;
+  background-color: #a8d8ea; 
 }
 
 body {
@@ -46,6 +33,10 @@ body[data-scroll-locked] {
   width: 100% !important;
   padding-right: 0 !important;
   margin-right: 0 !important;
+}
+
+.app-bg::before {
+  display: none;
 }
 
 code {
