@@ -6,7 +6,7 @@ const LoadingScreen = ({ onComplete }) => {
   const [flyKeyframe, setFlyKeyframe] = useState('');
   const [flyStyle, setFlyStyle]       = useState({});
   const [overlayOut, setOverlayOut]   = useState(false);
-  const [bgVisible, setBgVisible]     = useState(false); // novo
+  const [bgVisible, setBgVisible]     = useState(false); 
 
   const logoRef = useRef(null);
 
@@ -63,12 +63,10 @@ const LoadingScreen = ({ onComplete }) => {
         });
       }
 
-      // Overlay some junto com o início do voo
       setOverlayOut(true);
       setPhase('fly');
-    }, 2400); // um pouco depois do bg aparecer
+    }, 2400); 
 
-    // Fase 3 — voo acabou, conteúdo aparece
     const t4 = setTimeout(() => {
       setPhase('done');
       onComplete?.();

@@ -96,7 +96,6 @@ const HowItWorksSection = () => {
   }, [STEPS]);
 
   useEffect(() => {
-    // Só observa após o loading ter terminado
     if (!revealed) return;
 
     const observer = new IntersectionObserver(
@@ -105,7 +104,7 @@ const HowItWorksSection = () => {
     );
     if (sectionRef.current) observer.observe(sectionRef.current);
     return () => observer.disconnect();
-  }, [revealed]); // ← depende de revealed
+  }, [revealed]);
 
   const triggerTransition = useCallback((from, to) => {
     clearTimeout(transitionTimerRef.current);
